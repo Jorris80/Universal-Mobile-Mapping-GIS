@@ -382,7 +382,7 @@ var Geo = (function () {
  * Mode: 'gas' (HtmlService/google.script.run), 'remote' (PWA GitHub Pages -> fetch Web App), 'demo' (backend emulasi di browser).
  */
 'use strict';
-var APP_VERSION = '1.1.0', APP_BUILD = '2026-10-30';
+var APP_VERSION = '1.2.0', APP_BUILD = '2026-10-30';
 var S = { token: '', user: null, org: null, perms: [], settings: {}, license: {}, projects: [], layers: [], users: [],
   features: new Map(), serverVer: {}, projectId: '', layerId: '', hiddenLayers: new Set(), online: navigator.onLine, tab: 'map', rendered: {} };
 
@@ -804,6 +804,12 @@ var MapView = {
     if (bm === 'osm') {
       style.sources.base = { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19, attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors' };
       style.layers.push({ id: 'base', type: 'raster', source: 'base', paint: dark ? { 'raster-brightness-max': 0.75, 'raster-saturation': -0.3 } : {} });
+    } else if (bm === 'maptiler') {
+      var mt = MapTiler.cfg();
+      if (mt.key) {
+        style.sources.base = { type: 'raster', tiles: [MapTiler.url(mt.style, mt.key)], tileSize: 256, maxzoom: 20, attribution: '<a href="https://www.maptiler.com/copyright/" target="_blank" rel="noopener">© MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>' };
+        style.layers.push({ id: 'base', type: 'raster', source: 'base', paint: dark && !MapTiler.isImagery(mt.style) ? { 'raster-brightness-max': 0.8 } : {} });
+      }
     } else if (bm === 'xyz' && /^https:\/\//.test(custom)) {
       style.sources.base = { type: 'raster', tiles: [custom], tileSize: 256, maxzoom: 22, attribution: 'Basemap kustom' };
       style.layers.push({ id: 'base', type: 'raster', source: 'base' });
@@ -891,7 +897,8 @@ var MapView = {
     if (!p.classList.contains('hidden')) { MapView.closePanel(); return; }
     var bm = LS.get('umg_basemap') || 'osm', lyrs = S.layers.filter(function (l) { return l.project_id === S.projectId; });
     p.innerHTML = '<div class="row"><b class="grow">Layer &amp; Basemap</b><button class="btn icon ghost sm" data-close>✕</button></div>' +
-      '<h4>Basemap</h4><div class="seg">' + [['osm', 'OSM'], ['xyz', 'XYZ kustom'], ['none', 'Kosong']].map(function (o) { return '<button data-bm="' + o[0] + '" class="' + (bm === o[0] ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>' +
+      '<h4>Basemap</h4><div class="seg">' + [['osm', 'OSM'], ['maptiler', 'MapTiler'], ['xyz', 'XYZ'], ['none', 'Kosong']].map(function (o) { return '<button data-bm="' + o[0] + '" class="' + (bm === o[0] ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="' + (bm === 'maptiler' ? '' : 'hidden') + '" id="mt-box" style="margin-top:8px"></div>' +
       '<div class="' + (bm === 'xyz' ? '' : 'hidden') + '" style="margin-top:8px"><input class="input small mono" id="xyz-url" placeholder="https://server/{z}/{x}/{y}.png" value="' + esc(LS.get('umg_xyz') || '') + '"><button class="btn sm" id="xyz-save" style="margin-top:6px">Terapkan</button></div>' +
       '<h4>Layer data</h4>' + (lyrs.length ? lyrs.map(function (l) { return '<label class="lyr"><input type="checkbox" data-ly="' + esc(l.id) + '"' + (S.hiddenLayers.has(l.id) ? '' : ' checked') + '><span class="swatch" style="background:' + esc(l.style.color) + '"></span><span class="grow">' + esc(l.name) + '</span><span class="small muted">' + countLayer(l.id) + '</span></label>'; }).join('') : '<div class="small muted">Belum ada layer.</div>') +
       '<h4>Layer referensi</h4><div id="ov-box"></div>' +
@@ -900,6 +907,7 @@ var MapView = {
     if (!MapView._panelHist) MapView._panelHist = Hist.push(function () { MapView._panelHist = null; MapView.closePanel(true); }, 'panel');
     Overlays.renderBox($('#ov-box'));
     PMT.renderBox($('#pmt-box'));
+    if (bm === 'maptiler') MapTiler.renderBox($('#mt-box'));
     $('[data-close]', p).onclick = function () { MapView.closePanel(); };
     $$('[data-bm]', p).forEach(function (b) { b.onclick = function () { LS.set('umg_basemap', b.getAttribute('data-bm')); MapView.restyle(); p.classList.add('hidden'); MapView.layerPanel(); }; });
     var xs = $('#xyz-save', p); if (xs) xs.onclick = function () { var u = $('#xyz-url').value.trim(); if (!/^https:\/\/.+\{z\}.+\{x\}.+\{y\}/.test(u)) return toast('URL XYZ harus HTTPS dan memuat {z}/{x}/{y}.', 'err'); LS.set('umg_xyz', u); MapView.restyle(); };
@@ -1852,6 +1860,12 @@ var Overlays = {
       m.addLayer({ id: src + '-fill', type: 'fill', source: src, filter: ['in', ['geometry-type'], ['literal', ['Polygon', 'MultiPolygon']]], layout: { visibility: vis }, paint: { 'fill-color': o.color, 'fill-opacity': 0.18 * o.opacity } }, before);
       m.addLayer({ id: src + '-line', type: 'line', source: src, filter: ['in', ['geometry-type'], ['literal', ['LineString', 'MultiLineString', 'Polygon', 'MultiPolygon']]], layout: { visibility: vis }, paint: { 'line-color': o.color, 'line-width': 1.8, 'line-opacity': o.opacity } }, before);
       m.addLayer({ id: src + '-pt', type: 'circle', source: src, filter: ['in', ['geometry-type'], ['literal', ['Point', 'MultiPoint']]], layout: { visibility: vis }, paint: { 'circle-radius': 5, 'circle-color': o.color, 'circle-opacity': o.opacity, 'circle-stroke-width': 1.5, 'circle-stroke-color': '#fff' } }, before);
+    } else if (o.kind === 'tiles') {
+      var rs = { type: 'raster', tiles: o.tiles, tileSize: o.tileSize || 256, minzoom: o.minzoom || 0, maxzoom: o.maxzoom || 22 };
+      if (o.attribution) rs.attribution = esc(o.attribution);
+      if (o.bbox) rs.bounds = o.bbox;
+      m.addSource(src, rs);
+      m.addLayer({ id: src + '-ras', type: 'raster', source: src, layout: { visibility: vis }, paint: { 'raster-opacity': o.opacity } }, before);
     } else {
       if (!Overlays.urls[o.id]) Overlays.urls[o.id] = URL.createObjectURL(o.image);
       m.addSource(src, { type: 'image', url: Overlays.urls[o.id], coordinates: o.corners });
@@ -2064,12 +2078,14 @@ var Overlays = {
   // ---------- UI di panel Layer ----------
   renderBox: function (box) {
     if (!box) return;
-    box.innerHTML = '<label class="btn sm primary">+ Tambah layer<input type="file" id="ov-file" multiple hidden accept=".zip,.shp,.dbf,.prj,.cpg,.shx,.kml,.kmz,.geojson,.json,.tif,.tiff,.pdf"></label><div class="small muted" id="ov-msg" style="margin:6px 0"><b>SHP · KML/KMZ · GeoJSON · GeoTIFF · GeoPDF</b>. Shapefile: pilih .zip atau sekaligus .shp+.dbf+.prj. Tersimpan offline di perangkat.</div>' +
+    box.innerHTML = '<div class="row wrap"><label class="btn sm primary">+ Tambah layer<input type="file" id="ov-file" multiple hidden accept=".zip,.shp,.dbf,.prj,.cpg,.shx,.kml,.kmz,.geojson,.json,.tif,.tiff,.pdf"></label><button class="btn sm" id="ov-arc" type="button">+ ArcGIS REST</button></div><div class="small muted" id="ov-msg" style="margin:6px 0"><b>SHP · KML/KMZ · GeoJSON · GeoTIFF · GeoPDF</b>. Shapefile: pilih .zip atau sekaligus .shp+.dbf+.prj. Tersimpan offline di perangkat.</div>' +
       (Overlays.list.length ? Overlays.list.slice().reverse().map(function (o) {
-        return '<div style="border:1px solid var(--line);border-radius:10px;padding:8px;margin-top:6px"><div class="lyr" style="padding:0"><input type="checkbox" data-ovv="' + o.id + '"' + (o.visible ? ' checked' : '') + '><span class="swatch" style="background:' + (o.kind === 'raster' ? 'linear-gradient(135deg,#65a30d,#ca8a04)' : esc(o.color)) + '"></span><span class="grow small"><b>' + esc(o.name) + '</b><br><span class="muted">' + esc(o.fmt) + ' · ' + (o.kind === 'vector' ? fmtNum(o.meta.features, 0) + ' fitur · ' : '') + esc(o.meta.crs || '') + '</span></span></div>' +
-          '<div class="row" style="margin-top:6px"><input type="range" min="0.1" max="1" step="0.05" value="' + o.opacity + '" data-ovo="' + o.id + '" class="grow" aria-label="Opasitas">' + (o.kind === 'vector' ? '<input type="color" value="' + esc(o.color) + '" data-ovc="' + o.id + '" style="width:34px;height:30px;border:0;padding:0;background:none">' : '') + '<button class="btn sm" data-ovz="' + o.id + '">Zoom</button><button class="btn sm danger" data-ovd="' + o.id + '">✕</button></div></div>';
+        return '<div style="border:1px solid var(--line);border-radius:10px;padding:8px;margin-top:6px"><div class="lyr" style="padding:0"><input type="checkbox" data-ovv="' + o.id + '"' + (o.visible ? ' checked' : '') + '><span class="swatch" style="background:' + (o.kind === 'raster' || o.kind === 'tiles' ? 'linear-gradient(135deg,#65a30d,#ca8a04)' : esc(o.color)) + '"></span><span class="grow small"><b>' + esc(o.name) + '</b><br><span class="muted">' + esc(o.fmt) + ' · ' + (o.kind === 'vector' ? fmtNum(o.meta.features, 0) + ' fitur · ' : '') + (o.kind === 'tiles' ? 'online · ' : '') + esc(o.meta.crs || '') + '</span></span></div>' +
+          '<div class="row" style="margin-top:6px"><input type="range" min="0.1" max="1" step="0.05" value="' + o.opacity + '" data-ovo="' + o.id + '" class="grow" aria-label="Opasitas">' + (o.kind === 'vector' ? '<input type="color" value="' + esc(o.color) + '" data-ovc="' + o.id + '" style="width:34px;height:30px;border:0;padding:0;background:none">' : '') + (o.source && o.kind === 'vector' ? '<button class="btn sm" data-ovr="' + o.id + '" title="Unduh ulang dari server">↻</button>' : '') + '<button class="btn sm" data-ovz="' + o.id + '">Zoom</button><button class="btn sm danger" data-ovd="' + o.id + '">✕</button></div></div>';
       }).join('') : '');
     var msg = $('#ov-msg', box), find = function (id) { return Overlays.list.find(function (o) { return o.id === id; }); };
+    $('#ov-arc', box).onclick = function () { ArcGIS.dialog(function () { Overlays.renderBox(box); }); };
+    $$('[data-ovr]', box).forEach(function (b) { b.onclick = async function () { var o = find(b.getAttribute('data-ovr')); msg.textContent = 'Memuat ulang ' + o.name + '…'; try { var rec = await ArcGIS.load(o.source.url, o.source.token, o.source.where); Object.assign(o, { geojson: rec.geojson, bbox: rec.bbox, meta: rec.meta }); await Overlays.save(o); Overlays.addToMap(o); toast('Diperbarui: ' + fmtNum(rec.meta.features, 0) + ' fitur.', 'ok'); } catch (er) { toast(er.message, 'err', 6000); } Overlays.renderBox(box); }; });
     $('#ov-file', box).onchange = async function (e) {
       var files = e.target.files; msg.textContent = 'Membaca ' + files.length + ' file…';
       try { var rec = await Overlays.readFiles(files); var o = await Overlays.add(rec); toast('Layer "' + o.name + '" ditambahkan.', 'ok'); }
@@ -2219,7 +2235,9 @@ var Print = {
     }
     // Atribusi pada bingkai peta
     pdf.setFontSize(5 * f); pdf.setTextColor(60);
-    var attr = 'Basemap: ' + ((LS.get('umg_basemap') || 'osm') === 'osm' ? '(c) OpenStreetMap contributors' : (LS.get('umg_basemap') === 'xyz' ? 'XYZ kustom' : 'tanpa basemap')) + (PMT.active ? ' | Foto udara: ' + T(PMT.active.label) : '');
+    var bmk = LS.get('umg_basemap') || 'osm';
+    var attr = 'Basemap: ' + ({ osm: '(c) OpenStreetMap contributors', maptiler: '(c) MapTiler (c) OpenStreetMap contributors', xyz: 'XYZ kustom', none: 'tanpa basemap' }[bmk] || bmk) + (PMT.active ? ' | Foto udara: ' + T(PMT.active.label) : '') + Overlays.list.filter(function (x) { return x.visible && x.kind === 'tiles' && x.attribution; }).map(function (x) { return ' | ' + T(x.attribution); }).join('');
+    if (attr.length > 160) attr = attr.slice(0, 157) + '...';
     pdf.setFillColor(255, 255, 255); pdf.rect(map.x + map.w - pdf.getTextWidth(attr) - 3, map.y + map.h - 3.4 * f, pdf.getTextWidth(attr) + 3, 3.4 * f, 'F');
     pdf.text(attr, map.x + map.w - 1.5, map.y + map.h - 1 * f, { align: 'right' });
 
@@ -2274,14 +2292,15 @@ var Print = {
         pdf.setTextColor(20); pdf.text(pdf.splitTextToSize(T(label), w - 11)[0], x + 9, yy); yy += rowH;
       };
       vis.forEach(function (l) { item(l.geom_type, l.style.color || '#e11d48', l.name + ' (' + countLayer(l.id) + ')'); });
-      Overlays.list.filter(function (x2) { return x2.visible; }).forEach(function (ov) { item(ov.kind === 'raster' ? 'raster' : 'Polygon', ov.color || '#7c3aed', ov.name + ' [' + ov.fmt + ']'); });
+      Overlays.list.filter(function (x2) { return x2.visible; }).forEach(function (ov) { item(ov.kind === 'vector' ? 'Polygon' : 'raster', ov.color || '#7c3aed', ov.name + ' [' + ov.fmt + ']'); });
       if (PMT.active) item('raster', '#65a30d', 'Foto udara: ' + PMT.active.label);
       pdf.setLineWidth(0.25); pdf.setDrawColor(20); pdf.rect(x, y, w, h);
     };
     var infoBlock = function (x, y, w, h) {
       var yy = sec(x, y, w, 'KETERANGAN') + 3.4 * f;
       var proj = S.projects.find(function (p) { return p.id === S.projectId; }) || {};
-      var rows = [['Proyek', proj.name || '-'], ['Organisasi', S.org ? S.org.name : '-'], ['Disusun oleh', o.by], ['Tanggal cetak', new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })], ['Sistem koordinat', 'Geografis WGS 84 (EPSG:4326); tampilan Web Mercator'], ['Sumber data', 'Survei lapangan ' + (S.org ? S.org.name : '') + '; basemap OSM'], ['Lembar', o.no]];
+      var bmName = { osm: 'OSM', maptiler: 'MapTiler/OSM', xyz: 'XYZ kustom', none: '-' }[LS.get('umg_basemap') || 'osm'] || '-';
+      var rows = [['Proyek', proj.name || '-'], ['Organisasi', S.org ? S.org.name : '-'], ['Disusun oleh', o.by], ['Tanggal cetak', new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })], ['Sistem koordinat', 'Geografis WGS 84 (EPSG:4326); tampilan Web Mercator'], ['Sumber data', 'Survei lapangan ' + (S.org ? S.org.name : '') + '; basemap ' + bmName], ['Lembar', o.no]];
       pdf.setFontSize(6 * f);
       rows.forEach(function (r) { if (yy > y + h - 2) return; pdf.setFont('helvetica', 'bold'); pdf.text(r[0], x + 1.8, yy); pdf.setFont('helvetica', 'normal'); var t = pdf.splitTextToSize(T(r[1]), w - 26 * f).slice(0, 2); pdf.text(t, x + 24 * f, yy); yy += 3.1 * f * t.length + 0.4; });
       if (o.note && yy < y + h - 4) { pdf.setFontSize(5.4 * f); pdf.setTextColor(90); pdf.text(pdf.splitTextToSize(T('Catatan: ' + o.note), w - 3.6).slice(0, 3), x + 1.8, yy + 0.8); pdf.setTextColor(20); }
@@ -2317,6 +2336,189 @@ var Print = {
     return { blob: pdf.output('blob'), name: name, scale: scaleN, pages: pdf.getNumberOfPages() };
   },
   fmtDeg: function (v, dec, pos, neg) { return fmtNum(Math.abs(v), Math.min(dec + 1, 6)).replace(/\./g, '') + '°' + (v >= 0 ? pos : neg); }
+};
+
+// ======================================================= Basemap MapTiler
+var MapTiler = {
+  STYLES: [['streets-v2', 'Streets', 'png'], ['outdoor-v2', 'Outdoor', 'png'], ['topo-v2', 'Topo', 'png'], ['satellite', 'Satelit', 'jpg'], ['hybrid', 'Hybrid (satelit + label)', 'jpg'], ['basic-v2', 'Basic', 'png'], ['dataviz', 'Dataviz', 'png']],
+  cfg: function () { return { key: LS.get('umg_mt_key') || (S.settings && S.settings.maptiler_key) || '', style: LS.get('umg_mt_style') || 'streets-v2' }; },
+  ext: function (style) { var s = MapTiler.STYLES.find(function (x) { return x[0] === style; }); return s ? s[2] : 'png'; },
+  isImagery: function (style) { return style === 'satellite' || style === 'hybrid'; },
+  url: function (style, key) { return 'https://api.maptiler.com/maps/' + encodeURIComponent(style) + '/256/{z}/{x}/{y}' + ((window.devicePixelRatio || 1) >= 2 ? '@2x' : '') + '.' + MapTiler.ext(style) + '?key=' + encodeURIComponent(key); },
+  test: async function (style, key) {
+    var r = await fetch(MapTiler.url(style, key).replace('{z}/{x}/{y}', '0/0/0'), { credentials: 'omit' }).catch(function () { return null; });
+    if (!r) throw new Error('Tidak dapat menghubungi MapTiler (periksa koneksi).');
+    if (r.status === 403 || r.status === 401) throw new Error('API key MapTiler ditolak (salah, kedaluwarsa, atau domain ini belum diizinkan di pengaturan key).');
+    if (!r.ok) throw new Error('MapTiler menjawab HTTP ' + r.status + '.');
+    return true;
+  },
+  renderBox: function (box) {
+    var c = MapTiler.cfg(), org = S.settings && S.settings.maptiler_key;
+    box.innerHTML = '<label class="f small">Gaya peta<select class="input" id="mt-style">' + MapTiler.STYLES.map(function (s) { return '<option value="' + s[0] + '"' + (s[0] === c.style ? ' selected' : '') + '>' + s[1] + '</option>'; }).join('') + '</select></label>' +
+      '<label class="f small" style="margin-top:6px">API key MapTiler' + (org ? ' <span class="muted">(default organisasi tersedia)</span>' : '') + '<input class="input small mono" id="mt-key" autocomplete="off" spellcheck="false" placeholder="' + (org ? 'memakai key organisasi' : 'tempel key dari cloud.maptiler.com') + '" value="' + esc(LS.get('umg_mt_key') || '') + '"></label>' +
+      (can('*') ? '<label class="row small" style="margin-top:6px"><input type="checkbox" id="mt-org"> Simpan sebagai key default organisasi</label>' : '') +
+      '<div class="row wrap" style="margin-top:6px"><button class="btn sm primary" id="mt-save">Terapkan</button><a class="small" href="https://cloud.maptiler.com/account/keys/" target="_blank" rel="noopener">Dapatkan API key</a></div>' +
+      '<div class="small muted" id="mt-msg" style="margin-top:4px">Batasi key ke domain aplikasi Anda di dashboard MapTiler. Tile MapTiler hanya tersedia online.</div>';
+    $('#mt-save', box).onclick = async function () {
+      var key = $('#mt-key', box).value.trim(), style = $('#mt-style', box).value, use = key || org, msg = $('#mt-msg', box);
+      if (!use) return toast('Isi API key MapTiler.', 'err');
+      if (!/^[A-Za-z0-9_-]{8,80}$/.test(use)) return toast('Format API key tidak valid.', 'err');
+      msg.textContent = 'Memeriksa key…';
+      try {
+        await MapTiler.test(style, use);
+        LS.set('umg_mt_key', key || null); LS.set('umg_mt_style', style);
+        var orgBox = $('#mt-org', box);
+        if (orgBox && orgBox.checked && key) { var st = await Api.call('settings.save', { maptiler_key: key }); S.settings = Object.assign(S.settings, st); }
+        MapView.restyle(); msg.textContent = 'MapTiler aktif: ' + MapTiler.STYLES.find(function (x) { return x[0] === style; })[1]; toast('Basemap MapTiler diterapkan.', 'ok');
+      } catch (e) { msg.textContent = e.message; toast(e.message, 'err', 6000); }
+    };
+  }
+};
+
+// ======================================================= Layer ArcGIS REST (MapServer / ImageServer / FeatureServer)
+var ArcGIS = {
+  norm: function (u) {
+    u = String(u || '').trim().replace(/[?#].*$/, '').replace(/\/+$/, '');
+    if (!/^https:\/\//i.test(u) && !/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//.test(u)) throw new Error('URL harus diawali https://');
+    var m = /^(.*\/rest\/services\/.+\/(MapServer|ImageServer|FeatureServer))(\/(\d+))?$/i.exec(u);
+    if (!m) throw new Error('URL harus berakhiran /MapServer, /ImageServer, /FeatureServer atau /…Server/<id layer>.');
+    return { service: m[1], type: m[2].replace(/server$/i, 'Server'), layer: m[4] !== undefined ? Number(m[4]) : null, url: u };
+  },
+  json: async function (url, token) {
+    var r = await fetch(url + (url.indexOf('?') >= 0 ? '&' : '?') + 'f=json' + (token ? '&token=' + encodeURIComponent(token) : ''), { credentials: 'omit' }).catch(function () { return null; });
+    if (!r) throw new Error('Server ArcGIS tidak dapat dihubungi (periksa URL, koneksi, atau CORS).');
+    if (!r.ok) throw new Error('Server ArcGIS menjawab HTTP ' + r.status + '.');
+    var j = await r.json().catch(function () { throw new Error('Respons ArcGIS bukan JSON.'); });
+    if (j.error) throw new Error('ArcGIS: ' + (j.error.message || 'galat') + (j.error.code === 499 || j.error.code === 498 ? ' — layanan butuh token yang valid.' : ''));
+    return j;
+  },
+  extent4326: async function (ext) {
+    if (!ext || !isFinite(ext.xmin) || ext.xmin === 'NaN') return null;
+    var wkid = ext.spatialReference && (ext.spatialReference.latestWkid || ext.spatialReference.wkid);
+    var pts = [[ext.xmin, ext.ymin], [ext.xmax, ext.ymax]];
+    if (wkid === 102100 || wkid === 102113) wkid = 3857;
+    if (!wkid || CRS.isGeographic(wkid)) return inLonLat([ext.xmin, ext.ymin, ext.xmax, ext.ymax]) ? [ext.xmin, ext.ymin, ext.xmax, ext.ymax] : null;
+    var def = CRS.def(wkid); if (!def) return null;
+    var p4 = await Lib.load('proj4'), tr = p4(def, 'EPSG:4326');
+    var a = tr.forward(pts[0]), b = tr.forward(pts[1]);
+    var bb = [Math.max(-180, Math.min(a[0], b[0])), Math.max(-85, Math.min(a[1], b[1])), Math.min(180, Math.max(a[0], b[0])), Math.min(85, Math.max(a[1], b[1]))];
+    return inLonLat(bb) ? bb : null;
+  },
+  /** Periksa layanan; kembalikan info untuk dialog. */
+  inspect: async function (url, token) {
+    var n = ArcGIS.norm(url), j = await ArcGIS.json(n.url, token);
+    var info = { n: n, meta: j, name: j.name || j.mapName || j.serviceDescription || n.service.split('/').slice(-2, -1)[0], layers: [] };
+    if (n.layer === null && (n.type === 'MapServer' || n.type === 'FeatureServer')) info.layers = (j.layers || []).filter(function (l) { return !l.subLayerIds || !l.subLayerIds.length; }).map(function (l) { return { id: l.id, name: l.name, geom: l.geometryType || '' }; });
+    info.canImage = n.layer === null && (n.type === 'MapServer' || n.type === 'ImageServer');
+    info.canVector = n.layer !== null || info.layers.length > 0;
+    return info;
+  },
+  /** Layer gambar online (tile cache bila tersedia, jika tidak: export dinamis per tile). */
+  imageLayer: async function (info, token) {
+    var j = info.meta, n = info.n, tk = token ? '&token=' + encodeURIComponent(token) : '';
+    var ti = j.tileInfo, wkid = ti && ti.spatialReference && (ti.spatialReference.latestWkid || ti.spatialReference.wkid);
+    var o = { kind: 'tiles', fmt: 'ArcGIS ' + n.type, name: info.name, attribution: (j.copyrightText || '').replace(/<[^>]*>/g, '').slice(0, 120), source: { url: n.url, token: token || '' } };
+    if (j.singleFusedMapCache && ti && (wkid === 3857 || wkid === 102100)) {
+      o.tiles = [n.service + '/tile/{z}/{y}/{x}' + (token ? '?token=' + encodeURIComponent(token) : '')];
+      o.tileSize = ti.rows || 256;
+      var lods = ti.lods || []; o.minzoom = lods.length ? lods[0].level : 0; o.maxzoom = lods.length ? lods[lods.length - 1].level : 19;
+      o.meta = { crs: 'EPSG:3857 (tile cache)' };
+    } else if (n.type === 'ImageServer') {
+      o.tiles = [n.service + '/exportImage?bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=512,512&format=jpgpng&f=image' + tk];
+      o.tileSize = 512; o.meta = { crs: 'export dinamis' };
+    } else {
+      o.tiles = [n.service + '/export?bbox={bbox-epsg-3857}&bboxSR=3857&imageSR=3857&size=512,512&dpi=96&format=png32&transparent=true&f=image' + tk];
+      o.tileSize = 512; o.meta = { crs: 'export dinamis' };
+    }
+    o.bbox = await ArcGIS.extent4326(j.fullExtent || j.extent || j.initialExtent);
+    o.opacity = 1;
+    return o;
+  },
+  /** Unduh fitur layer (query, berhalaman) sebagai GeoJSON WGS84 — tersimpan offline. */
+  load: async function (layerUrl, token, where) {
+    var lj = await ArcGIS.json(layerUrl, token);
+    if (lj.type && !/Feature Layer|Table/i.test(lj.type)) throw new Error('Sublayer "' + (lj.name || '') + '" bukan feature layer (tipe: ' + lj.type + ').');
+    if (lj.capabilities && lj.capabilities.indexOf('Query') < 0) throw new Error('Layer tidak mengizinkan Query.');
+    var page = Math.min(lj.maxRecordCount || 1000, 2000), paging = !!(lj.advancedQueryCapabilities && lj.advancedQueryCapabilities.supportsPagination);
+    var feats = [], offset = 0, more = true, LIMIT = 50000, warn = '';
+    while (more && feats.length < LIMIT) {
+      var qs = 'where=' + encodeURIComponent(where || '1=1') + '&outFields=*&returnGeometry=true&outSR=4326' + (paging ? '&resultOffset=' + offset + '&resultRecordCount=' + page : '') + (token ? '&token=' + encodeURIComponent(token) : '');
+      var r = await fetch(layerUrl + '/query?' + qs + '&f=geojson', { credentials: 'omit' }).catch(function () { return null; }), gj = null, j = null;
+      if (r && r.ok) { j = await r.json().catch(function () { return null; }); if (j && j.type === 'FeatureCollection') gj = j; }
+      if (!gj) { // server lama: f=json (Esri JSON) lalu konversi
+        var r2 = await fetch(layerUrl + '/query?' + qs + '&f=json', { credentials: 'omit' }).catch(function () { return null; });
+        if (!r2 || !r2.ok) throw new Error('Query layer gagal' + (r2 ? ' (HTTP ' + r2.status + ')' : '') + '.');
+        j = await r2.json(); if (j.error) throw new Error('ArcGIS: ' + j.error.message);
+        gj = ArcGIS.esriToGeoJSON(j);
+      }
+      feats = feats.concat(gj.features || []);
+      var exceeded = (j && (j.exceededTransferLimit || (j.properties && j.properties.exceededTransferLimit))) || false;
+      if (exceeded && !paging) { warn = 'Server membatasi ' + feats.length + ' fitur per permintaan dan tidak mendukung paging — gunakan filter WHERE.'; more = false; }
+      else { more = exceeded && (gj.features || []).length > 0; offset += (gj.features || []).length; }
+    }
+    if (feats.length >= LIMIT) warn = 'Dibatasi ' + LIMIT + ' fitur pertama — gunakan filter WHERE.';
+    if (warn) toast(warn, 'err', 7000);
+    var rec = await Overlays.vector({ type: 'FeatureCollection', features: feats }, lj.name || 'ArcGIS', 'ArcGIS FeatureLayer', 4326);
+    rec.source = { url: layerUrl, token: token || '', where: where || '1=1' };
+    rec.attribution = (lj.copyrightText || '').replace(/<[^>]*>/g, '').slice(0, 120);
+    if (lj.drawingInfo && lj.drawingInfo.renderer && lj.drawingInfo.renderer.symbol && Array.isArray(lj.drawingInfo.renderer.symbol.color)) {
+      var cc = lj.drawingInfo.renderer.symbol.color; var col = lj.drawingInfo.renderer.symbol.outline && lj.drawingInfo.renderer.symbol.type === 'esriSFS' && cc[3] === 0 ? lj.drawingInfo.renderer.symbol.outline.color : cc;
+      if (col) rec.color = '#' + col.slice(0, 3).map(function (v) { return ('0' + Number(v).toString(16)).slice(-2); }).join('');
+    }
+    return rec;
+  },
+  esriToGeoJSON: function (j) {
+    var area = function (r) { var s = 0; for (var i = 0; i < r.length - 1; i++) s += (r[i + 1][0] - r[i][0]) * (r[i + 1][1] + r[i][1]); return s; }; // >0 = searah jarum jam
+    var geom = function (g) {
+      if (!g) return null;
+      if (isFinite(g.x)) return { type: 'Point', coordinates: [g.x, g.y] };
+      if (g.points) return { type: 'MultiPoint', coordinates: g.points };
+      if (g.paths) return g.paths.length === 1 ? { type: 'LineString', coordinates: g.paths[0] } : { type: 'MultiLineString', coordinates: g.paths };
+      if (g.rings) {
+        var polys = [];
+        g.rings.forEach(function (r) { if (area(r) >= 0 || !polys.length) polys.push([r]); else polys[polys.length - 1].push(r); });
+        return polys.length === 1 ? { type: 'Polygon', coordinates: polys[0] } : { type: 'MultiPolygon', coordinates: polys };
+      }
+      return null;
+    };
+    return { type: 'FeatureCollection', features: (j.features || []).map(function (f) { return { type: 'Feature', properties: f.attributes || {}, geometry: geom(f.geometry) }; }) };
+  },
+  dialog: function (onDone) {
+    var info = null;
+    var md = modal({ title: 'Tambah layer ArcGIS REST', wide: true, body: '<label class="f">URL layanan<input class="input mono small" id="ag-url" placeholder="https://server/arcgis/rest/services/Folder/Nama/MapServer"></label>' +
+      '<div class="grid2"><label class="f">Token (opsional, untuk layanan terlindungi)<input class="input mono small" id="ag-token" autocomplete="off"></label><label class="f">Filter WHERE (feature layer)<input class="input mono small" id="ag-where" value="1=1"></label></div>' +
+      '<button class="btn sm" id="ag-check" type="button">Periksa layanan</button><div id="ag-info" class="small" style="margin-top:6px"></div>' +
+      '<p class="small muted">MapServer/ImageServer ditampilkan sebagai gambar <b>online</b> (tile cache atau export dinamis). Feature layer diunduh sebagai vektor dan <b>tersimpan offline</b>. Server harus mengizinkan CORS. Patuhi ketentuan penggunaan layanan yang Anda tambahkan.</p>',
+      buttons: [{ label: 'Batal' }, { label: 'Tambahkan', cls: 'primary', onClick: async function (mb, btn) {
+        var token = $('#ag-token', mb).value.trim(), where = $('#ag-where', mb).value.trim() || '1=1';
+        if (!info) info = await ArcGIS.inspect($('#ag-url', mb).value, token);
+        var mode = (mb.querySelector('input[name=ag-mode]:checked') || {}).value || (info.canImage ? 'image' : 'vector');
+        btn.textContent = 'Memuat…';
+        var rec;
+        if (mode === 'image') rec = await ArcGIS.imageLayer(info, token);
+        else {
+          var lid = info.n.layer !== null ? info.n.layer : Number(($('#ag-layer', mb) || {}).value);
+          if (!isFinite(lid)) throw new Error('Pilih sublayer.');
+          rec = await ArcGIS.load(info.n.service + '/' + lid, token, where);
+        }
+        var o = await Overlays.add(rec);
+        toast('Layer "' + o.name + '" ditambahkan' + (o.kind === 'vector' ? ' (' + fmtNum(o.meta.features, 0) + ' fitur).' : '.'), 'ok');
+        if (onDone) onDone();
+      } }] });
+    $('#ag-url', md.body).oninput = function () { info = null; $('#ag-info', md.body).innerHTML = ''; };
+    $('#ag-check', md.body).onclick = async function () {
+      var box = $('#ag-info', md.body); box.textContent = 'Memeriksa…';
+      try {
+        info = await ArcGIS.inspect($('#ag-url', md.body).value, $('#ag-token', md.body).value.trim());
+        var j = info.meta;
+        box.innerHTML = '<div class="card" style="padding:10px"><b>' + esc(info.name) + '</b> · ' + esc(info.n.type) + (info.n.layer !== null ? ' layer ' + info.n.layer : '') + (j.singleFusedMapCache ? ' · tile cache' : '') + (j.currentVersion ? ' · v' + esc(j.currentVersion) : '') +
+          (j.copyrightText ? '<div class="muted">' + esc(String(j.copyrightText).replace(/<[^>]*>/g, '')) + '</div>' : '') +
+          '<div class="row wrap" style="margin-top:8px">' + (info.canImage ? '<label class="row"><input type="radio" name="ag-mode" value="image" checked> Tampilkan sebagai gambar (online)</label>' : '') +
+          (info.canVector ? '<label class="row"><input type="radio" name="ag-mode" value="vector"' + (info.canImage ? '' : ' checked') + '> Unduh fitur (vektor, offline)</label>' : '') + '</div>' +
+          (info.layers.length ? '<label class="f" style="margin-top:6px">Sublayer untuk diunduh<select class="input" id="ag-layer">' + info.layers.map(function (l) { return '<option value="' + l.id + '">' + l.id + ' — ' + esc(l.name) + (l.geom ? ' (' + esc(l.geom.replace('esriGeometry', '')) + ')' : '') + '</option>'; }).join('') + '</select></label>' : '') + '</div>';
+      } catch (e) { info = null; box.innerHTML = '<span style="color:var(--danger)">' + esc(e.message) + '</span>'; }
+    };
+  }
 };
 
 </script>
