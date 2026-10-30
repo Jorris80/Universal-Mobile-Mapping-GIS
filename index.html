@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f766e">
-<meta name="description" content="Universal Mobile Mapping GIS — pemetaan lapangan offline-first">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: blob: https:; connect-src 'self' https: data: blob:; worker-src 'self' blob:; child-src blob:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="description" content="Universal Mobile Mapping GIS — pemetaan lapangan offline-first, layer SHP/KML/GeoTIFF/GeoPDF, cetak peta A4/A3">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' blob: https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: blob: https:; connect-src 'self' https: data: blob:; worker-src 'self' blob:; child-src blob:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <title>Universal Mobile Mapping GIS</title>
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" href="./icon-512.png">
@@ -191,6 +191,7 @@ table.t th{background:var(--panel-2);font-size:12px;text-transform:uppercase;let
         <button class="btn" data-tool="measure" title="Ukur jarak/luas"><svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17L17 3l4 4L7 21z"/><path d="M7 13l2 2M10 10l2 2M13 7l2 2"/></svg></button>
         <button class="btn" id="btn-gps" title="Posisi GPS / ikuti"><svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/></svg></button>
         <button class="btn" id="btn-layers" title="Layer, basemap &amp; foto udara PMTiles"><svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg></button>
+        <button class="btn" id="btn-print" title="Cetak peta A4/A3 (PDF)"><svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg></button>
         <button class="btn" id="btn-fit" title="Zoom ke data"><svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
       </div>
       <span class="pill gps-chip" id="gps-chip"><span class="dot off"></span><span class="lbl">GPS mati</span></span>
@@ -381,7 +382,7 @@ var Geo = (function () {
  * Mode: 'gas' (HtmlService/google.script.run), 'remote' (PWA GitHub Pages -> fetch Web App), 'demo' (backend emulasi di browser).
  */
 'use strict';
-var APP_VERSION = '1.0.0', APP_BUILD = '2026-10-30';
+var APP_VERSION = '1.1.0', APP_BUILD = '2026-10-30';
 var S = { token: '', user: null, org: null, perms: [], settings: {}, license: {}, projects: [], layers: [], users: [],
   features: new Map(), serverVer: {}, projectId: '', layerId: '', hiddenLayers: new Set(), online: navigator.onLine, tab: 'map', rendered: {} };
 
@@ -417,7 +418,8 @@ function modal(opt) {
   ov.innerHTML = '<div class="modal ' + (opt.wide ? 'wide' : '') + '" role="dialog" aria-modal="true"><div class="mh"><b>' + esc(opt.title || '') + '</b><button class="btn icon ghost" data-x aria-label="Tutup">✕</button></div><div class="mb"></div>' + (opt.foot === false ? '' : '<div class="mf"></div>') + '</div>';
   var mb = $('.mb', ov), mf = $('.mf', ov);
   if (typeof opt.body === 'string') mb.innerHTML = opt.body; else if (opt.body) mb.appendChild(opt.body);
-  function close(v) { ov.remove(); document.removeEventListener('keydown', onKey); if (opt.onClose) opt.onClose(v); }
+  var closed = false, hEntry = null;
+  function close(v, fromBack) { if (closed) return; closed = true; ov.remove(); document.removeEventListener('keydown', onKey); if (!fromBack) Hist.release(hEntry); if (opt.onClose) opt.onClose(v); }
   function onKey(e) { if (e.key === 'Escape' && !$('.zoomer')) close(); }
   document.addEventListener('keydown', onKey);
   $('[data-x]', ov).onclick = function () { close(); };
@@ -428,6 +430,7 @@ function modal(opt) {
     mf.appendChild(el);
   });
   document.body.appendChild(ov);
+  hEntry = Hist.push(function () { close(undefined, true); }, 'modal');
   var first = $('input,select,textarea', mb); if (first && opt.focus !== false && window.innerWidth > 860) setTimeout(function () { first.focus(); }, 30);
   return { el: ov, body: mb, close: close };
 }
@@ -438,13 +441,15 @@ function confirmBox(title, msg, okLabel, danger) {
   });
 }
 function popMenu(anchor, items) {
-  $$('.menu').forEach(function (m) { m.remove(); });
+  $$('.menu').forEach(function (x) { x.remove(); });
   var m = document.createElement('div'); m.className = 'menu';
   items.forEach(function (it) { var b = document.createElement('button'); b.innerHTML = (it.icon ? ic(it.icon) : '') + '<span>' + esc(it.label) + '</span>'; b.onclick = function () { m.remove(); it.onClick(); }; m.appendChild(b); });
   document.body.appendChild(m);
   var r = anchor.getBoundingClientRect();
   var top = r.bottom + 6; if (top + m.offsetHeight > window.innerHeight - 8) top = Math.max(8, r.top - m.offsetHeight - 6);
   m.style.top = top + 'px'; m.style.left = Math.max(8, Math.min(window.innerWidth - m.offsetWidth - 8, r.right - m.offsetWidth)) + 'px';
+  var he = Hist.push(function () { m.remove(); }, 'menu');
+  var origRemove = m.remove.bind(m); m.remove = function () { if (!m.isConnected) return; origRemove(); Hist.release(he); };
   setTimeout(function () { document.addEventListener('click', function h(e) { if (!m.contains(e.target)) { m.remove(); document.removeEventListener('click', h); } }); }, 0);
 }
 
@@ -462,7 +467,8 @@ var Zoom = {
       if (cx !== undefined) { var dx = cx - window.innerWidth / 2 - st.x, dy = cy - window.innerHeight / 2 - st.y; st.x -= dx * (ns / st.s - 1); st.y -= dy * (ns / st.s - 1); }
       st.s = ns; if (ns === 1) { st.x = 0; st.y = 0; } apply();
     }
-    function close() { z.remove(); document.removeEventListener('keydown', key); }
+    var he;
+    function close(fromBack) { if (!z.isConnected) return; z.remove(); document.removeEventListener('keydown', key); if (fromBack !== true) Hist.release(he); }
     function key(e) { if (e.key === 'Escape') close(); if (e.key === '+' || e.key === '=') zoomBy(1.25); if (e.key === '-') zoomBy(0.8); }
     document.addEventListener('keydown', key);
     z.addEventListener('wheel', function (e) { e.preventDefault(); zoomBy(e.deltaY < 0 ? 1.15 : 0.87, e.clientX, e.clientY); }, { passive: false });
@@ -476,7 +482,7 @@ var Zoom = {
     function up(e) { pts.delete(e.pointerId); if (pts.size < 2) pinch0 = null; if (!pts.size) last = null; else last = Array.from(pts.values())[0]; }
     z.addEventListener('pointerup', up); z.addEventListener('pointercancel', up);
     z.addEventListener('click', function (e) { var a = e.target.getAttribute && e.target.getAttribute('data-a'); if (a === 'in') zoomBy(1.4); else if (a === 'out') zoomBy(0.7); else if (a === 'reset') { st = { s: 1, x: 0, y: 0 }; apply(); } else if (a === 'close' || e.target === z) close(); });
-    apply(); document.body.appendChild(z);
+    apply(); document.body.appendChild(z); he = Hist.push(function () { close(true); }, 'zoom');
   }
 };
 
@@ -487,8 +493,8 @@ var IDB = {
     return new Promise(function (res) {
       if (!window.indexedDB) return res(null);
       var rq;
-      try { rq = indexedDB.open('umg-enterprise', 2); } catch (e) { return res(null); }
-      rq.onupgradeneeded = function () { var d = rq.result; ['kv', 'ops', 'pmtiles'].forEach(function (n) { if (!d.objectStoreNames.contains(n)) d.createObjectStore(n, { keyPath: n === 'kv' ? 'k' : (n === 'ops' ? 'op_id' : 'name') }); }); };
+      try { rq = indexedDB.open('umg-enterprise', 3); } catch (e) { return res(null); }
+      rq.onupgradeneeded = function () { var d = rq.result; ['kv', 'ops', 'pmtiles', 'overlays'].forEach(function (n) { if (!d.objectStoreNames.contains(n)) d.createObjectStore(n, { keyPath: { kv: 'k', ops: 'op_id', pmtiles: 'name', overlays: 'id' }[n] }); }); };
       rq.onsuccess = function () { IDB.db = rq.result; res(IDB.db); };
       rq.onerror = function () { console.warn('IndexedDB tidak tersedia', rq.error); res(null); };
     });
@@ -609,6 +615,11 @@ var Auth = {
 };
 
 // ======================================================= App shell
+var Side = {
+  h: null,
+  open: function () { $('#sidenav').classList.add('open'); if (!Side.h) Side.h = Hist.push(function () { Side.h = null; Side.close(true); }, 'side'); },
+  close: function (fromBack) { $('#sidenav').classList.remove('open'); if (!fromBack && Side.h) { var h = Side.h; Side.h = null; Hist.release(h); } }
+};
 var NAV = [
   { id: 'map', label: 'Peta', icon: 'map' }, { id: 'data', label: 'Data Survei', icon: 'data' }, { id: 'sync', label: 'Sinkronisasi', icon: 'sync' },
   { id: 'dash', label: 'Dashboard', icon: 'dash' }, { id: 'projects', label: 'Proyek & Layer', icon: 'projects' },
@@ -618,6 +629,7 @@ var App = {
   enter: async function (boot, fromCache) {
     App.applyBoot(boot);
     $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
+    if (!Hist.enabled || !Hist.stack) Hist.init(); Hist.reset();
     App.renderNav();
     App.show(S.tab && S.tab !== 'admin' ? S.tab : 'map');
     if (!fromCache) IDB.kvSet('boot', Object.assign({}, boot, { features: undefined }));
@@ -654,7 +666,7 @@ var App = {
   leave: function () {
     S.token = ''; LS.set('umg_token', null); IDB.kvSet('boot', null); IDB.kvSet('features', null);
     S.user = null; S.features = new Map(); S.serverVer = {};
-    Draw.cancel(); GPS.stop();
+    Draw.cancel(); GPS.stop(); Hist.reset();
     $('#app').classList.add('hidden'); $('#login').classList.remove('hidden');
     $('#lg-pass').value = ''; $('#lg-err').textContent = '';
   },
@@ -671,11 +683,17 @@ var App = {
     App.markNav();
   },
   markNav: function () { $$('[data-nav]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-nav') === S.tab); }); },
-  show: function (tab) {
+  show: function (tab, opts) {
+    opts = opts || {};
     if (tab === 'admin' && !can('*')) tab = 'map';
+    var prev = S.tab;
+    if (prev !== tab && !opts.fromBack && S.user) {
+      if (tab === 'map') Hist.releaseTabs();
+      else Hist.push(function () { App.show(prev, { fromBack: true }); }, 'tab');
+    }
     S.tab = tab;
     $$('.tab').forEach(function (s) { s.classList.toggle('hidden', s.getAttribute('data-tab') !== tab); });
-    App.markNav(); $('#sidenav').classList.remove('open');
+    App.markNav(); Side.close();
     if (tab === 'map') { MapView.ensure(); if (MapView.map) requestAnimationFrame(function () { MapView.map.resize(); }); }
     else if (!S.rendered[tab]) { Tabs[tab](); S.rendered[tab] = true; }
   },
@@ -799,7 +817,7 @@ var MapView = {
     var m = MapView.map = new maplibregl.Map({ container: 'map', style: MapView.basemapStyle(), center: view.center, zoom: view.zoom, attributionControl: { compact: true }, maxZoom: 22, dragRotate: false });
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
     m.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-right');
-    m.on('load', function () { MapView.ready = true; MapView.addLayers(); MapView.refreshData(); PMT.restore(); });
+    m.on('load', function () { MapView.ready = true; MapView.addLayers(); Overlays.restoreAll(); MapView.refreshData(); PMT.restore(); });
     m.on('moveend', debounce(function () { LS.set('umg_view', JSON.stringify({ center: m.getCenter().toArray(), zoom: m.getZoom() })); }, 500));
     m.on('click', MapView.onClick);
     m.on('error', function (e) { console.warn('MapLibre:', e && e.error ? e.error.message : e); });
@@ -824,7 +842,7 @@ var MapView = {
   restyle: function () {
     var m = MapView.map; if (!m) return;
     m.setStyle(MapView.basemapStyle());
-    m.once('styledata', function () { var wait = function () { if (!m.isStyleLoaded()) return setTimeout(wait, 50); MapView.addLayers(); MapView.refreshData(); Draw.render(); MapView.drawGps(); PMT.restore(); }; wait(); });
+    m.once('styledata', function () { var wait = function () { if (!m.isStyleLoaded()) return setTimeout(wait, 50); MapView.addLayers(); Overlays.list.forEach(Overlays.addToMap); MapView.refreshData(); Draw.render(); MapView.drawGps(); PMT.restore(); }; wait(); });
   },
   visibleFeatures: function () {
     var out = [];
@@ -850,7 +868,9 @@ var MapView = {
   onClick: function (e) {
     if (Draw.mode) { Draw.add([e.lngLat.lng, e.lngLat.lat]); return; }
     var hits = MapView.map.queryRenderedFeatures([[e.point.x - 6, e.point.y - 6], [e.point.x + 6, e.point.y + 6]], { layers: ['f-pt', 'f-line', 'f-line-p', 'f-fill'] });
-    if (hits.length) Detail.open(hits[0].properties.id);
+    if (hits.length) { Detail.open(hits[0].properties.id); return; }
+    var ovl = Overlays.vectorLayerIds().filter(function (id) { return MapView.map.getLayer(id); });
+    if (ovl.length) { var oh = MapView.map.queryRenderedFeatures([[e.point.x - 6, e.point.y - 6], [e.point.x + 6, e.point.y + 6]], { layers: ovl }); if (oh.length) Overlays.showAttributes(oh[0], oh[0].layer.id); }
   },
   drawGps: function () {
     if (!MapView.ready) return; var s = MapView.map.getSource('gps'); if (!s) return;
@@ -859,6 +879,7 @@ var MapView = {
     for (var i = 0; i <= 48; i++) { var t = i / 48 * 2 * Math.PI; ring.push([c[0] + r * Math.cos(t) / (111320 * Math.cos(c[1] * Math.PI / 180)), c[1] + r * Math.sin(t) / 110540]); }
     s.setData({ type: 'FeatureCollection', features: [{ type: 'Feature', geometry: { type: 'Polygon', coordinates: [ring] }, properties: {} }, { type: 'Feature', geometry: { type: 'Point', coordinates: c }, properties: {} }] });
   },
+  closePanel: function (fromBack) { $('#layer-panel').classList.add('hidden'); if (!fromBack && MapView._panelHist) { var h = MapView._panelHist; MapView._panelHist = null; Hist.release(h); } },
   fit: function (list) {
     list = list || MapView.visibleFeatures(); if (!list.length || !MapView.map) return toast('Belum ada data untuk ditampilkan.');
     var b = [180, 90, -180, -90];
@@ -867,16 +888,19 @@ var MapView = {
   },
   layerPanel: function () {
     var p = $('#layer-panel');
-    if (!p.classList.contains('hidden')) { p.classList.add('hidden'); return; }
+    if (!p.classList.contains('hidden')) { MapView.closePanel(); return; }
     var bm = LS.get('umg_basemap') || 'osm', lyrs = S.layers.filter(function (l) { return l.project_id === S.projectId; });
     p.innerHTML = '<div class="row"><b class="grow">Layer &amp; Basemap</b><button class="btn icon ghost sm" data-close>✕</button></div>' +
       '<h4>Basemap</h4><div class="seg">' + [['osm', 'OSM'], ['xyz', 'XYZ kustom'], ['none', 'Kosong']].map(function (o) { return '<button data-bm="' + o[0] + '" class="' + (bm === o[0] ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>' +
       '<div class="' + (bm === 'xyz' ? '' : 'hidden') + '" style="margin-top:8px"><input class="input small mono" id="xyz-url" placeholder="https://server/{z}/{x}/{y}.png" value="' + esc(LS.get('umg_xyz') || '') + '"><button class="btn sm" id="xyz-save" style="margin-top:6px">Terapkan</button></div>' +
       '<h4>Layer data</h4>' + (lyrs.length ? lyrs.map(function (l) { return '<label class="lyr"><input type="checkbox" data-ly="' + esc(l.id) + '"' + (S.hiddenLayers.has(l.id) ? '' : ' checked') + '><span class="swatch" style="background:' + esc(l.style.color) + '"></span><span class="grow">' + esc(l.name) + '</span><span class="small muted">' + countLayer(l.id) + '</span></label>'; }).join('') : '<div class="small muted">Belum ada layer.</div>') +
+      '<h4>Layer referensi</h4><div id="ov-box"></div>' +
       '<h4>Foto udara (PMTiles)</h4><div id="pmt-box"></div>';
     p.classList.remove('hidden');
+    if (!MapView._panelHist) MapView._panelHist = Hist.push(function () { MapView._panelHist = null; MapView.closePanel(true); }, 'panel');
+    Overlays.renderBox($('#ov-box'));
     PMT.renderBox($('#pmt-box'));
-    $('[data-close]', p).onclick = function () { p.classList.add('hidden'); };
+    $('[data-close]', p).onclick = function () { MapView.closePanel(); };
     $$('[data-bm]', p).forEach(function (b) { b.onclick = function () { LS.set('umg_basemap', b.getAttribute('data-bm')); MapView.restyle(); p.classList.add('hidden'); MapView.layerPanel(); }; });
     var xs = $('#xyz-save', p); if (xs) xs.onclick = function () { var u = $('#xyz-url').value.trim(); if (!/^https:\/\/.+\{z\}.+\{x\}.+\{y\}/.test(u)) return toast('URL XYZ harus HTTPS dan memuat {z}/{x}/{y}.', 'err'); LS.set('umg_xyz', u); MapView.restyle(); };
     $$('[data-ly]', p).forEach(function (c) { c.onchange = function () { var id = c.getAttribute('data-ly'); if (c.checked) S.hiddenLayers.delete(id); else S.hiddenLayers.add(id); MapView.refreshData(); }; });
@@ -907,7 +931,7 @@ var PMT = {
     PMT.protocol.add(p);
     var key = p.source.getKey();
     PMT.detach();
-    var m = MapView.map, before = m.getLayer('f-fill') ? 'f-fill' : undefined, opacity = Number(LS.get('umg_pmt_opacity') || 1);
+    var m = MapView.map, firstOv = (m.getStyle().layers || []).find(function (l) { return l.id.indexOf('ov-') === 0; }), before = firstOv ? firstOv.id : (m.getLayer('f-fill') ? 'f-fill' : undefined), opacity = Number(LS.get('umg_pmt_opacity') || 1);
     var raster = header.tileType === 2 || header.tileType === 3 || header.tileType === 4 || header.tileType === 5;
     if (raster) {
       m.addSource('pmt', { type: 'raster', url: 'pmtiles://' + key, tileSize: Number(opts.tileSize || LS.get('umg_pmt_ts') || 256) });
@@ -1012,6 +1036,7 @@ var Draw = {
     }
     Draw.cancel(true);
     Draw.mode = mode; Draw.target = opt.featureId || null; Draw.coords = [];
+    Draw._hist = Hist.push(function () { Draw._hist = null; Draw.cancel(false, true); }, 'draw');
     $$('[data-tool]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-tool') === mode); });
     if (MapView.map) MapView.map.getCanvas().style.cursor = 'crosshair';
     Draw.panel();
@@ -1068,7 +1093,8 @@ var Draw = {
     if (target) { var f = S.features.get(target); FeatureForm.open(Object.assign({}, f, { geometry: g, gps: gpsMeta || f.gps })); }
     else FeatureForm.open({ id: uuid(), layer_id: layer.id, project_id: layer.project_id, geometry: g, attrs: {}, photos: [], gps: gpsMeta || null, status: 'draft', version: 0, _new: true });
   },
-  cancel: function (silent) {
+  cancel: function (silent, fromBack) {
+    if (!fromBack && Draw._hist) { var h = Draw._hist; Draw._hist = null; Hist.release(h); }
     Draw.mode = null; Draw.coords = []; Draw.target = null; GPS.track = false;
     $$('[data-tool]').forEach(function (b) { b.classList.remove('on'); });
     if (MapView.map) MapView.map.getCanvas().style.cursor = '';
@@ -1523,7 +1549,7 @@ var Tabs = {
   about: function () {
     var el = $('[data-tab=about]');
     el.innerHTML = '<div class="tab-h"><h2>Tentang &amp; Legal</h2></div><div class="grid2"><div class="card"><h3>Informasi aplikasi</h3><table class="t"><tr><th>Aplikasi</th><td>Universal Mobile Mapping GIS — Edisi Apps Script</td></tr><tr><th>Versi klien</th><td>' + APP_VERSION + ' (build ' + APP_BUILD + ')</td></tr><tr><th>Versi server</th><td id="ab-sv">' + esc(S.serverApp && S.serverApp.version ? S.serverApp.version + ' (' + S.serverApp.build + ')' : '-') + '</td></tr><tr><th>Mode</th><td>' + ({ gas: 'Apps Script (HtmlService)', remote: 'PWA (GitHub Pages)', demo: 'DEMO (data di browser)' }[CONFIG.MODE]) + '</td></tr><tr><th>Lisensi</th><td>' + esc(S.license.label || '-') + (S.license.exp ? ' · s/d ' + esc(S.license.exp) : '') + '</td></tr><tr><th>CRS data</th><td>EPSG:4326 (WGS84)</td></tr></table><div class="row wrap" style="margin-top:10px"><button class="btn sm" id="ab-health">Cek kesehatan server</button>' + (CONFIG.MODE === 'demo' ? '<button class="btn sm danger" id="ab-reset">Reset data demo</button>' : '') + '</div><div id="ab-h" class="small mono" style="margin-top:8px"></div></div>' +
-      '<div class="card"><h3>Komponen pihak ketiga</h3><ul class="small"><li>MapLibre GL JS 4.7.1 — BSD-3-Clause</li><li>PMTiles (protomaps) 3.2.1 — BSD-3-Clause</li><li>Data peta © OpenStreetMap contributors — ODbL; tile OSM tunduk pada Tile Usage Policy OSMF</li><li>Google Apps Script, Sheets, Drive — Ketentuan Layanan Google</li></ul><p class="small muted">Ikon & logo bawaan dibuat khusus untuk aplikasi ini.</p></div></div>' +
+      '<div class="card"><h3>Komponen pihak ketiga</h3><ul class="small"><li>MapLibre GL JS 4.7.1 — BSD-3-Clause</li><li>PMTiles (protomaps) 3.2.1 — BSD-3-Clause</li><li>shpjs 6.2.0, geotiff.js 2.1.3, proj4js 2.15.0, pdf-lib 1.17.1, jsPDF 2.5.2, fflate 0.8.2 — MIT</li><li>@tmcw/togeojson 7.1.3 — BSD-2-Clause</li><li>PDF.js 3.11.174 — Apache-2.0</li><li>Data peta © OpenStreetMap contributors — ODbL; tile OSM tunduk pada Tile Usage Policy OSMF</li><li>Google Apps Script, Sheets, Drive — Ketentuan Layanan Google</li></ul><p class="small muted">Ikon & logo bawaan dibuat khusus untuk aplikasi ini.</p></div></div>' +
       '<div class="card legal" style="margin-top:12px">' + LEGAL.terms + '</div><div class="card legal" style="margin-top:12px">' + LEGAL.privacy + '</div>';
     $('#ab-health').onclick = async function () { try { var h = await Api.call('health'); $('#ab-h').textContent = JSON.stringify(h); $('#ab-sv').textContent = h.version + ' (' + h.build + ')'; } catch (e) { $('#ab-h').textContent = 'Gagal: ' + e.message; } };
     var rs = $('#ab-reset'); if (rs) rs.onclick = async function () { if (!(await confirmBox('Reset demo', 'Semua data demo di browser ini dihapus dan dibuat ulang.', 'Reset', true))) return; Demo.reset(); await IDB.clear('ops').catch(function () { }); await IDB.clear('kv').catch(function () { }); LS.set('umg_token', null); location.reload(); };
@@ -1634,7 +1660,7 @@ function bindGlobal() {
     var n = e.target.closest('[data-nav]'); if (n) { App.show(n.getAttribute('data-nav')); return; }
     if (e.target.closest('[data-more]')) { popMenu(e.target.closest('[data-more]'), NAV.filter(function (x) { return ['projects', 'admin', 'profile', 'about'].indexOf(x.id) >= 0 && (!x.perm || can(x.perm)); }).map(function (x) { return { label: x.label, icon: x.icon, onClick: function () { App.show(x.id); } }; }).concat([{ label: 'Tema gelap/terang', icon: 'theme', onClick: Theme.toggle }, { label: 'Keluar', icon: 'logout', onClick: Auth.logout }])); }
   });
-  $('#btn-menu').onclick = function () { $('#sidenav').classList.toggle('open'); };
+  $('#btn-menu').onclick = function () { if ($('#sidenav').classList.contains('open')) Side.close(); else Side.open(); };
   $('#hd-avatar').onclick = function () { popMenu(this, [{ label: S.user.name + ' (' + ROLE_LBL[S.user.role] + ')', icon: 'profile', onClick: function () { App.show('profile'); } }].concat(S.user.photo ? [{ label: 'Lihat foto profil', icon: 'profile', onClick: function () { Zoom.open(S.user.photo, S.user.name); } }] : []).concat([{ label: 'Tema gelap/terang', icon: 'theme', onClick: Theme.toggle }, { label: 'Tentang & legal', icon: 'about', onClick: function () { App.show('about'); } }, { label: 'Keluar', icon: 'logout', onClick: Auth.logout }])); };
   $('#pill-sync').onclick = function () { App.show('sync'); };
   $('#pill-net').onclick = function () { App.show('sync'); };
@@ -1642,6 +1668,7 @@ function bindGlobal() {
   $('#btn-gps').onclick = function () { if (GPS.watch === null) { GPS.start(); GPS.follow = true; } else if (!GPS.follow) { GPS.follow = true; if (GPS.pos) MapView.map.easeTo({ center: [GPS.pos.lon, GPS.pos.lat], zoom: Math.max(MapView.map.getZoom(), 17) }); } else { GPS.stop(); MapView.drawGps(); } };
   $('#btn-layers').onclick = MapView.layerPanel;
   $('#btn-fit').onclick = function () { MapView.fit(); };
+  $('#btn-print').onclick = function () { Print.open(); };
   $('#sel-project').onchange = function (e) { S.projectId = e.target.value; MapView.refreshData(); S.rendered = {}; };
   $('#sel-layer').onchange = function (e) { S.layerId = e.target.value; };
   function net() { S.online = navigator.onLine; var p = $('#pill-net'); $('.dot', p).className = 'dot' + (S.online ? '' : ' off'); $('.lbl', p).textContent = CONFIG.MODE === 'demo' ? 'Demo' : (S.online ? 'Online' : 'Offline'); if (S.online) { Sync.backoff = 2000; Sync.schedule(500); } }
@@ -1670,6 +1697,627 @@ async function boot() {
   if (CONFIG.SW && 'serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('./sw.js').catch(function (e) { console.warn('SW', e); });
 }
 document.addEventListener('DOMContentLoaded', boot);
+
+/* gis.js — Navigasi tombol Back (Hist), layer referensi (SHP/KML/KMZ/GeoJSON/GeoTIFF/GeoPDF), dan cetak peta A4/A3.
+ * Pustaka berat dimuat sesuai kebutuhan (lazy) dari CDN dan di-cache service worker.
+ */
+'use strict';
+
+// ======================================================= Tombol Back: kembali ke tampilan sebelumnya
+var Hist = {
+  stack: [], ignore: 0, lastBack: 0, enabled: false,
+  init: function () {
+    try { history.replaceState({ umg: 'base' }, ''); history.pushState({ umg: 'guard' }, ''); Hist.enabled = true; }
+    catch (e) { Hist.enabled = false; console.warn('History API tidak tersedia', e); return; }
+    if (Hist._bound) return;
+    Hist._bound = true;
+    window.addEventListener('popstate', Hist.onPop);
+  },
+  /** Daftarkan tampilan yang bisa ditutup dengan tombol Back. close(fromBack) dipanggil saat Back ditekan.
+   *  Entri yang sudah ditutup lewat UI ditandai "stale" dan slot riwayatnya dipakai ulang — tanpa history.back()
+   *  saat transisi UI (menghindari race pushState/back yang dapat membuat aplikasi keluar). */
+  push: function (close, type) {
+    var entry = { close: close, type: type || 'overlay' };
+    if (!Hist.enabled || !S.user) return entry;
+    var top = Hist.stack[Hist.stack.length - 1];
+    if (top && top.stale) { Hist.stack[Hist.stack.length - 1] = entry; return entry; }
+    Hist.stack.push(entry);
+    try { history.pushState({ umg: 'v', n: Hist.stack.length }, ''); } catch (e) { /* abaikan */ }
+    return entry;
+  },
+  release: function (entry) { if (entry && Hist.stack.indexOf(entry) >= 0) entry.stale = true; },
+  releaseTabs: function () {
+    for (var i = Hist.stack.length - 1; i >= 0 && (Hist.stack[i].type === 'tab' || Hist.stack[i].stale); i--) Hist.stack[i].stale = true;
+  },
+  reset: function () { Hist.stack = []; },
+  onPop: function () {
+    if (Hist.ignore > 0) { Hist.ignore--; return; }
+    if (!S.user) return;
+    var e = Hist.stack.pop();
+    if (e && e.stale) { history.back(); return; }   // langkah kosong: lanjutkan mundur ke tampilan sebenarnya
+    if (e) { try { e.close(true); } catch (er) { console.warn(er); } return; }
+    // Di dasar riwayat: Back pertama kembali ke Peta / peringatan keluar, Back kedua (≤2 dtk) keluar aplikasi.
+    if (S.tab !== 'map') { App.show('map', { fromBack: true }); history.pushState({ umg: 'guard' }, ''); return; }
+    if (Date.now() - Hist.lastBack < 2000) { Hist.enabled = false; history.back(); return; }
+    Hist.lastBack = Date.now();
+    toast('Tekan Kembali sekali lagi untuk keluar');
+    history.pushState({ umg: 'guard' }, '');
+  }
+};
+
+// ======================================================= Pemuat pustaka (lazy)
+var Lib = {
+  URL: {
+    shp: 'https://unpkg.com/shpjs@6.2.0/dist/shp.min.js',
+    togeojson: 'https://unpkg.com/@tmcw/togeojson@7.1.3/dist/togeojson.umd.js',
+    geotiff: 'https://unpkg.com/geotiff@2.1.3/dist-browser/geotiff.js',
+    proj4: 'https://unpkg.com/proj4@2.15.0/dist/proj4.js',
+    pdfjs: 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js',
+    pdfworker: 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js',
+    pdflib: 'https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js',
+    jspdf: 'https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js',
+    fflate: 'https://unpkg.com/fflate@0.8.2/umd/index.js'
+  },
+  GLOBAL: { shp: 'shp', togeojson: 'toGeoJSON', geotiff: 'GeoTIFF', proj4: 'proj4', pdfjs: 'pdfjsLib', pdflib: 'PDFLib', jspdf: 'jspdf', fflate: 'fflate' },
+  _p: {},
+  load: function (name) {
+    if (window[Lib.GLOBAL[name]]) return Promise.resolve(window[Lib.GLOBAL[name]]);
+    if (Lib._p[name]) return Lib._p[name];
+    Lib._p[name] = new Promise(function (res, rej) {
+      var s = document.createElement('script'); s.src = Lib.URL[name]; s.async = true; s.crossOrigin = 'anonymous';
+      s.onload = function () { var g = window[Lib.GLOBAL[name]]; if (g) res(g); else rej(new Error('Pustaka ' + name + ' gagal dimuat.')); };
+      s.onerror = function () { delete Lib._p[name]; rej(new Error('Pustaka ' + name + ' tidak dapat dimuat (periksa koneksi; setelah sekali dimuat akan tersedia offline di versi PWA).')); };
+      document.head.appendChild(s);
+    });
+    return Lib._p[name];
+  },
+  pdfjs: async function () {
+    var lib = await Lib.load('pdfjs');
+    if (!lib.GlobalWorkerOptions.workerSrc) {
+      var txt = await (await fetch(Lib.URL.pdfworker)).text();
+      lib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([txt], { type: 'text/javascript' }));
+    }
+    return lib;
+  }
+};
+
+// ======================================================= Sistem koordinat (proj4)
+var CRS = {
+  /** Definisi proj4 untuk kode EPSG yang lazim di Indonesia. */
+  def: function (code) {
+    code = Number(code);
+    if (!code) return null;
+    if (code === 4326 || code === 4755 || code === 9470 || code === 4979) return '+proj=longlat +datum=WGS84 +no_defs';
+    if (code === 3857 || code === 900913 || code === 3785 || code === 102100) return '+proj=merc +a=6378137 +b=6378137 +lat_ts=0 +lon_0=0 +x_0=0 +y_0=0 +k=1 +units=m +nadgrids=@null +no_defs';
+    if (code >= 32601 && code <= 32660) return '+proj=utm +zone=' + (code - 32600) + ' +datum=WGS84 +units=m +no_defs';
+    if (code >= 32701 && code <= 32760) return '+proj=utm +zone=' + (code - 32700) + ' +south +datum=WGS84 +units=m +no_defs';
+    if (code >= 23830 && code <= 23845) return '+proj=tmerc +lat_0=0 +lon_0=' + (94.5 + 3 * (code - 23830)) + ' +k=0.9999 +x_0=200000 +y_0=1500000 +ellps=WGS84 +towgs84=0,0,0 +units=m +no_defs'; // DGN95 / Indonesia TM-3
+    if (code >= 23866 && code <= 23872) return '+proj=utm +zone=' + (code - 23820) + ' +ellps=WGS84 +towgs84=0,0,0 +units=m +no_defs'; // DGN95 UTM N
+    if (code >= 23877 && code <= 23884) return '+proj=utm +zone=' + (code - 23830) + ' +south +ellps=WGS84 +towgs84=0,0,0 +units=m +no_defs'; // DGN95 UTM S
+    return null;
+  },
+  isGeographic: function (code) { return [4326, 4755, 9470, 4979].indexOf(Number(code)) >= 0; },
+  fromGeoJsonCrs: function (gj) {
+    var n = gj && gj.crs && gj.crs.properties && gj.crs.properties.name;
+    if (!n) return null;
+    if (/CRS84/i.test(n)) return 4326;
+    var m = /EPSG:{1,2}(\d+)/i.exec(n);
+    return m ? Number(m[1]) : null;
+  },
+  /** Minta pengguna memasukkan kode EPSG/proj4 bila CRS tidak dikenali. */
+  ask: function (hint) {
+    return new Promise(function (res) {
+      modal({ title: 'Sistem koordinat tidak dikenali', body: '<p class="small">' + esc(hint || '') + '</p><label class="f">Kode EPSG (mis. 32749) atau string proj4<input class="input mono" id="crs-in" placeholder="32749"></label><p class="small muted">Didukung otomatis: WGS84 (4326), Web Mercator (3857), UTM WGS84 (326xx/327xx), DGN95 TM-3 (23830–23845), DGN95 UTM.</p>',
+        onClose: function (v) { res(v || null); },
+        buttons: [{ label: 'Batal' }, { label: 'Pakai', cls: 'primary', onClick: function (mb) { var v = $('#crs-in', mb).value.trim(); if (!v) throw new Error('Isi kode EPSG atau proj4.'); return /^\d+$/.test(v) ? (CRS.def(v) || (function () { throw new Error('Kode EPSG ' + v + ' belum dikenal; masukkan string proj4.'); })()) : v; } }] });
+    });
+  },
+  reprojectGeoJSON: async function (gj, fromDef) {
+    var p4 = await Lib.load('proj4');
+    var tr = p4(fromDef, 'EPSG:4326');
+    var pt = function (c) { var o = tr.forward([c[0], c[1]]); return c.length > 2 ? [o[0], o[1], c[2]] : [o[0], o[1]]; };
+    var walk = function (c, d) { return d === 0 ? pt(c) : c.map(function (x) { return walk(x, d - 1); }); };
+    var depth = { Point: 0, MultiPoint: 1, LineString: 1, MultiLineString: 2, Polygon: 2, MultiPolygon: 3 };
+    var geom = function (g) { if (!g) return g; if (g.type === 'GeometryCollection') return { type: g.type, geometries: g.geometries.map(geom) }; return { type: g.type, coordinates: walk(g.coordinates, depth[g.type]) }; };
+    gj.features.forEach(function (f) { f.geometry = geom(f.geometry); });
+    delete gj.crs;
+    return gj;
+  }
+};
+
+function gjBBox(gj) {
+  var b = [Infinity, Infinity, -Infinity, -Infinity];
+  var add = function (c) { if (typeof c[0] === 'number') { if (c[0] < b[0]) b[0] = c[0]; if (c[1] < b[1]) b[1] = c[1]; if (c[0] > b[2]) b[2] = c[0]; if (c[1] > b[3]) b[3] = c[1]; } else c.forEach(add); };
+  var g = function (geo) { if (!geo) return; if (geo.type === 'GeometryCollection') geo.geometries.forEach(g); else if (geo.coordinates) add(geo.coordinates); };
+  gj.features.forEach(function (f) { g(f.geometry); });
+  return isFinite(b[0]) ? b : null;
+}
+function inLonLat(b) { return b && b[0] >= -180.5 && b[2] <= 180.5 && b[1] >= -90.5 && b[3] <= 90.5; }
+function blobToPng(canvas) { return new Promise(function (res) { canvas.toBlob(function (b) { res(b); }, 'image/png'); }); }
+
+// ======================================================= Layer referensi (overlay)
+var Overlays = {
+  list: [], urls: {},
+  PALETTE: ['#7c3aed', '#0891b2', '#ea580c', '#db2777', '#65a30d', '#ca8a04', '#2563eb'],
+  load: async function () { Overlays.list = (await IDB.all('overlays').catch(function () { return []; })).sort(function (a, b) { return a.order - b.order; }); },
+  restoreAll: async function () { if (!Overlays.list.length) await Overlays.load(); Overlays.list.forEach(function (o) { Overlays.addToMap(o); }); },
+  ids: function (o) { return ['ov-' + o.id + '-fill', 'ov-' + o.id + '-line', 'ov-' + o.id + '-pt', 'ov-' + o.id + '-ras']; },
+  addToMap: function (o) {
+    var m = MapView.map; if (!m || !MapView.ready) return;
+    var src = 'ov-' + o.id, before = m.getLayer('f-fill') ? 'f-fill' : undefined, vis = o.visible ? 'visible' : 'none';
+    Overlays.ids(o).forEach(function (id) { if (m.getLayer(id)) m.removeLayer(id); });
+    if (m.getSource(src)) m.removeSource(src);
+    if (o.kind === 'vector') {
+      m.addSource(src, { type: 'geojson', data: o.geojson });
+      m.addLayer({ id: src + '-fill', type: 'fill', source: src, filter: ['in', ['geometry-type'], ['literal', ['Polygon', 'MultiPolygon']]], layout: { visibility: vis }, paint: { 'fill-color': o.color, 'fill-opacity': 0.18 * o.opacity } }, before);
+      m.addLayer({ id: src + '-line', type: 'line', source: src, filter: ['in', ['geometry-type'], ['literal', ['LineString', 'MultiLineString', 'Polygon', 'MultiPolygon']]], layout: { visibility: vis }, paint: { 'line-color': o.color, 'line-width': 1.8, 'line-opacity': o.opacity } }, before);
+      m.addLayer({ id: src + '-pt', type: 'circle', source: src, filter: ['in', ['geometry-type'], ['literal', ['Point', 'MultiPoint']]], layout: { visibility: vis }, paint: { 'circle-radius': 5, 'circle-color': o.color, 'circle-opacity': o.opacity, 'circle-stroke-width': 1.5, 'circle-stroke-color': '#fff' } }, before);
+    } else {
+      if (!Overlays.urls[o.id]) Overlays.urls[o.id] = URL.createObjectURL(o.image);
+      m.addSource(src, { type: 'image', url: Overlays.urls[o.id], coordinates: o.corners });
+      m.addLayer({ id: src + '-ras', type: 'raster', source: src, layout: { visibility: vis }, paint: { 'raster-opacity': o.opacity, 'raster-fade-duration': 0 } }, before);
+    }
+  },
+  removeFromMap: function (o) {
+    var m = MapView.map; if (!m) return;
+    Overlays.ids(o).forEach(function (id) { if (m.getLayer(id)) m.removeLayer(id); });
+    if (m.getSource('ov-' + o.id)) m.removeSource('ov-' + o.id);
+    if (Overlays.urls[o.id]) { URL.revokeObjectURL(Overlays.urls[o.id]); delete Overlays.urls[o.id]; }
+  },
+  save: async function (o) { await IDB.put('overlays', o); },
+  add: async function (o) {
+    o.id = o.id || uuid(); o.order = Date.now(); o.visible = true; o.opacity = o.opacity || (o.kind === 'raster' ? 0.9 : 1);
+    o.color = o.color || Overlays.PALETTE[Overlays.list.length % Overlays.PALETTE.length]; o.created_at = new Date().toISOString();
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function () { });
+    await Overlays.save(o);
+    Overlays.list.push(o); Overlays.addToMap(o); Overlays.zoom(o);
+    return o;
+  },
+  remove: async function (o) { Overlays.removeFromMap(o); await IDB.del('overlays', o.id); Overlays.list = Overlays.list.filter(function (x) { return x.id !== o.id; }); },
+  setVisible: function (o, v) { o.visible = v; Overlays.save(o); var m = MapView.map; Overlays.ids(o).forEach(function (id) { if (m && m.getLayer(id)) m.setLayoutProperty(id, 'visibility', v ? 'visible' : 'none'); }); },
+  setOpacity: function (o, v) {
+    o.opacity = Number(v); Overlays.save(o); var m = MapView.map, s = 'ov-' + o.id; if (!m) return;
+    if (m.getLayer(s + '-ras')) m.setPaintProperty(s + '-ras', 'raster-opacity', o.opacity);
+    if (m.getLayer(s + '-fill')) { m.setPaintProperty(s + '-fill', 'fill-opacity', 0.18 * o.opacity); m.setPaintProperty(s + '-line', 'line-opacity', o.opacity); m.setPaintProperty(s + '-pt', 'circle-opacity', o.opacity); }
+  },
+  zoom: function (o) { var b = o.bbox; if (b && MapView.map) MapView.map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: 40, maxZoom: 18, duration: 500 }); },
+  vectorLayerIds: function () { var out = []; Overlays.list.forEach(function (o) { if (o.kind === 'vector' && o.visible) out.push('ov-' + o.id + '-fill', 'ov-' + o.id + '-line', 'ov-' + o.id + '-pt'); }); return out; },
+  showAttributes: function (feat, layerId) {
+    var o = Overlays.list.find(function (x) { return layerId.indexOf('ov-' + x.id) === 0; });
+    var p = feat.properties || {}, keys = Object.keys(p).slice(0, 80);
+    modal({ title: (o ? o.name : 'Layer referensi'), body: '<div class="tscroll"><table class="t">' + (keys.length ? keys.map(function (k) { return '<tr><th>' + esc(k) + '</th><td>' + esc(typeof p[k] === 'object' ? JSON.stringify(p[k]) : p[k]) + '</td></tr>'; }).join('') : '<tr><td class="muted">Tanpa atribut.</td></tr>') + '</table></div><p class="small muted">Layer referensi bersifat baca-saja dan hanya tersimpan di perangkat ini.</p>', buttons: [{ label: 'Tutup' }] });
+  },
+
+  // ---------- Pembaca format ----------
+  readFiles: async function (files) {
+    files = Array.from(files || []);
+    if (!files.length) throw new Error('Pilih file terlebih dahulu.');
+    var total = files.reduce(function (a, f) { return a + f.size; }, 0);
+    if (total > 150 * 1024 * 1024) throw new Error('Ukuran file terlalu besar (maks 150 MB). Potong area terlebih dahulu.');
+    var ext = function (f) { return (f.name.split('.').pop() || '').toLowerCase(); };
+    var by = {}; files.forEach(function (f) { by[ext(f)] = f; });
+    var base = files[0].name.replace(/\.[^.]+$/, '');
+    if (by.shp) return Overlays.fromShpFiles(by, base);
+    var f = files[0], e = ext(f);
+    if (e === 'zip') return Overlays.fromShpZip(f);
+    if (e === 'geojson' || e === 'json') return Overlays.fromGeoJSON(f);
+    if (e === 'kml') return Overlays.fromKML(await f.text(), base);
+    if (e === 'kmz') return Overlays.fromKMZ(f, base);
+    if (e === 'tif' || e === 'tiff') return Overlays.fromGeoTIFF(f, base);
+    if (e === 'pdf') return Overlays.fromGeoPDF(f, base);
+    if (e === 'dbf' || e === 'prj' || e === 'shx') throw new Error('Untuk Shapefile pilih sekaligus .shp, .dbf, .prj (dan .cpg) — atau satu file .zip.');
+    throw new Error('Format .' + e + ' belum didukung. Gunakan SHP (zip / .shp+.dbf+.prj), KML/KMZ, GeoJSON, GeoTIFF, atau GeoPDF.');
+  },
+  vector: async function (gj, name, fmt, crsCode) {
+    if (Array.isArray(gj)) { var all = { type: 'FeatureCollection', features: [] }; gj.forEach(function (g) { all.features = all.features.concat(g.features || []); }); gj = all; }
+    if (gj.type === 'Feature') gj = { type: 'FeatureCollection', features: [gj] };
+    if (gj.type !== 'FeatureCollection' || !Array.isArray(gj.features)) throw new Error('Isi file bukan kumpulan fitur GeoJSON.');
+    gj.features = gj.features.filter(function (f) { return f && f.geometry; });
+    if (!gj.features.length) throw new Error('Tidak ada fitur bergeometri di file ini.');
+    if (gj.features.length > 200000) throw new Error('Terlalu banyak fitur (' + gj.features.length + '). Maks 200.000.');
+    var code = crsCode || CRS.fromGeoJsonCrs(gj);
+    var bb = gjBBox(gj);
+    if ((code && !CRS.isGeographic(code)) || !inLonLat(bb)) {
+      var def = code ? CRS.def(code) : null;
+      if (!def) def = await CRS.ask('Koordinat tidak berada dalam rentang derajat WGS84' + (code ? ' (EPSG:' + code + ')' : '') + '. Masukkan sistem koordinat sumber agar dapat direproyeksikan.');
+      if (!def) throw new Error('Impor dibatalkan: sistem koordinat tidak diketahui.');
+      gj = await CRS.reprojectGeoJSON(gj, def); bb = gjBBox(gj);
+      if (!inLonLat(bb)) throw new Error('Hasil reproyeksi di luar rentang WGS84 — periksa sistem koordinat.');
+    }
+    return { kind: 'vector', name: name, fmt: fmt, geojson: gj, bbox: bb, meta: { features: gj.features.length, crs: code ? 'EPSG:' + code : 'EPSG:4326' } };
+  },
+  fromGeoJSON: async function (f) {
+    var gj; try { gj = JSON.parse(await f.text()); } catch (e) { throw new Error('GeoJSON tidak valid: ' + e.message); }
+    return Overlays.vector(gj, f.name.replace(/\.[^.]+$/, ''), 'GeoJSON');
+  },
+  fromKML: async function (text, name) {
+    var tg = await Lib.load('togeojson');
+    var doc = new DOMParser().parseFromString(text, 'text/xml');
+    if (doc.getElementsByTagName('parsererror').length) throw new Error('KML tidak valid (XML rusak).');
+    return Overlays.vector(tg.kml(doc), name, 'KML', 4326);
+  },
+  fromKMZ: async function (f, name) {
+    var ff = await Lib.load('fflate');
+    var files = ff.unzipSync(new Uint8Array(await f.arrayBuffer()));
+    var k = Object.keys(files).find(function (n) { return /\.kml$/i.test(n); });
+    if (!k) throw new Error('KMZ tidak berisi file .kml.');
+    return Overlays.fromKML(new TextDecoder().decode(files[k]), name);
+  },
+  fromShpZip: async function (f) {
+    var shp = await Lib.load('shp');
+    var gj; try { gj = await shp(await f.arrayBuffer()); } catch (e) { throw new Error('Shapefile ZIP tidak terbaca: ' + e.message); }
+    return Overlays.vector(gj, f.name.replace(/\.[^.]+$/, ''), 'Shapefile');
+  },
+  fromShpFiles: async function (by, name) {
+    var shp = await Lib.load('shp');
+    var obj = { shp: await by.shp.arrayBuffer() };
+    if (by.dbf) obj.dbf = await by.dbf.arrayBuffer();
+    if (by.prj) obj.prj = await by.prj.text();
+    if (by.cpg) obj.cpg = await by.cpg.text();
+    var gj; try { gj = await shp(obj); } catch (e) { throw new Error('Shapefile tidak terbaca: ' + e.message); }
+    if (!by.dbf) toast('File .dbf tidak disertakan — fitur tanpa atribut.', '', 4000);
+    return Overlays.vector(gj, name, 'Shapefile', by.prj ? 4326 : null);
+  },
+  fromGeoTIFF: async function (f, name) {
+    var GT = await Lib.load('geotiff');
+    var tiff = await GT.fromBlob(f), img = await tiff.getImage();
+    var w = img.getWidth(), h = img.getHeight(), keys = img.getGeoKeys() || {};
+    var code = keys.ProjectedCSTypeGeoKey && keys.ProjectedCSTypeGeoKey !== 32767 ? keys.ProjectedCSTypeGeoKey : (keys.GeographicTypeGeoKey && keys.GeographicTypeGeoKey !== 32767 ? keys.GeographicTypeGeoKey : null);
+    var bbox; try { bbox = img.getBoundingBox(); } catch (e) { bbox = null; }
+    var k = Math.min(1, 2048 / Math.max(w, h)), tw = Math.max(1, Math.round(w * k)), th = Math.max(1, Math.round(h * k));
+    var ras = await tiff.readRasters({ width: tw, height: th, resampleMethod: 'bilinear' });
+    var nb = ras.length, nodata = img.getGDALNoData(), photometric = img.fileDirectory.PhotometricInterpretation, cmap = img.fileDirectory.ColorMap;
+    var c = document.createElement('canvas'); c.width = tw; c.height = th;
+    var g = c.getContext('2d'), out = g.createImageData(tw, th), d = out.data, n = tw * th;
+    var stretch = function (band) {
+      var vals = []; for (var i = 0; i < band.length; i += Math.max(1, Math.floor(band.length / 20000))) { var v = band[i]; if (v !== nodata && isFinite(v)) vals.push(v); }
+      vals.sort(function (a, b) { return a - b; });
+      var lo = vals[Math.floor(vals.length * 0.02)] || 0, hi = vals[Math.floor(vals.length * 0.98)] || 255;
+      if (band.BYTES_PER_ELEMENT === 1 && !(band instanceof Float32Array)) { lo = 0; hi = 255; }
+      return function (v) { return Math.max(0, Math.min(255, Math.round((v - lo) / ((hi - lo) || 1) * 255))); };
+    };
+    if (photometric === 3 && cmap && nb === 1) {
+      var cm = cmap.length / 3;
+      for (var i = 0; i < n; i++) { var ix = ras[0][i]; d[i * 4] = cmap[ix] >> 8; d[i * 4 + 1] = cmap[cm + ix] >> 8; d[i * 4 + 2] = cmap[2 * cm + ix] >> 8; d[i * 4 + 3] = ras[0][i] === nodata ? 0 : 255; }
+    } else if (nb >= 3) {
+      var s0 = stretch(ras[0]), s1 = stretch(ras[1]), s2 = stretch(ras[2]);
+      for (var j = 0; j < n; j++) { d[j * 4] = s0(ras[0][j]); d[j * 4 + 1] = s1(ras[1][j]); d[j * 4 + 2] = s2(ras[2][j]); d[j * 4 + 3] = nb >= 4 ? (ras[3][j] > 0 ? 255 : 0) : ((nodata !== null && ras[0][j] === nodata && ras[1][j] === nodata && ras[2][j] === nodata) ? 0 : 255); }
+    } else {
+      var s = stretch(ras[0]);
+      for (var q = 0; q < n; q++) { var v = ras[0][q], gv = s(v); d[q * 4] = d[q * 4 + 1] = d[q * 4 + 2] = gv; d[q * 4 + 3] = (v === nodata || !isFinite(v)) ? 0 : 255; }
+    }
+    g.putImageData(out, 0, 0);
+    var corners;
+    if (!bbox || !code) {
+      corners = await Overlays.manualCorners('GeoTIFF tanpa informasi georeferensi/CRS yang dikenali.');
+    } else {
+      var def = CRS.isGeographic(code) ? null : CRS.def(code);
+      if (!CRS.isGeographic(code) && !def) def = await CRS.ask('GeoTIFF memakai EPSG:' + code + '.');
+      if (!CRS.isGeographic(code) && !def) throw new Error('Impor dibatalkan.');
+      var pts = [[bbox[0], bbox[3]], [bbox[2], bbox[3]], [bbox[2], bbox[1]], [bbox[0], bbox[1]]];
+      if (def) { var p4 = await Lib.load('proj4'); var tr = p4(def, 'EPSG:4326'); corners = pts.map(function (p) { return tr.forward(p); }); }
+      else corners = pts;
+    }
+    var bb = [Math.min.apply(null, corners.map(function (p) { return p[0]; })), Math.min.apply(null, corners.map(function (p) { return p[1]; })), Math.max.apply(null, corners.map(function (p) { return p[0]; })), Math.max.apply(null, corners.map(function (p) { return p[1]; }))];
+    if (!inLonLat(bb)) throw new Error('Georeferensi GeoTIFF menghasilkan koordinat tidak valid.');
+    return { kind: 'raster', name: name, fmt: 'GeoTIFF', image: await blobToPng(c), corners: corners, bbox: bb, meta: { crs: code ? 'EPSG:' + code : 'manual', size: w + '×' + h + ' px', bands: nb, rendered: tw + '×' + th + ' px' } };
+  },
+  fromGeoPDF: async function (f, name) {
+    var buf = await f.arrayBuffer();
+    var PL = await Lib.load('pdflib'), pdfjs = await Lib.pdfjs();
+    var geo = null;
+    try {
+      var doc = await PL.PDFDocument.load(buf.slice(0), { ignoreEncryption: true, updateMetadata: false });
+      var page = doc.getPage(0), num = function (x) { return x && x.asNumber ? x.asNumber() : Number(x); };
+      var arr = function (a) { var o = []; if (!a) return o; for (var i = 0; i < a.size(); i++) o.push(num(a.lookup(i))); return o; };
+      var vp = page.node.lookup(PL.PDFName.of('VP'));
+      if (vp && vp.size) {
+        for (var i = 0; i < vp.size(); i++) {
+          var v = vp.lookup(i), meas = v.lookup(PL.PDFName.of('Measure'));
+          if (!meas) continue;
+          var gpts = arr(meas.lookup(PL.PDFName.of('GPTS'))), lpts = arr(meas.lookup(PL.PDFName.of('LPTS'))), bb = arr(v.lookup(PL.PDFName.of('BBox')));
+          if (gpts.length < 6 || bb.length !== 4) continue;
+          if (!lpts.length) lpts = arr(meas.lookup(PL.PDFName.of('Bounds'))).length ? arr(meas.lookup(PL.PDFName.of('Bounds'))) : [0, 0, 0, 1, 1, 1, 1, 0];
+          var area = Math.abs((bb[2] - bb[0]) * (bb[3] - bb[1]));
+          if (!geo || area > geo.area) geo = { gpts: gpts, lpts: lpts, bbox: bb, area: area };
+        }
+      }
+    } catch (e) { console.warn('GeoPDF parse', e); }
+    var pdf = await pdfjs.getDocument({ data: new Uint8Array(buf.slice(0)), isEvalSupported: false }).promise;
+    var pg = await pdf.getPage(1), view = pg.view; // [x1,y1,x2,y2] user space
+    var region = geo ? [Math.min(geo.bbox[0], geo.bbox[2]), Math.min(geo.bbox[1], geo.bbox[3]), Math.max(geo.bbox[0], geo.bbox[2]), Math.max(geo.bbox[1], geo.bbox[3])] : view;
+    var rw = region[2] - region[0], rh = region[3] - region[1];
+    var scale = Math.min(4, 2400 / Math.max(rw, rh));
+    var vpt = pg.getViewport({ scale: scale });
+    var full = document.createElement('canvas'); full.width = Math.ceil(vpt.width); full.height = Math.ceil(vpt.height);
+    await pg.render({ canvasContext: full.getContext('2d'), viewport: vpt }).promise;
+    var crop = document.createElement('canvas'); crop.width = Math.max(1, Math.round(rw * scale)); crop.height = Math.max(1, Math.round(rh * scale));
+    var p1 = vpt.convertToViewportPoint(region[0], region[3]);
+    crop.getContext('2d').drawImage(full, Math.round(p1[0]), Math.round(p1[1]), crop.width, crop.height, 0, 0, crop.width, crop.height);
+    var corners;
+    if (geo) {
+      // GPTS = pasangan lintang,bujur; LPTS = posisi ternormalisasi (0..1) dalam BBox. Fit affine kuadrat terkecil.
+      var A = [], X = [], Y = [];
+      for (var k = 0; k + 1 < geo.gpts.length && k + 1 < geo.lpts.length; k += 2) { A.push([geo.lpts[k], geo.lpts[k + 1], 1]); Y.push(geo.gpts[k]); X.push(geo.gpts[k + 1]); }
+      var cx = lsq(A, X), cy = lsq(A, Y);
+      var at = function (u, v) { return [cx[0] * u + cx[1] * v + cx[2], cy[0] * u + cy[1] * v + cy[2]]; };
+      // BBox mungkin ditulis terbalik; LPTS mengacu ke BBox apa adanya
+      var flipU = geo.bbox[0] > geo.bbox[2], flipV = geo.bbox[1] > geo.bbox[3];
+      var U = function (u) { return flipU ? 1 - u : u; }, V = function (v) { return flipV ? 1 - v : v; };
+      corners = [at(U(0), V(1)), at(U(1), V(1)), at(U(1), V(0)), at(U(0), V(0))];
+    } else {
+      corners = await Overlays.manualCorners('PDF ini tidak memiliki georeferensi (ISO 32000 /VP /Measure GPTS). Format GeoPDF lama (LGIDict) belum didukung.');
+    }
+    var bbx = [Math.min.apply(null, corners.map(function (p) { return p[0]; })), Math.min.apply(null, corners.map(function (p) { return p[1]; })), Math.max.apply(null, corners.map(function (p) { return p[0]; })), Math.max.apply(null, corners.map(function (p) { return p[1]; }))];
+    if (!inLonLat(bbx)) throw new Error('Georeferensi GeoPDF tidak valid.');
+    return { kind: 'raster', name: name, fmt: 'GeoPDF', image: await blobToPng(crop), corners: corners, bbox: bbx, meta: { crs: geo ? 'GPTS (WGS84)' : 'manual', pages: pdf.numPages, rendered: crop.width + '×' + crop.height + ' px' } };
+  },
+  manualCorners: function (reason) {
+    return new Promise(function (res, rej) {
+      if (!MapView.map) return rej(new Error(reason));
+      modal({ title: 'Tempatkan manual?', body: '<p>' + esc(reason) + '</p><p class="small">Gambar dapat ditempatkan pada <b>batas tampilan peta saat ini</b> (perkiraan, bukan georeferensi akurat). Atur dahulu peta sehingga area sesuai, lalu impor ulang.</p>',
+        onClose: function (v) { if (v) res(v); else rej(new Error('Impor dibatalkan.')); },
+        buttons: [{ label: 'Batal' }, { label: 'Pasang di tampilan peta', cls: 'primary', onClick: function () { var b = MapView.map.getBounds(); return [[b.getWest(), b.getNorth()], [b.getEast(), b.getNorth()], [b.getEast(), b.getSouth()], [b.getWest(), b.getSouth()]]; } }] });
+    });
+  },
+
+  // ---------- UI di panel Layer ----------
+  renderBox: function (box) {
+    if (!box) return;
+    box.innerHTML = '<label class="btn sm primary">+ Tambah layer<input type="file" id="ov-file" multiple hidden accept=".zip,.shp,.dbf,.prj,.cpg,.shx,.kml,.kmz,.geojson,.json,.tif,.tiff,.pdf"></label><div class="small muted" id="ov-msg" style="margin:6px 0"><b>SHP · KML/KMZ · GeoJSON · GeoTIFF · GeoPDF</b>. Shapefile: pilih .zip atau sekaligus .shp+.dbf+.prj. Tersimpan offline di perangkat.</div>' +
+      (Overlays.list.length ? Overlays.list.slice().reverse().map(function (o) {
+        return '<div style="border:1px solid var(--line);border-radius:10px;padding:8px;margin-top:6px"><div class="lyr" style="padding:0"><input type="checkbox" data-ovv="' + o.id + '"' + (o.visible ? ' checked' : '') + '><span class="swatch" style="background:' + (o.kind === 'raster' ? 'linear-gradient(135deg,#65a30d,#ca8a04)' : esc(o.color)) + '"></span><span class="grow small"><b>' + esc(o.name) + '</b><br><span class="muted">' + esc(o.fmt) + ' · ' + (o.kind === 'vector' ? fmtNum(o.meta.features, 0) + ' fitur · ' : '') + esc(o.meta.crs || '') + '</span></span></div>' +
+          '<div class="row" style="margin-top:6px"><input type="range" min="0.1" max="1" step="0.05" value="' + o.opacity + '" data-ovo="' + o.id + '" class="grow" aria-label="Opasitas">' + (o.kind === 'vector' ? '<input type="color" value="' + esc(o.color) + '" data-ovc="' + o.id + '" style="width:34px;height:30px;border:0;padding:0;background:none">' : '') + '<button class="btn sm" data-ovz="' + o.id + '">Zoom</button><button class="btn sm danger" data-ovd="' + o.id + '">✕</button></div></div>';
+      }).join('') : '');
+    var msg = $('#ov-msg', box), find = function (id) { return Overlays.list.find(function (o) { return o.id === id; }); };
+    $('#ov-file', box).onchange = async function (e) {
+      var files = e.target.files; msg.textContent = 'Membaca ' + files.length + ' file…';
+      try { var rec = await Overlays.readFiles(files); var o = await Overlays.add(rec); toast('Layer "' + o.name + '" ditambahkan.', 'ok'); }
+      catch (er) { toast(er.message, 'err', 7000); }
+      e.target.value = ''; Overlays.renderBox(box);
+    };
+    $$('[data-ovv]', box).forEach(function (c) { c.onchange = function () { Overlays.setVisible(find(c.getAttribute('data-ovv')), c.checked); }; });
+    $$('[data-ovo]', box).forEach(function (c) { c.oninput = function () { Overlays.setOpacity(find(c.getAttribute('data-ovo')), c.value); }; });
+    $$('[data-ovc]', box).forEach(function (c) { c.onchange = function () { var o = find(c.getAttribute('data-ovc')); o.color = c.value; Overlays.save(o); Overlays.addToMap(o); }; });
+    $$('[data-ovz]', box).forEach(function (b) { b.onclick = function () { Overlays.zoom(find(b.getAttribute('data-ovz'))); }; });
+    $$('[data-ovd]', box).forEach(function (b) { b.onclick = async function () { var o = find(b.getAttribute('data-ovd')); if (!(await confirmBox('Hapus layer', 'Hapus "' + o.name + '" dari perangkat?', 'Hapus', true))) return; await Overlays.remove(o); Overlays.renderBox(box); }; });
+  }
+};
+
+/** Kuadrat terkecil 3 parameter (normal equations) untuk transformasi affine. */
+function lsq(A, b) {
+  var M = [[0, 0, 0], [0, 0, 0], [0, 0, 0]], v = [0, 0, 0];
+  A.forEach(function (r, i) { for (var p = 0; p < 3; p++) { v[p] += r[p] * b[i]; for (var q = 0; q < 3; q++) M[p][q] += r[p] * r[q]; } });
+  // eliminasi Gauss
+  for (var c = 0; c < 3; c++) {
+    var piv = c; for (var r = c + 1; r < 3; r++) if (Math.abs(M[r][c]) > Math.abs(M[piv][c])) piv = r;
+    var t = M[c]; M[c] = M[piv]; M[piv] = t; var tv = v[c]; v[c] = v[piv]; v[piv] = tv;
+    if (Math.abs(M[c][c]) < 1e-15) throw new Error('Titik kontrol georeferensi tidak cukup / segaris.');
+    for (var r2 = c + 1; r2 < 3; r2++) { var f = M[r2][c] / M[c][c]; for (var k = c; k < 3; k++) M[r2][k] -= f * M[c][k]; v[r2] -= f * v[c]; }
+  }
+  var x = [0, 0, 0];
+  for (var i = 2; i >= 0; i--) { var s = v[i]; for (var j = i + 1; j < 3; j++) s -= M[i][j] * x[j]; x[i] = s / M[i][i]; }
+  return x;
+}
+
+// ======================================================= Cetak peta (layout bergaya ArcGIS)
+var Print = {
+  PAPER: { A4: [297, 210], A3: [420, 297] },
+  open: function () {
+    if (!MapView.map) return toast('Buka tab Peta terlebih dahulu.', 'err');
+    var proj = S.projects.find(function (p) { return p.id === S.projectId; }) || {};
+    var body = '<div class="grid2"><label class="f">Ukuran kertas<select class="input" id="pr-paper"><option>A4</option><option>A3</option></select></label><label class="f">Orientasi<select class="input" id="pr-ori"><option value="L">Lanskap</option><option value="P">Potret</option></select></label>' +
+      '<label class="f">Skala<select class="input" id="pr-scale"><option value="0">Sesuai tampilan peta</option>' + [500, 1000, 2500, 5000, 10000, 25000, 50000, 100000].map(function (s) { return '<option value="' + s + '">1 : ' + fmtNum(s, 0) + '</option>'; }).join('') + '</select></label><label class="f">Resolusi<select class="input" id="pr-dpi"><option value="120">Draft (120 dpi)</option><option value="200" selected>Standar (200 dpi)</option><option value="300">Tinggi (300 dpi, lambat)</option></select></label></div>' +
+      '<label class="f">Judul peta<input class="input" id="pr-title" maxlength="90" value="' + esc('PETA ' + (proj.name || 'SURVEI LAPANGAN').toUpperCase()) + '"></label>' +
+      '<label class="f">Subjudul<input class="input" id="pr-sub" maxlength="120" value="' + esc(S.org ? S.org.name : '') + '"></label>' +
+      '<div class="grid2"><label class="f">Disusun oleh<input class="input" id="pr-by" maxlength="60" value="' + esc(S.user ? S.user.name : '') + '"></label><label class="f">Nomor lembar<input class="input" id="pr-no" maxlength="30" value="1 / 1"></label></div>' +
+      '<label class="f">Catatan<textarea class="input" id="pr-note" rows="2" maxlength="300">Posisi berasal dari GPS perangkat; bukan hasil pengukuran kadastral.</textarea></label>' +
+      '<div class="row wrap small"><label class="row"><input type="checkbox" id="pr-grid" checked> Grid koordinat</label><label class="row"><input type="checkbox" id="pr-inset" checked> Peta indeks</label><label class="row"><input type="checkbox" id="pr-legend" checked> Legenda</label></div>' +
+      '<div class="progress hidden" id="pr-prog"><div style="width:30%"></div></div><div class="small muted" id="pr-msg">Layout mengikuti pola ArcGIS: bingkai peta dengan grid, panel judul, arah utara, skala batang & numerik, legenda, peta indeks, dan blok informasi.</div><div id="pr-out"></div>';
+    modal({ title: 'Cetak peta (PDF)', body: body, wide: true, sticky: true, buttons: [{ label: 'Tutup' }, { label: 'Buat PDF', cls: 'primary', onClick: async function (mb, btn) {
+      var opt = { paper: $('#pr-paper', mb).value, ori: $('#pr-ori', mb).value, scale: Number($('#pr-scale', mb).value), dpi: Number($('#pr-dpi', mb).value), title: $('#pr-title', mb).value, sub: $('#pr-sub', mb).value, by: $('#pr-by', mb).value, no: $('#pr-no', mb).value, note: $('#pr-note', mb).value, grid: $('#pr-grid', mb).checked, inset: $('#pr-inset', mb).checked, legend: $('#pr-legend', mb).checked };
+      var prog = $('#pr-prog', mb), msg = $('#pr-msg', mb); prog.classList.remove('hidden'); btn.textContent = 'Memproses…';
+      try {
+        var r = await Print.make(opt, function (t, p) { msg.textContent = t; $('div', prog).style.width = p + '%'; });
+        Print.last = r;
+        var url = URL.createObjectURL(r.blob);
+        $('#pr-out', mb).innerHTML = '<div class="row wrap" style="margin-top:8px"><a class="btn primary" id="pr-dl" href="' + url + '" download="' + esc(r.name) + '">Unduh PDF (' + fmtNum(r.blob.size / 1048576, 1) + ' MB)</a><a class="btn" href="' + url + '" target="_blank" rel="noopener">Buka di tab baru</a></div>' + (window.innerWidth > 860 ? '<iframe title="Pratinjau" src="' + url + '#toolbar=0" style="width:100%;height:420px;border:1px solid var(--line);border-radius:10px;margin-top:8px"></iframe>' : '');
+        msg.textContent = 'Selesai: ' + r.name + ' · skala 1:' + fmtNum(r.scale, 0);
+      } finally { prog.classList.add('hidden'); btn.textContent = 'Buat PDF'; }
+      return false;
+    } }] });
+  },
+  latin: function (s) { return String(s == null ? '' : s).replace(/[–—]/g, '-').replace(/[“”]/g, '"').replace(/[‘’]/g, "'").replace(/≤/g, '<=').replace(/≥/g, '>=').replace(/±/g, '+/-').replace(/×/g, 'x').replace(/[^\x20-\x7E\xA0-\xFF]/g, ''); },
+  toPng: function (src, size) {
+    return new Promise(function (res) {
+      var im = new Image(); im.crossOrigin = 'anonymous';
+      im.onload = function () { var k = Math.min(1, (size || 512) / Math.max(im.naturalWidth, im.naturalHeight)); var c = document.createElement('canvas'); c.width = Math.max(1, im.naturalWidth * k); c.height = Math.max(1, im.naturalHeight * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); res({ data: c.toDataURL('image/png'), w: c.width, h: c.height }); };
+      im.onerror = function () { res(null); };
+      im.src = src;
+    });
+  },
+  /** Render peta di luar layar dengan ukuran piksel sesuai bingkai cetak. */
+  renderMap: function (style, wpx, hpx, view, extraLayers) {
+    return new Promise(function (res, rej) {
+      var div = document.createElement('div');
+      div.style.cssText = 'position:fixed;left:-20000px;top:0;width:' + wpx + 'px;height:' + hpx + 'px;';
+      document.body.appendChild(div);
+      var m;
+      try { m = new maplibregl.Map({ container: div, style: style, center: view.center, zoom: view.zoom, interactive: false, attributionControl: false, preserveDrawingBuffer: true, fadeDuration: 0, pixelRatio: 1 }); }
+      catch (e) { div.remove(); return rej(e); }
+      var done = false, finish = function () {
+        if (done) return; done = true; clearTimeout(to);
+        try { var url = m.getCanvas().toDataURL('image/jpeg', 0.92); var proj = function (ll) { return m.project(ll); }; var b = m.getBounds(); res({ url: url, project: proj, bounds: [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()], zoom: m.getZoom() }); }
+        catch (e) { rej(new Error('Kanvas peta tidak dapat diekspor (tile tanpa CORS?).')); }
+        setTimeout(function () { m.remove(); div.remove(); }, 0);
+      };
+      var to = setTimeout(finish, 30000);
+      m.on('load', function () { (extraLayers || []).forEach(function (fn) { fn(m); }); m.once('idle', finish); });
+      m.on('error', function (e) { console.warn('Cetak peta:', e && e.error && e.error.message); });
+    });
+  },
+  niceStep: function (span, target) { var raw = span / target, p = Math.pow(10, Math.floor(Math.log10(raw))), n = raw / p; return (n < 1.5 ? 1 : n < 3.5 ? 2 : n < 7.5 ? 5 : 10) * p; },
+  make: async function (o, progress) {
+    progress = progress || function () { };
+    progress('Memuat pustaka PDF…', 5);
+    var JS = (await Lib.load('jspdf')).jsPDF;
+    var P = Print.PAPER[o.paper], landscape = o.ori === 'L';
+    var W = landscape ? P[0] : P[1], H = landscape ? P[1] : P[0];
+    var A3 = o.paper === 'A3', m = A3 ? 12 : 9, gap = A3 ? 4 : 3, f = A3 ? 1.3 : 1; // f = faktor ukuran huruf
+    var frame, panel;
+    if (landscape) { var side = A3 ? 100 : 72; frame = { x: m, y: m, w: W - 2 * m - side - gap, h: H - 2 * m }; panel = { x: m + frame.w + gap, y: m, w: side, h: H - 2 * m }; }
+    else { var band = A3 ? 88 : 64; frame = { x: m, y: m, w: W - 2 * m, h: H - 2 * m - band - gap }; panel = { x: m, y: m + frame.h + gap, w: W - 2 * m, h: band }; }
+    var lab = o.grid ? (A3 ? 6 : 5) : 0; // ruang label grid di dalam bingkai
+    var map = { x: frame.x + lab, y: frame.y + lab, w: frame.w - 2 * lab, h: frame.h - 2 * lab };
+    var pxmm = o.dpi / 25.4, wpx = Math.round(map.w * pxmm), hpx = Math.round(map.h * pxmm);
+    var maxPx = 7000; if (wpx > maxPx || hpx > maxPx) { var k = maxPx / Math.max(wpx, hpx); wpx = Math.round(wpx * k); hpx = Math.round(hpx * k); pxmm *= k; }
+    var cur = MapView.map, c = cur.getCenter(), lat = c.lat;
+    var zoom;
+    if (o.scale) { var mpp = o.scale * 0.0254 / (pxmm * 25.4); zoom = Math.log2(40075016.686 * Math.cos(lat * Math.PI / 180) / (512 * mpp)); }
+    else zoom = cur.getZoom() + Math.log2(wpx / cur.getCanvas().clientWidth);
+    progress('Merender peta ' + wpx + '×' + hpx + ' px…', 20);
+    var style = cur.getStyle();
+    style.layers = style.layers.filter(function (l) { return ['gps-acc', 'gps-pt', 'd-fill', 'd-line', 'd-pt'].indexOf(l.id) < 0; });
+    var main = await Print.renderMap(style, wpx, hpx, { center: [c.lng, c.lat], zoom: zoom });
+    var mppReal = 40075016.686 * Math.cos(lat * Math.PI / 180) / (512 * Math.pow(2, main.zoom));
+    var scaleN = Math.round(mppReal * pxmm * 1000);
+    var inset = null;
+    if (o.inset) {
+      progress('Merender peta indeks…', 55);
+      var bs = main.bounds, ext = { type: 'FeatureCollection', features: [{ type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[bs[0], bs[1]], [bs[2], bs[1]], [bs[2], bs[3]], [bs[0], bs[3]], [bs[0], bs[1]]]] }, properties: {} }] };
+      var baseOnly = MapView.basemapStyle();
+      inset = await Print.renderMap(baseOnly, 360, 360, { center: [c.lng, c.lat], zoom: Math.max(1, main.zoom - 5) }, [function (mm) { mm.addSource('ext', { type: 'geojson', data: ext }); mm.addLayer({ id: 'ext-f', type: 'fill', source: 'ext', paint: { 'fill-color': '#dc2626', 'fill-opacity': 0.15 } }); mm.addLayer({ id: 'ext-l', type: 'line', source: 'ext', paint: { 'line-color': '#dc2626', 'line-width': 3 } }); }]).catch(function () { return null; });
+    }
+    progress('Menyusun layout…', 75);
+    var pdf = new JS({ orientation: landscape ? 'landscape' : 'portrait', unit: 'mm', format: o.paper.toLowerCase(), compress: true });
+    var T = Print.latin;
+    pdf.setProperties({ title: T(o.title), subject: 'Peta ' + o.paper, creator: 'Universal Mobile Mapping GIS ' + APP_VERSION });
+    // Neatline luar & bingkai
+    pdf.setDrawColor(20); pdf.setLineWidth(0.6); pdf.rect(m - 3, m - 3, W - 2 * m + 6, H - 2 * m + 6);
+    pdf.setLineWidth(0.35); pdf.rect(frame.x, frame.y, frame.w, frame.h);
+    pdf.addImage(main.url, 'JPEG', map.x, map.y, map.w, map.h, undefined, 'FAST');
+    pdf.setLineWidth(0.25); pdf.rect(map.x, map.y, map.w, map.h);
+    // Grid koordinat (graticule) + label tepi
+    if (o.grid) {
+      var b = main.bounds, sx = Print.niceStep(b[2] - b[0], 5), sy = Print.niceStep(b[3] - b[1], 4), dec = Math.max(0, Math.ceil(-Math.log10(Math.min(sx, sy)))) ;
+      var toMM = function (ll) { var p = main.project(ll); return [map.x + p.x / wpx * map.w, map.y + p.y / hpx * map.h]; };
+      pdf.setFontSize(5.6 * f); pdf.setTextColor(30); pdf.setDrawColor(90); pdf.setLineWidth(0.12);
+      var dash = pdf.setLineDashPattern ? function (on) { pdf.setLineDashPattern(on ? [1.2, 1.2] : [], 0); } : function () { };
+      for (var x = Math.ceil(b[0] / sx) * sx; x <= b[2]; x += sx) {
+        var px = toMM([x, (b[1] + b[3]) / 2])[0]; if (px < map.x + 1 || px > map.x + map.w - 1) continue;
+        dash(true); pdf.line(px, map.y, px, map.y + map.h); dash(false);
+        pdf.line(px, map.y - 1.2, px, map.y); pdf.line(px, map.y + map.h, px, map.y + map.h + 1.2);
+        var lx = Print.fmtDeg(x, dec, 'BT', 'BB'); pdf.text(lx, px, map.y - 1.8, { align: 'center' }); pdf.text(lx, px, map.y + map.h + 1.6 + 2.0 * f, { align: 'center' });
+      }
+      for (var y = Math.ceil(b[1] / sy) * sy; y <= b[3]; y += sy) {
+        var py = toMM([(b[0] + b[2]) / 2, y])[1]; if (py < map.y + 1 || py > map.y + map.h - 1) continue;
+        dash(true); pdf.line(map.x, py, map.x + map.w, py); dash(false);
+        pdf.line(map.x - 1.2, py, map.x, py); pdf.line(map.x + map.w, py, map.x + map.w + 1.2, py);
+        var ly = Print.fmtDeg(y, dec, 'LU', 'LS'), lw2 = pdf.getTextWidth(ly);
+        pdf.text(ly, map.x - 1.8, py + lw2 / 2, { angle: 90 }); pdf.text(ly, map.x + map.w + 1.8 + 1.9 * f, py + lw2 / 2, { angle: 90 });
+      }
+    }
+    // Atribusi pada bingkai peta
+    pdf.setFontSize(5 * f); pdf.setTextColor(60);
+    var attr = 'Basemap: ' + ((LS.get('umg_basemap') || 'osm') === 'osm' ? '(c) OpenStreetMap contributors' : (LS.get('umg_basemap') === 'xyz' ? 'XYZ kustom' : 'tanpa basemap')) + (PMT.active ? ' | Foto udara: ' + T(PMT.active.label) : '');
+    pdf.setFillColor(255, 255, 255); pdf.rect(map.x + map.w - pdf.getTextWidth(attr) - 3, map.y + map.h - 3.4 * f, pdf.getTextWidth(attr) + 3, 3.4 * f, 'F');
+    pdf.text(attr, map.x + map.w - 1.5, map.y + map.h - 1 * f, { align: 'right' });
+
+    // ---- Panel ----
+    pdf.setLineWidth(0.3); pdf.setDrawColor(20); pdf.rect(panel.x, panel.y, panel.w, panel.h);
+    var logo = await Print.toPng(Brand.data.logo || DEFAULT_LOGO, 300);
+    var accent = Brand.data.accent || '#0f766e', ar = parseInt(accent.slice(1, 3), 16), ag = parseInt(accent.slice(3, 5), 16), ab = parseInt(accent.slice(5, 7), 16);
+    var sec = function (x, y, w, title) { pdf.setFillColor(ar, ag, ab); pdf.rect(x, y, w, 4.6 * f, 'F'); pdf.setTextColor(255); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(6.6 * f); pdf.text(title, x + 1.8, y + 3.2 * f); pdf.setTextColor(20); pdf.setFont('helvetica', 'normal'); return y + 4.6 * f; };
+    var titleBlock = function (x, y, w, h) {
+      pdf.setDrawColor(20); pdf.rect(x, y, w, h);
+      var ls = Math.min(h - 4, A3 ? 20 : 14);
+      if (logo) { var lw = ls * Math.min(1, logo.w / logo.h), lh = ls * Math.min(1, logo.h / logo.w); pdf.addImage(logo.data, 'PNG', x + 2, y + 2 + (ls - lh) / 2, lw, lh); }
+      var tx = x + ls + 4, tw = w - ls - 6;
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10.5 * f); pdf.setTextColor(ar, ag, ab);
+      var lines = pdf.splitTextToSize(T(o.title), tw).slice(0, 3); pdf.text(lines, tx, y + 5.2 * f);
+      pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7 * f); pdf.setTextColor(60);
+      pdf.text(pdf.splitTextToSize(T(o.sub), tw).slice(0, 2), tx, y + 5.2 * f + lines.length * 4.3 * f);
+      pdf.setTextColor(20);
+    };
+    var north = function (cx, cy, s) {
+      pdf.setFillColor(20); pdf.setDrawColor(20); pdf.setLineWidth(0.2);
+      pdf.triangle(cx, cy - s, cx - s * 0.42, cy + s * 0.55, cx, cy + s * 0.25, 'F');
+      pdf.setFillColor(255); pdf.triangle(cx, cy - s, cx + s * 0.42, cy + s * 0.55, cx, cy + s * 0.25, 'FD');
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9 * f); pdf.text('U', cx, cy - s - 1.2, { align: 'center' }); pdf.setFont('helvetica', 'normal');
+    };
+    var scaleBar = function (x, y, w) {
+      var gpm = 1000 / scaleN; // mm kertas per meter tanah
+      var cand = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000, 20000, 25000, 50000, 100000, 200000];
+      var L = cand[0]; cand.forEach(function (v) { if (v * gpm <= w - 8) L = v; });
+      var bw = L * gpm, segs = 4;
+      pdf.setLineWidth(0.2); pdf.setDrawColor(20);
+      for (var i = 0; i < segs; i++) { if (i % 2 === 0) pdf.setFillColor(20); else pdf.setFillColor(255); pdf.rect(x + i * bw / segs, y, bw / segs, 1.8 * f, 'FD'); }
+      pdf.setFontSize(5.8 * f); var u = L >= 1000 ? 'km' : 'm', cv = function (v) { return L >= 1000 ? fmtNum(v / 1000, 2) : fmtNum(v, 0); };
+      pdf.text('0', x, y + 4.6 * f, { align: 'center' }); pdf.text(cv(L / 2), x + bw / 2, y + 4.6 * f, { align: 'center' }); pdf.text(cv(L) + ' ' + u, x + bw, y + 4.6 * f, { align: 'center' });
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8 * f); pdf.text('Skala 1 : ' + fmtNum(scaleN, 0), x, y + 9.5 * f); pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(5.4 * f); pdf.setTextColor(90); pdf.text('Kertas ' + o.paper + ' ' + (landscape ? 'lanskap' : 'potret') + ', cetak 100%', x, y + 12.5 * f); pdf.setTextColor(20);
+    };
+    var legend = function (x, y, w, h) {
+      var vis = S.layers.filter(function (l) { return l.project_id === S.projectId && !S.hiddenLayers.has(l.id); });
+      var nItems = vis.length + Overlays.list.filter(function (x2) { return x2.visible; }).length + (PMT.active ? 1 : 0);
+      var avail = h - 4.6 * f - 4, rowH = Math.max(3.1, Math.min(4.6 * f, avail / Math.max(1, nItems)));
+      var yy = sec(x, y, w, 'LEGENDA') + Math.min(3.5 * f, rowH * 0.8), maxY = y + h - 1;
+      pdf.setFontSize(Math.max(5, Math.min(6.6 * f, rowH * 1.45)));
+      var item = function (kind, color, label) {
+        if (yy > maxY) return;
+        var rgb = [parseInt(color.slice(1, 3), 16), parseInt(color.slice(3, 5), 16), parseInt(color.slice(5, 7), 16)];
+        pdf.setDrawColor(rgb[0], rgb[1], rgb[2]); pdf.setFillColor(rgb[0], rgb[1], rgb[2]); pdf.setLineWidth(0.5);
+        if (kind === 'Point') pdf.circle(x + 4, yy - 1.1, 1.2 * f, 'F');
+        else if (kind === 'LineString') pdf.line(x + 2, yy - 1, x + 7, yy - 1.4);
+        else if (kind === 'raster') { pdf.setFillColor(120, 160, 90); pdf.rect(x + 2, yy - 2.6, 5, 3, 'F'); }
+        else { pdf.setFillColor(Math.round(rgb[0] * 0.25 + 191), Math.round(rgb[1] * 0.25 + 191), Math.round(rgb[2] * 0.25 + 191)); pdf.rect(x + 2, yy - 2.6, 5, 3, 'FD'); }
+        pdf.setTextColor(20); pdf.text(pdf.splitTextToSize(T(label), w - 11)[0], x + 9, yy); yy += rowH;
+      };
+      vis.forEach(function (l) { item(l.geom_type, l.style.color || '#e11d48', l.name + ' (' + countLayer(l.id) + ')'); });
+      Overlays.list.filter(function (x2) { return x2.visible; }).forEach(function (ov) { item(ov.kind === 'raster' ? 'raster' : 'Polygon', ov.color || '#7c3aed', ov.name + ' [' + ov.fmt + ']'); });
+      if (PMT.active) item('raster', '#65a30d', 'Foto udara: ' + PMT.active.label);
+      pdf.setLineWidth(0.25); pdf.setDrawColor(20); pdf.rect(x, y, w, h);
+    };
+    var infoBlock = function (x, y, w, h) {
+      var yy = sec(x, y, w, 'KETERANGAN') + 3.4 * f;
+      var proj = S.projects.find(function (p) { return p.id === S.projectId; }) || {};
+      var rows = [['Proyek', proj.name || '-'], ['Organisasi', S.org ? S.org.name : '-'], ['Disusun oleh', o.by], ['Tanggal cetak', new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })], ['Sistem koordinat', 'Geografis WGS 84 (EPSG:4326); tampilan Web Mercator'], ['Sumber data', 'Survei lapangan ' + (S.org ? S.org.name : '') + '; basemap OSM'], ['Lembar', o.no]];
+      pdf.setFontSize(6 * f);
+      rows.forEach(function (r) { if (yy > y + h - 2) return; pdf.setFont('helvetica', 'bold'); pdf.text(r[0], x + 1.8, yy); pdf.setFont('helvetica', 'normal'); var t = pdf.splitTextToSize(T(r[1]), w - 26 * f).slice(0, 2); pdf.text(t, x + 24 * f, yy); yy += 3.1 * f * t.length + 0.4; });
+      if (o.note && yy < y + h - 4) { pdf.setFontSize(5.4 * f); pdf.setTextColor(90); pdf.text(pdf.splitTextToSize(T('Catatan: ' + o.note), w - 3.6).slice(0, 3), x + 1.8, yy + 0.8); pdf.setTextColor(20); }
+      pdf.rect(x, y, w, h);
+    };
+    var insetBlock = function (x, y, w, h) {
+      var yy = sec(x, y, w, 'PETA INDEKS'); var s = Math.min(w - 4, h - (yy - y) - 3);
+      if (inset) pdf.addImage(inset.url, 'JPEG', x + (w - s) / 2, yy + 1.5, s, s, undefined, 'FAST'); else { pdf.setFontSize(6); pdf.text('(tidak tersedia)', x + w / 2, yy + s / 2, { align: 'center' }); }
+      pdf.setDrawColor(20); pdf.rect(x + (w - s) / 2, yy + 1.5, s, s); pdf.rect(x, y, w, h);
+    };
+    var px0 = panel.x + 2.5, pw = panel.w - 5;
+    if (landscape) {
+      var py0 = panel.y + 2.5, th = A3 ? 30 : 22;
+      titleBlock(px0, py0, pw, th); var cy = py0 + th + 3;
+      var nsH = A3 ? 26 : 20; pdf.rect(px0, cy, pw, nsH); north(px0 + (A3 ? 11 : 8), cy + nsH / 2 + 1.5, A3 ? 7 : 5.2); scaleBar(px0 + (A3 ? 22 : 16), cy + (A3 ? 6 : 4.5), pw - (A3 ? 24 : 18)); cy += nsH + 3;
+      var foot = A3 ? 7 : 6, infoH = A3 ? 44 : 35, insetH = o.inset ? Math.min(pw * 0.8, A3 ? 70 : 50) : 0;
+      var legH = panel.y + panel.h - 2.5 - foot - infoH - insetH - (o.inset ? 3 : 0) - 3 - cy;
+      if (o.legend && legH > 12) { legend(px0, cy, pw, legH); cy += legH + 3; } else cy += Math.max(0, legH) + 3;
+      if (o.inset) { insetBlock(px0, cy, pw, insetH); cy += insetH + 3; }
+      infoBlock(px0, cy, pw, infoH);
+      pdf.setFontSize(5 * f); pdf.setTextColor(110); pdf.text('Universal Mobile Mapping GIS v' + APP_VERSION, px0, panel.y + panel.h - 2.2); pdf.setTextColor(20);
+    } else {
+      var by0 = panel.y + 2.5, bh = panel.h - 5, c1 = pw * 0.44, c2 = pw * 0.29, c3 = pw - c1 - c2 - 6;
+      var tH = A3 ? 26 : 19; titleBlock(px0, by0, c1, tH); infoBlock(px0, by0 + tH + 2.5, c1, bh - tH - 2.5);
+      if (o.legend) legend(px0 + c1 + 3, by0, c2, bh); else pdf.rect(px0 + c1 + 3, by0, c2, bh);
+      var x3 = px0 + c1 + c2 + 6, nH = A3 ? 28 : 21; pdf.rect(x3, by0, c3, nH); north(x3 + (A3 ? 9 : 7), by0 + nH / 2 + 1.5, A3 ? 6 : 4.6); scaleBar(x3 + (A3 ? 19 : 14), by0 + (A3 ? 6 : 4.5), c3 - (A3 ? 21 : 16));
+      if (o.inset) insetBlock(x3, by0 + nH + 2.5, c3, bh - nH - 2.5);
+    }
+    progress('Menyimpan PDF…', 95);
+    var proj = S.projects.find(function (p) { return p.id === S.projectId; }) || {};
+    var name = ('Peta_' + (proj.name || 'UMG').replace(/[^\w]+/g, '_').replace(/^_+|_+$/g, '') + '_' + o.paper + (landscape ? 'L' : 'P') + '_' + new Date().toISOString().slice(0, 10) + '.pdf');
+    progress('Selesai', 100);
+    return { blob: pdf.output('blob'), name: name, scale: scaleN, pages: pdf.getNumberOfPages() };
+  },
+  fmtDeg: function (v, dec, pos, neg) { return fmtNum(Math.abs(v), Math.min(dec + 1, 6)).replace(/\./g, '') + '°' + (v >= 0 ? pos : neg); }
+};
 
 </script>
 </body>
