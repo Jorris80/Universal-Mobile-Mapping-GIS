@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<meta name="description" content="Universal Mobile Mapping GIS — pemetaan lapangan offline-first">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: blob: https:; connect-src 'self' https: data: blob:; worker-src 'self' blob:; child-src blob:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<title>Universal Mobile Mapping GIS</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon-512.png">
+<link rel="apple-touch-icon" href="./icon-512.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" crossorigin="anonymous">
+<style>
+:root{--accent:#0f766e;--accent-2:#115e59;--bg:#f3f5f8;--panel:#ffffff;--panel-2:#f8fafc;--text:#0f172a;--muted:#64748b;--line:#e2e8f0;--danger:#dc2626;--warn:#d97706;--ok:#16a34a;--info:#2563eb;--shadow:0 1px 2px rgba(15,23,42,.06),0 4px 16px rgba(15,23,42,.06);--radius:12px;--top:56px;--side:232px;--bottom:62px;font-synthesis:none}
+[data-theme=dark]{--bg:#0b1220;--panel:#111a2b;--panel-2:#0f172a;--text:#e2e8f0;--muted:#94a3b8;--line:#1e293b;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35)}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--accent)}
+.hidden{display:none!important}
+.muted{color:var(--muted)}.small{font-size:12px}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.row{display:flex;gap:8px;align-items:center}.wrap{flex-wrap:wrap}.grow{flex:1}.col{display:flex;flex-direction:column;gap:8px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--panel);padding:8px 14px;border-radius:9px;cursor:pointer;font-weight:600;min-height:38px;transition:background .15s,border-color .15s,transform .05s;white-space:nowrap}
+.btn:hover{border-color:var(--accent)}.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn.primary:hover{background:var(--accent-2)}
+.btn.danger{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 40%,var(--line))}.btn.danger.solid{background:var(--danger);color:#fff}
+.btn.ghost{background:transparent;border-color:transparent}.btn.sm{padding:4px 10px;min-height:30px;font-size:13px}.btn[disabled]{opacity:.5;pointer-events:none}
+.btn.icon{padding:0;width:40px;min-width:40px}
+.input,select.input,textarea.input{width:100%;border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:9px 11px;min-height:40px;outline:none}
+.input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
+label.f{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:13px}label.f span.req{color:var(--danger)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+.card h3{margin:0 0 10px;font-size:15px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;font-size:11.5px;font-weight:700;background:var(--panel-2);border:1px solid var(--line);white-space:nowrap}
+.b-draft{color:#475569}.b-submitted{color:var(--info);border-color:#bfdbfe}.b-approved{color:var(--ok);border-color:#bbf7d0}.b-revision{color:var(--warn);border-color:#fde68a}.b-rejected{color:var(--danger);border-color:#fecaca}.b-pending{color:#c2410c;border-color:#fed7aa}
+.svg{width:18px;height:18px;flex:none}
+/* ---------- Login ---------- */
+#login{position:fixed;inset:0;overflow:auto;display:grid;place-items:center;padding:24px;background:radial-gradient(1200px 600px at 10% -10%,color-mix(in srgb,var(--accent) 22%,transparent),transparent),radial-gradient(900px 500px at 110% 110%,color-mix(in srgb,var(--accent) 16%,transparent),transparent),var(--bg)}
+.login-card{width:100%;max-width:400px;background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:28px}
+.login-brand{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;margin-bottom:18px}
+.login-brand img{width:76px;height:76px;object-fit:contain;border-radius:16px;background:var(--panel-2);border:1px solid var(--line);cursor:zoom-in}
+.login-brand h1{margin:0;font-size:20px}.login-brand p{margin:0;color:var(--muted)}
+.pw-wrap{position:relative}.pw-wrap .btn{position:absolute;right:4px;top:4px;min-height:32px}
+.demo-box{margin-top:14px;padding:12px;border-radius:10px;background:color-mix(in srgb,var(--accent) 8%,var(--panel));border:1px dashed color-mix(in srgb,var(--accent) 45%,var(--line))}
+.login-foot{margin-top:16px;text-align:center;font-size:12px;color:var(--muted)}
+/* ---------- Shell ---------- */
+#app{position:fixed;inset:0;display:grid;grid-template-rows:var(--top) minmax(0,1fr);grid-template-columns:var(--side) minmax(0,1fr);grid-template-areas:"top top" "side main"}
+.topbar{grid-area:top;display:flex;align-items:center;gap:10px;padding:0 12px;background:var(--panel);border-bottom:1px solid var(--line);z-index:20}
+.topbar .logo{width:36px;height:36px;border-radius:9px;object-fit:contain;background:var(--panel-2);border:1px solid var(--line);cursor:zoom-in}
+.topbar>*{flex-shrink:0}.topbar .ttl{display:flex;flex-direction:column;min-width:0;flex:1 1 auto;flex-shrink:1}.topbar .ttl b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.topbar .ttl small{color:var(--muted);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);font-size:12px;font-weight:600;background:var(--panel-2);cursor:pointer;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}.dot.off{background:var(--danger)}.dot.warn{background:var(--warn)}
+.avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;border:2px solid var(--panel);box-shadow:0 0 0 1px var(--line);cursor:pointer;overflow:hidden}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.sidenav{grid-area:side;background:var(--panel);border-right:1px solid var(--line);padding:10px;display:flex;flex-direction:column;gap:2px;overflow:auto}
+.nav-i{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;cursor:pointer;color:var(--muted);font-weight:600;border:0;background:none;text-align:left;width:100%}
+.nav-i:hover{background:var(--panel-2);color:var(--text)}.nav-i.on{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent)}
+.nav-i .cnt{margin-left:auto;background:var(--warn);color:#fff;border-radius:99px;font-size:11px;padding:0 7px}
+.side-foot{margin-top:auto;padding:10px;font-size:11.5px;color:var(--muted)}
+main{grid-area:main;position:relative;overflow:hidden}
+.tab{position:absolute;inset:0;overflow:auto;padding:18px}.tab.map{padding:0;overflow:hidden}
+.tab-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}.tab-h h2{margin:0;font-size:19px}
+.bottomnav{display:none}
+/* ---------- Map ---------- */
+#map{position:absolute;inset:0}
+.map-top{position:absolute;top:10px;left:10px;right:10px;display:flex;gap:8px;z-index:5;pointer-events:none;flex-wrap:wrap}
+.map-top>*{pointer-events:auto}
+.map-top select{max-width:220px;box-shadow:var(--shadow)}
+.tools{position:absolute;right:10px;top:64px;display:flex;flex-direction:column;gap:6px;z-index:5}
+.tools .btn{width:44px;height:44px;padding:0;box-shadow:var(--shadow);border-radius:11px}
+.tools .btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.gps-chip{position:absolute;left:10px;bottom:30px;z-index:5;box-shadow:var(--shadow);max-width:calc(100% - 70px)}.gps-chip .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.draw-panel{position:absolute;left:50%;transform:translateX(-50%);bottom:24px;z-index:6;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:10px 12px;display:flex;flex-direction:column;gap:8px;max-width:calc(100% - 20px);width:560px}
+.layer-panel{position:absolute;right:62px;top:64px;z-index:7;width:320px;max-width:calc(100% - 80px);max-height:calc(100% - 90px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px}
+.layer-panel h4{margin:12px 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+.lyr{display:flex;align-items:center;gap:8px;padding:5px 0}.swatch{width:14px;height:14px;border-radius:4px;flex:none}
+.maplibregl-ctrl-attrib{font-size:10px}
+/* ---------- Lists / tables ---------- */
+.list{display:flex;flex-direction:column;gap:8px}
+.item{display:flex;gap:12px;align-items:center;padding:12px;background:var(--panel);border:1px solid var(--line);border-radius:11px;cursor:pointer}
+.item:hover{border-color:var(--accent)}.item .meta{min-width:0;flex:1}.item .meta b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gicon{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:#fff;flex:none}
+table.t{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:11px;overflow:hidden}
+table.t th,table.t td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:13px}
+table.t th{background:var(--panel-2);font-size:12px;text-transform:uppercase;letter-spacing:.3px;color:var(--muted)}
+.tscroll{overflow:auto;border-radius:11px}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+.kpi .card{padding:14px}.kpi b{font-size:24px;display:block}.kpi span{color:var(--muted);font-size:12px;font-weight:600}
+.bar{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13px}.bar .lbl{width:38%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bar .trk{flex:1;height:10px;border-radius:99px;background:var(--panel-2);border:1px solid var(--line);overflow:hidden}.bar .fill{height:100%;background:var(--accent)}
+.empty{padding:30px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap}.thumb{position:relative;width:76px;height:76px;border-radius:9px;overflow:hidden;border:1px solid var(--line);background:var(--panel-2);cursor:zoom-in}
+.thumb img{width:100%;height:100%;object-fit:cover}.thumb .x{position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;line-height:22px;padding:0}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}.seg button{border:0;background:var(--panel);padding:7px 12px;cursor:pointer;font-weight:600}.seg button.on{background:var(--accent);color:#fff}
+.legal h4{margin:16px 0 6px}.legal p,.legal li{color:var(--text);opacity:.9}
+.skeleton{background:linear-gradient(90deg,var(--panel-2),var(--line),var(--panel-2));background-size:200% 100%;animation:sk 1.2s infinite;border-radius:8px;height:14px}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+/* ---------- Modal / sheet / toast / zoom ---------- */
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;animation:fade .12s ease}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3);width:100%;max-width:560px;max-height:calc(100% - 20px);display:flex;flex-direction:column}
+.modal.wide{max-width:860px}
+.modal .mh{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line)}.modal .mh b{font-size:16px;flex:1}
+.modal .mb{padding:16px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.modal .mf{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+#toasts{position:fixed;z-index:80;left:50%;transform:translateX(-50%);bottom:20px;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{background:#0f172a;color:#fff;padding:10px 14px;border-radius:10px;box-shadow:var(--shadow);font-weight:600;max-width:90vw;animation:fade .15s}
+.toast.err{background:var(--danger)}.toast.ok{background:var(--ok)}
+.zoomer{position:fixed;inset:0;z-index:90;background:rgba(2,6,23,.92);touch-action:none;overflow:hidden;user-select:none}
+.zoomer img{position:absolute;left:50%;top:50%;max-width:92vw;max-height:86vh;transform-origin:center center;will-change:transform;-webkit-user-drag:none}
+.zoomer .zbar{position:absolute;left:50%;transform:translateX(-50%);bottom:18px;display:flex;gap:6px;background:rgba(15,23,42,.8);padding:6px;border-radius:12px}
+.zoomer .zbar button{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:8px;min-width:42px;height:38px;cursor:pointer;font-weight:700}
+.zoomer .zcap{position:absolute;top:14px;left:16px;color:#e2e8f0;font-weight:600}
+.menu{position:fixed;z-index:60;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:6px;min-width:200px}
+.menu button{display:flex;width:100%;gap:10px;align-items:center;border:0;background:none;padding:9px 10px;border-radius:8px;cursor:pointer;text-align:left}.menu button:hover{background:var(--panel-2)}
+.progress{height:8px;border-radius:99px;background:var(--panel-2);overflow:hidden;border:1px solid var(--line)}.progress>div{height:100%;background:var(--accent);width:0}
+/* ---------- Responsif ---------- */
+@media (max-width: 860px){
+  #app{grid-template-columns:minmax(0,1fr);grid-template-rows:var(--top) minmax(0,1fr) var(--bottom);grid-template-areas:"top" "main" "bottom"}
+  .sidenav{display:none}
+  .sidenav.open{display:flex;position:fixed;top:var(--top);left:0;bottom:var(--bottom);width:260px;z-index:40;box-shadow:var(--shadow)}
+  .bottomnav{grid-area:bottom;display:flex;background:var(--panel);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+  .bottomnav button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;position:relative}
+  .bottomnav button.on{color:var(--accent)}
+  .bottomnav .cnt{position:absolute;top:6px;right:calc(50% - 20px);background:var(--warn);color:#fff;border-radius:99px;font-size:10px;padding:0 5px}
+  .tab{padding:12px}
+  .tab-h h2{flex-basis:100%}
+  .topbar .ttl small{display:none}
+  .hide-m{display:none!important}
+  .overlay{align-items:flex-end;padding:0}
+  .modal{max-width:100%!important;border-radius:16px 16px 0 0;max-height:92%}
+  .draw-panel{bottom:10px}
+  .layer-panel{right:10px;left:10px;width:auto;max-width:none;top:60px}
+  .map-top select{max-width:46vw}
+}
+@media (min-width: 861px){.show-m{display:none!important}}
+@media (max-width: 520px){#pill-net .lbl{display:none}.topbar{gap:6px;padding:0 8px}.topbar .logo{width:32px;height:32px}.pill{padding:4px 8px}}
+
+</style>
+</head>
+<body>
+<div id="login" class="hidden">
+  <div class="login-card">
+    <div class="login-brand">
+      <img id="lg-logo" alt="Logo" title="Klik untuk memperbesar">
+      <div><h1 id="lg-title">Universal Mobile Mapping GIS</h1><p id="lg-sub">Enterprise Field Mapping</p></div>
+    </div>
+    <form id="lg-form" class="col" autocomplete="on">
+      <label class="f">Username<input class="input" id="lg-user" name="username" autocomplete="username" autocapitalize="none" required maxlength="60"></label>
+      <label class="f">Password<div class="pw-wrap"><input class="input" id="lg-pass" type="password" name="password" autocomplete="current-password" required maxlength="128"><button type="button" class="btn ghost sm" id="lg-eye" aria-label="Tampilkan password">Lihat</button></div></label>
+      <div id="lg-err" class="small" style="color:var(--danger);min-height:18px" role="alert"></div>
+      <button class="btn primary" id="lg-btn" type="submit">Masuk</button>
+    </form>
+    <div id="lg-server" class="hidden" style="margin-top:12px">
+      <details><summary class="small muted" style="cursor:pointer">Pengaturan server</summary>
+        <div class="col" style="margin-top:8px"><label class="f">URL Web App Apps Script<input class="input mono small" id="lg-api" placeholder="https://script.google.com/macros/s/…/exec"></label>
+        <button type="button" class="btn sm" id="lg-api-save">Simpan &amp; uji koneksi</button><div id="lg-api-msg" class="small muted"></div></div>
+      </details>
+    </div>
+    <div id="lg-demo" class="demo-box hidden">
+      <b>Mode Demo</b><div class="small muted" style="margin:4px 0 8px">Semua data contoh berlabel [DEMO] dan disimpan hanya di browser ini. Password: <span class="mono">demo1234</span></div>
+      <div class="row wrap"><button class="btn sm" data-demo="admin">Admin</button><button class="btn sm" data-demo="supervisor">Supervisor</button><button class="btn sm" data-demo="surveyor">Surveyor</button><button class="btn sm" data-demo="viewer">Viewer</button></div>
+    </div>
+    <div class="login-foot"><span id="lg-ver"></span> · <a href="#" data-legal="terms">Syarat &amp; Ketentuan</a> · <a href="#" data-legal="privacy">Pemberitahuan Privasi</a></div>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+  <header class="topbar">
+    <button class="btn icon ghost show-m" id="btn-menu" aria-label="Menu"><svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <img class="logo" id="hd-logo" alt="Logo" title="Klik untuk memperbesar">
+    <div class="ttl grow"><b id="hd-title">Universal Mobile Mapping GIS</b><small id="hd-sub"></small></div>
+    <span class="badge b-pending hidden" id="hd-demo" title="Mode demo: data contoh disimpan di browser">DEMO</span>
+    <span class="pill" id="pill-net" title="Status koneksi"><span class="dot"></span><span class="lbl">Online</span></span>
+    <span class="pill" id="pill-sync" title="Antrean sinkronisasi"><span class="lbl">Tersinkron</span></span>
+    <div class="avatar" id="hd-avatar" title="Akun"></div>
+  </header>
+  <nav class="sidenav" id="sidenav"></nav>
+  <main id="main">
+    <section class="tab map" data-tab="map">
+      <div id="map"></div>
+      <div class="map-top">
+        <select class="input" id="sel-project" aria-label="Proyek"></select>
+        <select class="input" id="sel-layer" aria-label="Layer untuk data baru"></select>
+      </div>
+      <div class="tools" id="tools">
+        <button class="btn" data-tool="Point" title="Rekam titik"><svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg></button>
+        <button class="btn" data-tool="LineString" title="Rekam garis"><svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 18l6-8 4 4 6-9"/><circle cx="4" cy="18" r="1.8"/><circle cx="20" cy="5" r="1.8"/></svg></button>
+        <button class="btn" data-tool="Polygon" title="Rekam poligon"><svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 7l7-4 7 5-2 10H7z"/></svg></button>
+        <button class="btn" data-tool="measure" title="Ukur jarak/luas"><svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17L17 3l4 4L7 21z"/><path d="M7 13l2 2M10 10l2 2M13 7l2 2"/></svg></button>
+        <button class="btn" id="btn-gps" title="Posisi GPS / ikuti"><svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/></svg></button>
+        <button class="btn" id="btn-layers" title="Layer, basemap &amp; foto udara PMTiles"><svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg></button>
+        <button class="btn" id="btn-fit" title="Zoom ke data"><svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+      </div>
+      <span class="pill gps-chip" id="gps-chip"><span class="dot off"></span><span class="lbl">GPS mati</span></span>
+      <div class="draw-panel hidden" id="draw-panel"></div>
+      <div class="layer-panel hidden" id="layer-panel"></div>
+    </section>
+    <section class="tab hidden" data-tab="data"></section>
+    <section class="tab hidden" data-tab="sync"></section>
+    <section class="tab hidden" data-tab="dash"></section>
+    <section class="tab hidden" data-tab="projects"></section>
+    <section class="tab hidden" data-tab="admin"></section>
+    <section class="tab hidden" data-tab="profile"></section>
+    <section class="tab hidden" data-tab="about"></section>
+  </main>
+  <nav class="bottomnav" id="bottomnav"></nav>
+</div>
+<div id="toasts"></div>
+<noscript>Aplikasi ini membutuhkan JavaScript.</noscript>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/pmtiles@3.2.1/dist/pmtiles.js" crossorigin="anonymous"></script>
+<script>
+var CONFIG = { MODE: 'remote', API_URL: 'https://script.google.com/macros/s/AKfycbw-fm8ZIoQWyQKgvzpN1laXU5-K7WV8UfvirmPbsQ-bcSB8OXXtiya4CcpU-fduqtaqkA/exec', SW: true };
+/**
+ * 04_Geo.gs — kontrak & validasi geometri GeoJSON (RFC 7946, EPSG:4326),
+ * metrik geodesik (luas/panjang) dan konversi UTM untuk tampilan.
+ * File ini murni JavaScript (tanpa API GAS) dan juga dipakai frontend.
+ */
+var Geo = (function () {
+  var R = 6378137; // jari-jari WGS84 (m)
+  var toRad = Math.PI / 180;
+
+  function isNum(v) { return typeof v === 'number' && isFinite(v); }
+
+  function checkPos(p, errs, where) {
+    if (!Array.isArray(p) || p.length < 2 || p.length > 4) { errs.push('Koordinat ' + where + ' tidak valid.'); return false; }
+    if (!isNum(p[0]) || !isNum(p[1])) { errs.push('Koordinat ' + where + ' bukan angka.'); return false; }
+    if (p[0] < -180 || p[0] > 180) { errs.push('Bujur (lon) ' + where + ' di luar rentang -180..180.'); return false; }
+    if (p[1] < -90 || p[1] > 90) { errs.push('Lintang (lat) ' + where + ' di luar rentang -90..90.'); return false; }
+    return true;
+  }
+
+  function samePos(a, b) { return a[0] === b[0] && a[1] === b[1]; }
+
+  function segIntersect(p1, p2, p3, p4) {
+    function orient(a, b, c) {
+      var v = (b[1] - a[1]) * (c[0] - b[0]) - (b[0] - a[0]) * (c[1] - b[1]);
+      return Math.abs(v) < 1e-15 ? 0 : (v > 0 ? 1 : 2);
+    }
+    function onSeg(a, b, c) {
+      return Math.min(a[0], c[0]) <= b[0] && b[0] <= Math.max(a[0], c[0]) && Math.min(a[1], c[1]) <= b[1] && b[1] <= Math.max(a[1], c[1]);
+    }
+    var o1 = orient(p1, p2, p3), o2 = orient(p1, p2, p4), o3 = orient(p3, p4, p1), o4 = orient(p3, p4, p2);
+    if (o1 !== o2 && o3 !== o4) return true;
+    if (o1 === 0 && onSeg(p1, p3, p2)) return true;
+    if (o2 === 0 && onSeg(p1, p4, p2)) return true;
+    if (o3 === 0 && onSeg(p3, p1, p4)) return true;
+    if (o4 === 0 && onSeg(p3, p2, p4)) return true;
+    return false;
+  }
+
+  /** Deteksi self-intersection ring (O(n^2), dibatasi 3000 vertex demi kinerja). */
+  function ringSelfIntersects(ring) {
+    var n = ring.length - 1;
+    if (n > 3000) return false;
+    for (var i = 0; i < n; i++) {
+      for (var j = i + 1; j < n; j++) {
+        if (Math.abs(i - j) <= 1 || (i === 0 && j === n - 1)) continue;
+        if (segIntersect(ring[i], ring[i + 1], ring[j], ring[j + 1])) return true;
+      }
+    }
+    return false;
+  }
+
+  function ringArea(ring) {
+    // Luas pada bola (metode Chamberlain & Duquette, sama seperti turf.js)
+    if (ring.length > 1 && samePos(ring[0], ring[ring.length - 1])) ring = ring.slice(0, -1);
+    var area = 0, n = ring.length;
+    if (n < 3) return 0;
+    for (var i = 0; i < n; i++) {
+      var lower = ring[i], middle = ring[(i + 1) % n], upper = ring[(i + 2) % n];
+      area += (upper[0] * toRad - lower[0] * toRad) * Math.sin(middle[1] * toRad);
+    }
+    return Math.abs(area * R * R / 2);
+  }
+
+  function haversine(a, b) {
+    var dLat = (b[1] - a[1]) * toRad, dLon = (b[0] - a[0]) * toRad;
+    var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(a[1] * toRad) * Math.cos(b[1] * toRad) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+  }
+
+  function lineLength(coords) {
+    var d = 0;
+    for (var i = 1; i < coords.length; i++) d += haversine(coords[i - 1], coords[i]);
+    return d;
+  }
+
+  function bbox(geom) {
+    var b = [180, 90, -180, -90];
+    function add(p) { if (p[0] < b[0]) b[0] = p[0]; if (p[1] < b[1]) b[1] = p[1]; if (p[0] > b[2]) b[2] = p[0]; if (p[1] > b[3]) b[3] = p[1]; }
+    if (geom.type === 'Point') add(geom.coordinates);
+    else if (geom.type === 'LineString') geom.coordinates.forEach(add);
+    else if (geom.type === 'Polygon') geom.coordinates.forEach(function (r) { r.forEach(add); });
+    return b.map(function (v) { return Math.round(v * 1e7) / 1e7; });
+  }
+
+  function metrics(geom) {
+    if (geom.type === 'LineString') return { length_m: Math.round(lineLength(geom.coordinates) * 100) / 100 };
+    if (geom.type === 'Polygon') {
+      var outer = ringArea(geom.coordinates[0]);
+      for (var i = 1; i < geom.coordinates.length; i++) outer -= ringArea(geom.coordinates[i]);
+      return { area_m2: Math.round(outer * 100) / 100, area_ha: Math.round(outer / 100) / 100, perimeter_m: Math.round(lineLength(geom.coordinates[0]) * 100) / 100 };
+    }
+    return {};
+  }
+
+  /**
+   * Validasi geometri terhadap tipe yang diharapkan layer.
+   * @return {{ok:boolean, errors:string[], bbox?:number[], metrics?:Object, vertices?:number}}
+   */
+  function validate(geom, expectedType, opts) {
+    opts = opts || {};
+    var errs = [];
+    if (!geom || typeof geom !== 'object') return { ok: false, errors: ['Geometri kosong.'] };
+    if (GEOM_TYPES_.indexOf(geom.type) < 0) return { ok: false, errors: ['Tipe geometri "' + geom.type + '" tidak didukung.'] };
+    if (expectedType && geom.type !== expectedType) return { ok: false, errors: ['Tipe geometri ' + geom.type + ' tidak sesuai layer (' + expectedType + ').'] };
+    var c = geom.coordinates, vertices = 0;
+    if (!Array.isArray(c) || !c.length) return { ok: false, errors: ['Geometri kosong (tanpa koordinat).'] };
+    if (geom.type === 'Point') {
+      checkPos(c, errs, 'titik'); vertices = 1;
+    } else if (geom.type === 'LineString') {
+      if (c.length < 2) errs.push('Garis minimal 2 titik.');
+      c.forEach(function (p, i) { if (errs.length < 5) checkPos(p, errs, '#' + (i + 1)); });
+      vertices = c.length;
+      if (!errs.length && lineLength(c) <= 0) errs.push('Panjang garis nol.');
+    } else {
+      c.forEach(function (ring, ri) {
+        if (!Array.isArray(ring) || ring.length < 4) { errs.push('Ring ' + (ri + 1) + ' minimal 4 posisi (tertutup).'); return; }
+        ring.forEach(function (p, i) { if (errs.length < 5) checkPos(p, errs, 'ring ' + (ri + 1) + ' #' + (i + 1)); });
+        vertices += ring.length;
+        if (!errs.length && !samePos(ring[0], ring[ring.length - 1])) errs.push('Ring ' + (ri + 1) + ' tidak tertutup.');
+        if (!errs.length && ringSelfIntersects(ring)) errs.push('Ring ' + (ri + 1) + ' berpotongan sendiri (self-intersection).');
+      });
+      if (!errs.length && ringArea(c[0]) <= 0.01) errs.push('Luas poligon nol / terlalu kecil.');
+    }
+    if (vertices > (opts.maxVertices || 20000)) errs.push('Jumlah vertex (' + vertices + ') melebihi batas.');
+    if (errs.length) return { ok: false, errors: errs, vertices: vertices };
+    var bb = bbox(geom);
+    if (opts.workArea && (bb[0] < opts.workArea[0] || bb[1] < opts.workArea[1] || bb[2] > opts.workArea[2] || bb[3] > opts.workArea[3])) {
+      return { ok: false, errors: ['Geometri berada di luar area kerja proyek.'], vertices: vertices };
+    }
+    return { ok: true, errors: [], bbox: bb, metrics: metrics(geom), vertices: vertices };
+  }
+
+  /** Bulatkan koordinat ke 7 desimal (~1 cm) untuk menekan ukuran payload. */
+  function round(geom) {
+    function r(p) { return [Math.round(p[0] * 1e7) / 1e7, Math.round(p[1] * 1e7) / 1e7].concat(p.length > 2 && isNum(p[2]) ? [Math.round(p[2] * 100) / 100] : []); }
+    if (geom.type === 'Point') return { type: 'Point', coordinates: r(geom.coordinates) };
+    if (geom.type === 'LineString') return { type: 'LineString', coordinates: geom.coordinates.map(r) };
+    return { type: 'Polygon', coordinates: geom.coordinates.map(function (ring) { return ring.map(r); }) };
+  }
+
+  /** Konversi WGS84 -> UTM (untuk tampilan surveyor; bukan transformasi datum lokal). */
+  function toUTM(lon, lat) {
+    var a = 6378137, f = 1 / 298.257223563, k0 = 0.9996;
+    var zone = Math.floor((lon + 180) / 6) + 1;
+    var lon0 = ((zone - 1) * 6 - 180 + 3) * toRad;
+    var e2 = f * (2 - f), ep2 = e2 / (1 - e2);
+    var phi = lat * toRad, lam = lon * toRad;
+    var N = a / Math.sqrt(1 - e2 * Math.sin(phi) * Math.sin(phi));
+    var T = Math.tan(phi) * Math.tan(phi), C = ep2 * Math.cos(phi) * Math.cos(phi), A = Math.cos(phi) * (lam - lon0);
+    var M = a * ((1 - e2 / 4 - 3 * e2 * e2 / 64 - 5 * e2 * e2 * e2 / 256) * phi - (3 * e2 / 8 + 3 * e2 * e2 / 32 + 45 * e2 * e2 * e2 / 1024) * Math.sin(2 * phi)
+      + (15 * e2 * e2 / 256 + 45 * e2 * e2 * e2 / 1024) * Math.sin(4 * phi) - (35 * e2 * e2 * e2 / 3072) * Math.sin(6 * phi));
+    var x = k0 * N * (A + (1 - T + C) * A * A * A / 6 + (5 - 18 * T + T * T + 72 * C - 58 * ep2) * Math.pow(A, 5) / 120) + 500000;
+    var y = k0 * (M + N * Math.tan(phi) * (A * A / 2 + (5 - T + 9 * C + 4 * C * C) * Math.pow(A, 4) / 24 + (61 - 58 * T + T * T + 600 * C - 330 * ep2) * Math.pow(A, 6) / 720));
+    var south = lat < 0;
+    if (south) y += 10000000;
+    return { zone: zone, hemi: south ? 'S' : 'N', easting: Math.round(x * 100) / 100, northing: Math.round(y * 100) / 100, epsg: (south ? 32700 : 32600) + zone };
+  }
+
+  var GEOM_TYPES_ = ['Point', 'LineString', 'Polygon'];
+
+  return { validate: validate, metrics: metrics, bbox: bbox, round: round, haversine: haversine, lineLength: lineLength, ringArea: ringArea, toUTM: toUTM, ringSelfIntersects: ringSelfIntersects };
+})();
+
+/* Universal Mobile Mapping GIS — frontend SPA (vanilla JS, tanpa build tool).
+ * Mode: 'gas' (HtmlService/google.script.run), 'remote' (PWA GitHub Pages -> fetch Web App), 'demo' (backend emulasi di browser).
+ */
+'use strict';
+var APP_VERSION = '1.0.0', APP_BUILD = '2026-10-30';
+var S = { token: '', user: null, org: null, perms: [], settings: {}, license: {}, projects: [], layers: [], users: [],
+  features: new Map(), serverVer: {}, projectId: '', layerId: '', hiddenLayers: new Set(), online: navigator.onLine, tab: 'map', rendered: {} };
+
+// ======================================================= Util
+var $ = function (s, r) { return (r || document).querySelector(s); };
+var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+function esc(v) { return String(v === undefined || v === null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function uuid() { if (crypto.randomUUID) return crypto.randomUUID(); var b = crypto.getRandomValues(new Uint8Array(16)); b[6] = (b[6] & 15) | 64; b[8] = (b[8] & 63) | 128; var h = Array.from(b, function (x) { return x.toString(16).padStart(2, '0'); }).join(''); return h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20); }
+function fmtDate(iso) { if (!iso) return '-'; var d = new Date(iso); return isNaN(d) ? esc(iso) : d.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+function fmtNum(n, d) { return Number(n || 0).toLocaleString('id-ID', { maximumFractionDigits: d === undefined ? 2 : d }); }
+function can(p) { return S.perms.indexOf('*') >= 0 || S.perms.indexOf(p) >= 0; }
+function debounce(fn, ms) { var t; return function () { var a = arguments, s = this; clearTimeout(t); t = setTimeout(function () { fn.apply(s, a); }, ms); }; }
+function initials(n) { return String(n || '?').split(/\s+/).map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase(); }
+function userName(id) { var u = S.users.find(function (x) { return x.id === id; }); return u ? u.name : (id ? id.slice(0, 8) : '-'); }
+function layerById(id) { return S.layers.find(function (l) { return l.id === id; }); }
+var STATUS_LBL = { draft: 'Draft', submitted: 'Diajukan', approved: 'Disetujui', revision: 'Revisi', rejected: 'Ditolak' };
+var ROLE_LBL = { admin: 'Admin', supervisor: 'Supervisor', surveyor: 'Surveyor', viewer: 'Viewer' };
+function badge(st) { return '<span class="badge b-' + esc(st) + '">' + esc(STATUS_LBL[st] || st) + '</span>'; }
+var ICON = {
+  map: '<path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>', data: '<path d="M4 6h16M4 12h16M4 18h10"/>',
+  sync: '<path d="M20 11a8 8 0 0 0-14.9-3M4 13a8 8 0 0 0 14.9 3"/><path d="M4 4v4h4M20 20v-4h-4"/>', dash: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  projects: '<path d="M3 7h7l2 2h9v10H3z"/>', admin: '<path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/>',
+  profile: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>', about: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>',
+  logout: '<path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11"/>', theme: '<path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/>', more: '<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>'
+};
+function ic(n) { return '<svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (ICON[n] || '') + '</svg>'; }
+var DEFAULT_LOGO = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0f766e"/><path d="M10 22l14-6 16 6 14-6v28l-14 6-16-6-14 6z" fill="none" stroke="#99f6e4" stroke-width="2.5" stroke-linejoin="round"/><path d="M24 16v28M40 22v28" stroke="#5eead4" stroke-width="2"/><path d="M32 46s9-8 9-15a9 9 0 0 0-18 0c0 7 9 15 9 15z" fill="#fff"/><circle cx="32" cy="31" r="3.4" fill="#0f766e"/></svg>');
+
+// ======================================================= Toast / Modal / Menu
+function toast(msg, type, ms) { var t = document.createElement('div'); t.className = 'toast ' + (type || ''); t.textContent = msg; $('#toasts').appendChild(t); setTimeout(function () { t.remove(); }, ms || 3200); }
+function modal(opt) {
+  var ov = document.createElement('div'); ov.className = 'overlay';
+  ov.innerHTML = '<div class="modal ' + (opt.wide ? 'wide' : '') + '" role="dialog" aria-modal="true"><div class="mh"><b>' + esc(opt.title || '') + '</b><button class="btn icon ghost" data-x aria-label="Tutup">✕</button></div><div class="mb"></div>' + (opt.foot === false ? '' : '<div class="mf"></div>') + '</div>';
+  var mb = $('.mb', ov), mf = $('.mf', ov);
+  if (typeof opt.body === 'string') mb.innerHTML = opt.body; else if (opt.body) mb.appendChild(opt.body);
+  function close(v) { ov.remove(); document.removeEventListener('keydown', onKey); if (opt.onClose) opt.onClose(v); }
+  function onKey(e) { if (e.key === 'Escape' && !$('.zoomer')) close(); }
+  document.addEventListener('keydown', onKey);
+  $('[data-x]', ov).onclick = function () { close(); };
+  ov.addEventListener('mousedown', function (e) { if (e.target === ov && !opt.sticky) close(); });
+  (opt.buttons || []).forEach(function (b) {
+    var el = document.createElement('button'); el.className = 'btn ' + (b.cls || ''); el.textContent = b.label; el.type = 'button';
+    el.onclick = async function () { if (!b.onClick) return close(); el.disabled = true; try { var r = await b.onClick(mb, el); if (r !== false) close(r); } catch (e) { toast(e.message, 'err', 5000); } finally { el.disabled = false; } };
+    mf.appendChild(el);
+  });
+  document.body.appendChild(ov);
+  var first = $('input,select,textarea', mb); if (first && opt.focus !== false && window.innerWidth > 860) setTimeout(function () { first.focus(); }, 30);
+  return { el: ov, body: mb, close: close };
+}
+function confirmBox(title, msg, okLabel, danger) {
+  return new Promise(function (res) {
+    modal({ title: title, body: '<p style="margin:0">' + esc(msg) + '</p>', onClose: function (v) { res(v === true); },
+      buttons: [{ label: 'Batal' }, { label: okLabel || 'Ya', cls: danger ? 'danger solid' : 'primary', onClick: function () { return true; } }] });
+  });
+}
+function popMenu(anchor, items) {
+  $$('.menu').forEach(function (m) { m.remove(); });
+  var m = document.createElement('div'); m.className = 'menu';
+  items.forEach(function (it) { var b = document.createElement('button'); b.innerHTML = (it.icon ? ic(it.icon) : '') + '<span>' + esc(it.label) + '</span>'; b.onclick = function () { m.remove(); it.onClick(); }; m.appendChild(b); });
+  document.body.appendChild(m);
+  var r = anchor.getBoundingClientRect();
+  var top = r.bottom + 6; if (top + m.offsetHeight > window.innerHeight - 8) top = Math.max(8, r.top - m.offsetHeight - 6);
+  m.style.top = top + 'px'; m.style.left = Math.max(8, Math.min(window.innerWidth - m.offsetWidth - 8, r.right - m.offsetWidth)) + 'px';
+  setTimeout(function () { document.addEventListener('click', function h(e) { if (!m.contains(e.target)) { m.remove(); document.removeEventListener('click', h); } }); }, 0);
+}
+
+// ======================================================= Zoom viewer (foto profil, logo, foto lapangan)
+var Zoom = {
+  open: function (src, caption) {
+    if (!src) return;
+    var z = document.createElement('div'); z.className = 'zoomer';
+    z.innerHTML = '<div class="zcap">' + esc(caption || '') + '</div><img alt=""><div class="zbar"><button data-a="out" aria-label="Perkecil">−</button><button data-a="reset">1:1</button><button data-a="in" aria-label="Perbesar">+</button><button data-a="close" aria-label="Tutup">✕</button></div>';
+    var img = $('img', z); img.src = src;
+    var st = { s: 1, x: 0, y: 0 }, pts = new Map(), last = null, pinch0 = null;
+    function apply() { img.style.transform = 'translate(calc(-50% + ' + st.x + 'px), calc(-50% + ' + st.y + 'px)) scale(' + st.s + ')'; }
+    function zoomBy(f, cx, cy) {
+      var ns = Math.min(8, Math.max(1, st.s * f));
+      if (cx !== undefined) { var dx = cx - window.innerWidth / 2 - st.x, dy = cy - window.innerHeight / 2 - st.y; st.x -= dx * (ns / st.s - 1); st.y -= dy * (ns / st.s - 1); }
+      st.s = ns; if (ns === 1) { st.x = 0; st.y = 0; } apply();
+    }
+    function close() { z.remove(); document.removeEventListener('keydown', key); }
+    function key(e) { if (e.key === 'Escape') close(); if (e.key === '+' || e.key === '=') zoomBy(1.25); if (e.key === '-') zoomBy(0.8); }
+    document.addEventListener('keydown', key);
+    z.addEventListener('wheel', function (e) { e.preventDefault(); zoomBy(e.deltaY < 0 ? 1.15 : 0.87, e.clientX, e.clientY); }, { passive: false });
+    z.addEventListener('dblclick', function (e) { if (e.target === img) zoomBy(st.s > 1.5 ? 1 / st.s : 2.5, e.clientX, e.clientY); });
+    z.addEventListener('pointerdown', function (e) { if (e.target.closest('.zbar')) return; z.setPointerCapture(e.pointerId); pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); last = { x: e.clientX, y: e.clientY }; if (pts.size === 2) { var a = Array.from(pts.values()); pinch0 = { d: Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y), s: st.s }; } });
+    z.addEventListener('pointermove', function (e) {
+      if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pts.size === 2 && pinch0) { var a = Array.from(pts.values()); var d = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y); st.s = Math.min(8, Math.max(1, pinch0.s * d / pinch0.d)); apply(); }
+      else if (pts.size === 1 && st.s > 1 && last) { st.x += e.clientX - last.x; st.y += e.clientY - last.y; last = { x: e.clientX, y: e.clientY }; apply(); }
+    });
+    function up(e) { pts.delete(e.pointerId); if (pts.size < 2) pinch0 = null; if (!pts.size) last = null; else last = Array.from(pts.values())[0]; }
+    z.addEventListener('pointerup', up); z.addEventListener('pointercancel', up);
+    z.addEventListener('click', function (e) { var a = e.target.getAttribute && e.target.getAttribute('data-a'); if (a === 'in') zoomBy(1.4); else if (a === 'out') zoomBy(0.7); else if (a === 'reset') { st = { s: 1, x: 0, y: 0 }; apply(); } else if (a === 'close' || e.target === z) close(); });
+    apply(); document.body.appendChild(z);
+  }
+};
+
+// ======================================================= IndexedDB
+var IDB = {
+  db: null,
+  open: function () {
+    return new Promise(function (res) {
+      if (!window.indexedDB) return res(null);
+      var rq;
+      try { rq = indexedDB.open('umg-enterprise', 2); } catch (e) { return res(null); }
+      rq.onupgradeneeded = function () { var d = rq.result; ['kv', 'ops', 'pmtiles'].forEach(function (n) { if (!d.objectStoreNames.contains(n)) d.createObjectStore(n, { keyPath: n === 'kv' ? 'k' : (n === 'ops' ? 'op_id' : 'name') }); }); };
+      rq.onsuccess = function () { IDB.db = rq.result; res(IDB.db); };
+      rq.onerror = function () { console.warn('IndexedDB tidak tersedia', rq.error); res(null); };
+    });
+  },
+  _tx: function (store, mode, fn) {
+    return new Promise(function (res, rej) {
+      if (!IDB.db) return rej(new Error('Penyimpanan lokal (IndexedDB) tidak tersedia di browser ini.'));
+      var tx = IDB.db.transaction(store, mode), st = tx.objectStore(store), out;
+      var r = fn(st); if (r) r.onsuccess = function () { out = r.result; };
+      tx.oncomplete = function () { res(out); };
+      tx.onerror = tx.onabort = function () { var e = tx.error || new Error('Transaksi IndexedDB gagal'); if (e.name === 'QuotaExceededError') e = new Error('Penyimpanan perangkat penuh. Hapus data offline (PMTiles) atau sinkronkan data.'); rej(e); };
+    });
+  },
+  get: function (s, k) { return IDB._tx(s, 'readonly', function (st) { return st.get(k); }); },
+  put: function (s, v) { return IDB._tx(s, 'readwrite', function (st) { return st.put(v); }); },
+  del: function (s, k) { return IDB._tx(s, 'readwrite', function (st) { return st.delete(k); }); },
+  all: function (s) { return IDB._tx(s, 'readonly', function (st) { return st.getAll(); }); },
+  clear: function (s) { return IDB._tx(s, 'readwrite', function (st) { return st.clear(); }); },
+  kvGet: function (k) { return IDB.get('kv', k).then(function (r) { return r ? r.v : undefined; }).catch(function () { return undefined; }); },
+  kvSet: function (k, v) { return IDB.put('kv', { k: k, v: v }).catch(function (e) { console.warn('kvSet', k, e); }); }
+};
+var LS = { get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: function (k, v) { try { if (v === null || v === undefined) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { /* storage diblokir */ } } };
+
+// ======================================================= API adapter
+var Api = {
+  url: function () { return LS.get('umg_api_url') || CONFIG.API_URL || ''; },
+  call: function (action, payload, opt) {
+    opt = opt || {};
+    var tok = S.token;
+    var p = new Promise(function (resolve, reject) {
+      function done(res) {
+        if (typeof res === 'string') { try { res = JSON.parse(res); } catch (e) { return reject(Object.assign(new Error('Respons server tidak valid.'), { network: true })); } }
+        if (!res || !res.ok) {
+          var er = (res && res.error) || {}; var e2 = new Error(er.message || 'Permintaan gagal.'); e2.code = er.code; e2.extra = er.extra; e2.server = true;
+          if (e2.code === 'UNAUTHENTICATED' && action !== 'auth.login') Auth.expired();
+          return reject(e2);
+        }
+        resolve(res.data);
+      }
+      function fail(err) { var e = new Error((err && err.message) || 'Tidak dapat terhubung ke server.'); e.network = true; reject(e); }
+      if (CONFIG.MODE === 'demo') { setTimeout(function () { try { done(Demo.api(action, payload || {}, tok)); } catch (e) { fail(e); } }, 60); return; }
+      if (CONFIG.MODE === 'gas' && window.google && google.script) { google.script.run.withSuccessHandler(done).withFailureHandler(fail).api(action, payload || {}, tok); return; }
+      var url = Api.url();
+      if (!url) return reject(Object.assign(new Error('URL server belum diatur. Buka "Pengaturan server".'), { code: 'NO_SERVER' }));
+      if (!navigator.onLine) return fail({ message: 'Perangkat sedang offline.' });
+      var ctl = new AbortController(), to = setTimeout(function () { ctl.abort(); }, opt.timeout || 45000);
+      fetch(url, { method: 'POST', body: JSON.stringify({ action: action, payload: payload || {}, token: tok }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }, signal: ctl.signal, redirect: 'follow', credentials: 'omit' })
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+        .then(done).catch(fail).finally(function () { clearTimeout(to); });
+    });
+    return p;
+  }
+};
+
+// ======================================================= Demo backend (emulasi di browser)
+var Demo = {
+  srv: null,
+  init: function () {
+    if (CONFIG.MODE !== 'demo') return;
+    var KEY = 'umg_demo_state_v1', state = null;
+    try { state = JSON.parse(LS.get(KEY) || 'null'); } catch (e) { state = null; }
+    var save = debounce(function () { try { localStorage.setItem(KEY, JSON.stringify(env._state)); } catch (e) { toast('Penyimpanan demo penuh (localStorage). Reset demo di menu Tentang.', 'err', 6000); } }, 400);
+    var env = GasShim.createGasEnv({ state: state || undefined, onWrite: save });
+    Demo.srv = UMGServerFactory(env);
+    if (!state) {
+      env._state.props.PHOTO_STORE = 'sheet';
+      Demo.srv.setup();
+      Demo.srv.Db.reset();
+      var admin = Demo.srv.Db.all('Users')[0];
+      Demo.srv.Db.update('Users', admin, { pass_hash: Demo.srv.Sec.hashPassword('demo1234'), name: 'Admin Demo' });
+      Demo.srv.seedDemo('demo1234');
+      save();
+    }
+  },
+  api: function (a, p, t) { return Demo.srv.api(a, JSON.parse(JSON.stringify(p)), t); },
+  reset: function () { LS.set('umg_demo_state_v1', null); }
+};
+
+// ======================================================= Branding & tema
+var Brand = {
+  data: { title: 'Universal Mobile Mapping GIS', subtitle: 'Enterprise Field Mapping', accent: '#0f766e', logo: '' },
+  apply: function (b) {
+    if (b) Object.assign(Brand.data, b);
+    var d = Brand.data, logo = d.logo || DEFAULT_LOGO;
+    document.title = d.title;
+    ['#lg-logo', '#hd-logo'].forEach(function (s) { var i = $(s); if (i && i.src !== logo) i.src = logo; });
+    $('#lg-title').textContent = d.title; $('#hd-title').textContent = d.title;
+    $('#lg-sub').textContent = d.subtitle || ''; $('#hd-sub').textContent = (d.subtitle || '') + (S.org ? ' · ' + S.org.name : '');
+    if (/^#[0-9a-f]{6}$/i.test(d.accent || '')) { document.documentElement.style.setProperty('--accent', d.accent); document.documentElement.style.setProperty('--accent-2', shade(d.accent, -18)); var m = $('meta[name=theme-color]'); if (m) m.content = d.accent; }
+  },
+  refresh: async function (ver) {
+    var cached = await IDB.kvGet('branding');
+    if (cached && ver !== undefined && cached.logo_ver === ver) return;
+    try { var b = await Api.call('branding.get'); Brand.apply(b); IDB.kvSet('branding', b); } catch (e) { /* offline: pakai cache */ }
+  }
+};
+function shade(hex, pct) { var n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255; var f = function (c) { return Math.max(0, Math.min(255, Math.round(c + c * pct / 100))); }; return '#' + [f(r), f(g), f(b)].map(function (c) { return c.toString(16).padStart(2, '0'); }).join(''); }
+var Theme = {
+  init: function () { var t = LS.get('umg_theme') || (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); Theme.set(t); },
+  set: function (t) { document.documentElement.setAttribute('data-theme', t); LS.set('umg_theme', t); if (MapView.map) MapView.restyle(); },
+  toggle: function () { Theme.set(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); }
+};
+
+// ======================================================= Auth
+var Auth = {
+  login: async function (u, p) {
+    var d = await Api.call('auth.login', { username: u, password: p });
+    S.token = d.token; LS.set('umg_token', d.token);
+    await App.enter(d.boot, false);
+  },
+  logout: async function () {
+    var pending = (await Sync.pendingOps()).length;
+    if (pending && !(await confirmBox('Keluar', 'Masih ada ' + pending + ' perubahan belum tersinkron. Data tetap tersimpan di perangkat ini dan akan dikirim saat Anda login kembali dengan akun yang sama. Lanjutkan keluar?', 'Keluar'))) return;
+    if (S.token) Api.call('auth.logout').catch(function () { /* sesi tetap kedaluwarsa otomatis di server */ });
+    App.leave();
+  },
+  expired: function () { if (!S.user) return; toast('Sesi berakhir. Silakan login kembali.', 'err', 5000); App.leave(); }
+};
+
+// ======================================================= App shell
+var NAV = [
+  { id: 'map', label: 'Peta', icon: 'map' }, { id: 'data', label: 'Data Survei', icon: 'data' }, { id: 'sync', label: 'Sinkronisasi', icon: 'sync' },
+  { id: 'dash', label: 'Dashboard', icon: 'dash' }, { id: 'projects', label: 'Proyek & Layer', icon: 'projects' },
+  { id: 'admin', label: 'Administrasi', icon: 'admin', perm: '*' }, { id: 'profile', label: 'Profil Saya', icon: 'profile' }, { id: 'about', label: 'Tentang & Legal', icon: 'about' }
+];
+var App = {
+  enter: async function (boot, fromCache) {
+    App.applyBoot(boot);
+    $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
+    App.renderNav();
+    App.show(S.tab && S.tab !== 'admin' ? S.tab : 'map');
+    if (!fromCache) IDB.kvSet('boot', Object.assign({}, boot, { features: undefined }));
+    await Sync.loadLocal(boot.features, fromCache);
+    MapView.refreshData();
+    Sync.updateBadge();
+    if (!fromCache) Brand.refresh(boot.settings.logo_ver);
+    if (boot.features_next) App.loadMoreFeatures(boot.features_next);
+    Sync.schedule(800);
+  },
+  applyBoot: function (b) {
+    S.user = b.user; S.org = b.org; S.perms = b.perms || []; S.settings = b.settings || {}; S.license = b.license || {};
+    S.projects = b.projects || []; S.layers = b.layers || []; S.users = b.users || []; S.serverApp = b.app || {};
+    if (!S.projects.find(function (p) { return p.id === S.projectId; })) S.projectId = (S.projects.find(function (p) { return p.status !== 'archived'; }) || S.projects[0] || {}).id || '';
+    Brand.apply({ title: S.settings.title, subtitle: S.settings.subtitle, accent: S.settings.accent });
+    App.renderAvatar();
+    S.rendered = {};
+    $('#hd-demo').classList.toggle('hidden', CONFIG.MODE !== 'demo');
+  },
+  loadMoreFeatures: async function (offset) {
+    try {
+      while (offset !== null && offset !== undefined) {
+        var pg = await Api.call('features.list', { offset: offset, limit: 2000 });
+        pg.items.forEach(function (f) { Sync.acceptServer(f); });
+        offset = pg.next;
+      }
+      Sync.persistFeatures(); MapView.refreshData();
+    } catch (e) { console.warn('loadMore', e); }
+  },
+  refreshBoot: async function () {
+    try { var b = await Api.call('boot'); App.applyBoot(b); IDB.kvSet('boot', Object.assign({}, b, { features: undefined })); await Sync.loadLocal(b.features, false); App.renderNav(); MapView.refreshData(); App.rerender(); Brand.refresh(b.settings.logo_ver); if (b.features_next) App.loadMoreFeatures(b.features_next); }
+    catch (e) { if (!e.network) console.warn(e); }
+  },
+  leave: function () {
+    S.token = ''; LS.set('umg_token', null); IDB.kvSet('boot', null); IDB.kvSet('features', null);
+    S.user = null; S.features = new Map(); S.serverVer = {};
+    Draw.cancel(); GPS.stop();
+    $('#app').classList.add('hidden'); $('#login').classList.remove('hidden');
+    $('#lg-pass').value = ''; $('#lg-err').textContent = '';
+  },
+  renderAvatar: function () {
+    var a = $('#hd-avatar'); if (!S.user) return;
+    a.innerHTML = S.user.photo ? '<img alt="" src="' + esc(S.user.photo) + '">' : esc(initials(S.user.name));
+  },
+  renderNav: function () {
+    var items = NAV.filter(function (n) { return !n.perm || can(n.perm); });
+    $('#sidenav').innerHTML = items.map(function (n) { return '<button class="nav-i" data-nav="' + n.id + '">' + ic(n.icon) + '<span>' + esc(n.label) + '</span>' + (n.id === 'sync' ? '<span class="cnt hidden" data-cnt></span>' : '') + '</button>'; }).join('') +
+      '<div class="side-foot">v' + APP_VERSION + ' · ' + esc(ROLE_LBL[S.user.role]) + '<br>' + esc(S.org.name) + '</div>';
+    var bn = ['map', 'data', 'sync', 'dash'];
+    $('#bottomnav').innerHTML = bn.map(function (id) { var n = NAV.find(function (x) { return x.id === id; }); return '<button data-nav="' + id + '">' + ic(n.icon) + '<span>' + esc(n.label.split(' ')[0]) + '</span>' + (id === 'sync' ? '<span class="cnt hidden" data-cnt></span>' : '') + '</button>'; }).join('') + '<button data-more>' + ic('more') + '<span>Lainnya</span></button>';
+    App.markNav();
+  },
+  markNav: function () { $$('[data-nav]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-nav') === S.tab); }); },
+  show: function (tab) {
+    if (tab === 'admin' && !can('*')) tab = 'map';
+    S.tab = tab;
+    $$('.tab').forEach(function (s) { s.classList.toggle('hidden', s.getAttribute('data-tab') !== tab); });
+    App.markNav(); $('#sidenav').classList.remove('open');
+    if (tab === 'map') { MapView.ensure(); if (MapView.map) requestAnimationFrame(function () { MapView.map.resize(); }); }
+    else if (!S.rendered[tab]) { Tabs[tab](); S.rendered[tab] = true; }
+  },
+  rerender: function (tab) {
+    if (tab) { S.rendered[tab] = false; if (S.tab === tab) { Tabs[tab](); S.rendered[tab] = true; } return; }
+    S.rendered = {}; if (S.tab !== 'map') { Tabs[S.tab](); S.rendered[S.tab] = true; }
+  }
+};
+
+// ======================================================= Gambar: kompresi foto
+function readImage(file, maxSize, quality, square) {
+  return new Promise(function (res, rej) {
+    if (!/^image\/(jpeg|png|webp|heic|heif)$/i.test(file.type) && !/\.(jpe?g|png|webp)$/i.test(file.name)) return rej(new Error('File harus berupa gambar JPEG/PNG/WebP.'));
+    if (file.size > 25 * 1024 * 1024) return rej(new Error('Gambar terlalu besar (maks 25 MB sebelum kompresi).'));
+    var url = URL.createObjectURL(file), img = new Image();
+    img.onload = function () {
+      var w = img.naturalWidth, h = img.naturalHeight, sx = 0, sy = 0, sw = w, sh = h;
+      if (square) { var m = Math.min(w, h); sx = (w - m) / 2; sy = (h - m) / 2; sw = sh = m; w = h = m; }
+      var k = Math.min(1, maxSize / Math.max(w, h)), c = document.createElement('canvas');
+      c.width = Math.round(w * k); c.height = Math.round(h * k);
+      var g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, sx, sy, sw, sh, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      res(c.toDataURL('image/jpeg', quality || 0.78));
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); rej(new Error('Gambar tidak dapat dibaca (format tidak didukung browser).')); };
+    img.src = url;
+  });
+}
+var MediaCache = {
+  mem: new Map(),
+  get: async function (ref) {
+    if (!ref) return '';
+    if (ref.indexOf('data:') === 0) return ref;
+    if (MediaCache.mem.has(ref)) return MediaCache.mem.get(ref);
+    var c = await IDB.kvGet('m:' + ref); if (c) { MediaCache.mem.set(ref, c); return c; }
+    var d = await Api.call('media.get', { ref: ref });
+    MediaCache.mem.set(ref, d.data); IDB.kvSet('m:' + ref, d.data);
+    return d.data;
+  }
+};
+
+// ======================================================= GPS
+var GPS = {
+  watch: null, pos: null, err: '', follow: false, track: false, trackLast: null,
+  start: function () {
+    if (!navigator.geolocation) { GPS.err = 'Perangkat tidak mendukung GPS/geolokasi.'; GPS.chip(); return; }
+    if (GPS.watch !== null) return;
+    GPS.err = '';
+    GPS.watch = navigator.geolocation.watchPosition(function (p) {
+      GPS.pos = { lon: p.coords.longitude, lat: p.coords.latitude, acc: p.coords.accuracy, alt: p.coords.altitude, ts: p.timestamp };
+      GPS.err = ''; GPS.chip(); MapView.drawGps();
+      if (GPS.follow && MapView.map) MapView.map.easeTo({ center: [GPS.pos.lon, GPS.pos.lat], duration: 400 });
+      if (GPS.track && Draw.mode && Draw.mode !== 'Point') GPS.trackPoint();
+    }, function (e) {
+      GPS.err = e.code === 1 ? 'Izin lokasi ditolak. Aktifkan izin lokasi di pengaturan browser.' : (e.code === 2 ? 'Posisi tidak tersedia (sinyal GPS lemah / di dalam ruangan).' : 'Waktu tunggu GPS habis.');
+      GPS.chip(); if (e.code === 1) { GPS.stop(); toast(GPS.err, 'err', 6000); }
+    }, { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 });
+    GPS.chip();
+    clearInterval(GPS._t); GPS._t = setInterval(GPS.chip, 2000);
+  },
+  stop: function () { if (GPS.watch !== null) navigator.geolocation.clearWatch(GPS.watch); GPS.watch = null; GPS.follow = false; GPS.track = false; clearInterval(GPS._t); GPS.chip(); },
+  age: function () { return GPS.pos ? Math.round((Date.now() - GPS.pos.ts) / 1000) : Infinity; },
+  chip: function () {
+    var c = $('#gps-chip'); if (!c) return;
+    var dot = $('.dot', c), lbl = $('.lbl', c);
+    if (GPS.watch === null) { dot.className = 'dot off'; lbl.textContent = GPS.err || 'GPS mati'; }
+    else if (GPS.err && !GPS.pos) { dot.className = 'dot off'; lbl.textContent = GPS.err; }
+    else if (!GPS.pos) { dot.className = 'dot warn'; lbl.textContent = 'Mencari sinyal GPS…'; }
+    else {
+      var a = GPS.age(), acc = GPS.pos.acc, stale = a > 10;
+      dot.className = 'dot ' + (stale || acc > 15 ? (acc > 30 || stale ? 'off' : 'warn') : '');
+      var u = Geo.toUTM(GPS.pos.lon, GPS.pos.lat);
+      lbl.textContent = '±' + fmtNum(acc, 1) + ' m · ' + (stale ? 'posisi lama ' + a + ' dtk' : a + ' dtk') + ' · ' + GPS.pos.lat.toFixed(6) + ', ' + GPS.pos.lon.toFixed(6) + ' · UTM ' + u.zone + u.hemi + ' ' + Math.round(u.easting) + 'E ' + Math.round(u.northing) + 'N';
+    }
+    var b = $('#btn-gps'); if (b) b.classList.toggle('on', GPS.watch !== null);
+  },
+  /** Rata-rata beberapa sampel GPS untuk titik (tidak mengklaim akurasi survei presisi). */
+  sample: function (seconds) {
+    return new Promise(function (res, rej) {
+      if (!navigator.geolocation) return rej(new Error('GPS tidak tersedia.'));
+      var pts = [], end = Date.now() + seconds * 1000;
+      var w = navigator.geolocation.watchPosition(function (p) { if (p.coords.accuracy <= 100) pts.push(p.coords); if (Date.now() > end) fin(); }, function (e) { navigator.geolocation.clearWatch(w); rej(new Error(e.code === 1 ? 'Izin lokasi ditolak.' : 'GPS tidak mendapatkan posisi.')); }, { enableHighAccuracy: true, maximumAge: 0, timeout: (seconds + 15) * 1000 });
+      var timer = setTimeout(fin, (seconds + 12) * 1000);
+      function fin() {
+        clearTimeout(timer); navigator.geolocation.clearWatch(w);
+        if (!pts.length) return rej(new Error('Tidak ada sampel GPS dengan akurasi ≤ 100 m.'));
+        var wsum = 0, lon = 0, lat = 0, best = Infinity;
+        pts.forEach(function (c) { var wt = 1 / Math.max(1, c.accuracy * c.accuracy); wsum += wt; lon += c.longitude * wt; lat += c.latitude * wt; best = Math.min(best, c.accuracy); });
+        res({ lon: lon / wsum, lat: lat / wsum, accuracy: best, altitude: pts[pts.length - 1].altitude, samples: pts.length, timestamp: new Date().toISOString(), source: 'device-avg' });
+      }
+    });
+  },
+  trackPoint: function () {
+    var p = [GPS.pos.lon, GPS.pos.lat];
+    if (GPS.pos.acc > 25) return;
+    if (GPS.trackLast && Geo.haversine(GPS.trackLast, p) < Math.max(3, GPS.pos.acc)) return;
+    GPS.trackLast = p; Draw.add(p, true);
+  }
+};
+
+// ======================================================= Peta (MapLibre)
+var MapView = {
+  map: null, ready: false, popupFeature: null,
+  basemapStyle: function () {
+    var bm = LS.get('umg_basemap') || 'osm', custom = LS.get('umg_xyz') || '';
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var style = { version: 8, sources: {}, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': dark ? '#0b1220' : '#eef2f6' } }] };
+    if (bm === 'osm') {
+      style.sources.base = { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19, attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors' };
+      style.layers.push({ id: 'base', type: 'raster', source: 'base', paint: dark ? { 'raster-brightness-max': 0.75, 'raster-saturation': -0.3 } : {} });
+    } else if (bm === 'xyz' && /^https:\/\//.test(custom)) {
+      style.sources.base = { type: 'raster', tiles: [custom], tileSize: 256, maxzoom: 22, attribution: 'Basemap kustom' };
+      style.layers.push({ id: 'base', type: 'raster', source: 'base' });
+    }
+    return style;
+  },
+  ensure: function () {
+    if (MapView.map || !window.maplibregl) { if (!window.maplibregl) $('#map').innerHTML = '<div class="empty" style="margin:20px">Pustaka peta belum termuat. Pastikan koneksi internet tersedia saat pertama kali membuka aplikasi.</div>'; return; }
+    PMT.init();
+    var view = JSON.parse(LS.get('umg_view') || 'null') || { center: [108.2207, -7.3274], zoom: 13 };
+    var m = MapView.map = new maplibregl.Map({ container: 'map', style: MapView.basemapStyle(), center: view.center, zoom: view.zoom, attributionControl: { compact: true }, maxZoom: 22, dragRotate: false });
+    m.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
+    m.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-right');
+    m.on('load', function () { MapView.ready = true; MapView.addLayers(); MapView.refreshData(); PMT.restore(); });
+    m.on('moveend', debounce(function () { LS.set('umg_view', JSON.stringify({ center: m.getCenter().toArray(), zoom: m.getZoom() })); }, 500));
+    m.on('click', MapView.onClick);
+    m.on('error', function (e) { console.warn('MapLibre:', e && e.error ? e.error.message : e); });
+    MapView.fillSelectors();
+  },
+  addLayers: function () {
+    var m = MapView.map;
+    if (!m.getSource('feat')) m.addSource('feat', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    if (!m.getSource('draft')) m.addSource('draft', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    if (!m.getSource('gps')) m.addSource('gps', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    var add = function (l) { if (!m.getLayer(l.id)) m.addLayer(l); };
+    add({ id: 'f-fill', type: 'fill', source: 'feat', filter: ['==', ['geometry-type'], 'Polygon'], paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.22 } });
+    add({ id: 'f-line', type: 'line', source: 'feat', filter: ['all', ['in', ['geometry-type'], ['literal', ['LineString', 'Polygon']]], ['!', ['get', 'pending']]], paint: { 'line-color': ['get', 'color'], 'line-width': ['case', ['get', 'sel'], 4, 2.2] } });
+    add({ id: 'f-line-p', type: 'line', source: 'feat', filter: ['all', ['in', ['geometry-type'], ['literal', ['LineString', 'Polygon']]], ['get', 'pending']], paint: { 'line-color': ['get', 'color'], 'line-width': ['case', ['get', 'sel'], 4, 2.6], 'line-dasharray': [2, 1.5] } });
+    add({ id: 'f-pt', type: 'circle', source: 'feat', filter: ['==', ['geometry-type'], 'Point'], paint: { 'circle-radius': ['case', ['get', 'sel'], 9, 6.5], 'circle-color': ['get', 'color'], 'circle-stroke-width': 2.2, 'circle-stroke-color': ['case', ['get', 'pending'], '#f97316', '#ffffff'] } });
+    add({ id: 'gps-acc', type: 'fill', source: 'gps', filter: ['==', ['geometry-type'], 'Polygon'], paint: { 'fill-color': '#2563eb', 'fill-opacity': 0.12 } });
+    add({ id: 'gps-pt', type: 'circle', source: 'gps', filter: ['==', ['geometry-type'], 'Point'], paint: { 'circle-radius': 7, 'circle-color': '#2563eb', 'circle-stroke-width': 3, 'circle-stroke-color': '#fff' } });
+    add({ id: 'd-fill', type: 'fill', source: 'draft', filter: ['==', ['geometry-type'], 'Polygon'], paint: { 'fill-color': '#f59e0b', 'fill-opacity': 0.2 } });
+    add({ id: 'd-line', type: 'line', source: 'draft', filter: ['in', ['geometry-type'], ['literal', ['LineString', 'Polygon']]], paint: { 'line-color': '#f59e0b', 'line-width': 3 } });
+    add({ id: 'd-pt', type: 'circle', source: 'draft', filter: ['==', ['geometry-type'], 'Point'], paint: { 'circle-radius': 5, 'circle-color': '#fff', 'circle-stroke-width': 2.5, 'circle-stroke-color': '#f59e0b' } });
+  },
+  restyle: function () {
+    var m = MapView.map; if (!m) return;
+    m.setStyle(MapView.basemapStyle());
+    m.once('styledata', function () { var wait = function () { if (!m.isStyleLoaded()) return setTimeout(wait, 50); MapView.addLayers(); MapView.refreshData(); Draw.render(); MapView.drawGps(); PMT.restore(); }; wait(); });
+  },
+  visibleFeatures: function () {
+    var out = [];
+    S.features.forEach(function (f) { if (!f.deleted && f.project_id === S.projectId && !S.hiddenLayers.has(f.layer_id) && f.geometry) out.push(f); });
+    return out;
+  },
+  refreshData: function () {
+    MapView.fillSelectors();
+    if (!MapView.ready) return;
+    var fc = { type: 'FeatureCollection', features: MapView.visibleFeatures().map(function (f) {
+      var l = layerById(f.layer_id); return { type: 'Feature', geometry: f.geometry, properties: { id: f.id, color: (l && l.style && l.style.color) || '#e11d48', pending: !!f._pending, sel: MapView.popupFeature === f.id } };
+    }) };
+    var src = MapView.map.getSource('feat'); if (src) src.setData(fc);
+  },
+  fillSelectors: function () {
+    var sp = $('#sel-project'), sl = $('#sel-layer'); if (!sp) return;
+    var projs = S.projects.filter(function (p) { return p.status !== 'archived' || p.id === S.projectId; });
+    sp.innerHTML = projs.length ? projs.map(function (p) { return '<option value="' + esc(p.id) + '"' + (p.id === S.projectId ? ' selected' : '') + '>' + esc(p.name) + '</option>'; }).join('') : '<option value="">Belum ada proyek</option>';
+    var lyrs = S.layers.filter(function (l) { return l.project_id === S.projectId; });
+    if (!lyrs.find(function (l) { return l.id === S.layerId; })) S.layerId = (lyrs[0] || {}).id || '';
+    sl.innerHTML = lyrs.length ? lyrs.map(function (l) { return '<option value="' + esc(l.id) + '"' + (l.id === S.layerId ? ' selected' : '') + '>' + esc(l.name) + ' (' + ({ Point: 'titik', LineString: 'garis', Polygon: 'poligon' }[l.geom_type]) + ')</option>'; }).join('') : '<option value="">Belum ada layer</option>';
+  },
+  onClick: function (e) {
+    if (Draw.mode) { Draw.add([e.lngLat.lng, e.lngLat.lat]); return; }
+    var hits = MapView.map.queryRenderedFeatures([[e.point.x - 6, e.point.y - 6], [e.point.x + 6, e.point.y + 6]], { layers: ['f-pt', 'f-line', 'f-line-p', 'f-fill'] });
+    if (hits.length) Detail.open(hits[0].properties.id);
+  },
+  drawGps: function () {
+    if (!MapView.ready) return; var s = MapView.map.getSource('gps'); if (!s) return;
+    if (!GPS.pos || GPS.watch === null) { s.setData({ type: 'FeatureCollection', features: [] }); return; }
+    var c = [GPS.pos.lon, GPS.pos.lat], r = Math.min(GPS.pos.acc, 500), ring = [];
+    for (var i = 0; i <= 48; i++) { var t = i / 48 * 2 * Math.PI; ring.push([c[0] + r * Math.cos(t) / (111320 * Math.cos(c[1] * Math.PI / 180)), c[1] + r * Math.sin(t) / 110540]); }
+    s.setData({ type: 'FeatureCollection', features: [{ type: 'Feature', geometry: { type: 'Polygon', coordinates: [ring] }, properties: {} }, { type: 'Feature', geometry: { type: 'Point', coordinates: c }, properties: {} }] });
+  },
+  fit: function (list) {
+    list = list || MapView.visibleFeatures(); if (!list.length || !MapView.map) return toast('Belum ada data untuk ditampilkan.');
+    var b = [180, 90, -180, -90];
+    list.forEach(function (f) { var bb = f.bbox || Geo.bbox(f.geometry); b[0] = Math.min(b[0], bb[0]); b[1] = Math.min(b[1], bb[1]); b[2] = Math.max(b[2], bb[2]); b[3] = Math.max(b[3], bb[3]); });
+    MapView.map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: 60, maxZoom: 18, duration: 500 });
+  },
+  layerPanel: function () {
+    var p = $('#layer-panel');
+    if (!p.classList.contains('hidden')) { p.classList.add('hidden'); return; }
+    var bm = LS.get('umg_basemap') || 'osm', lyrs = S.layers.filter(function (l) { return l.project_id === S.projectId; });
+    p.innerHTML = '<div class="row"><b class="grow">Layer &amp; Basemap</b><button class="btn icon ghost sm" data-close>✕</button></div>' +
+      '<h4>Basemap</h4><div class="seg">' + [['osm', 'OSM'], ['xyz', 'XYZ kustom'], ['none', 'Kosong']].map(function (o) { return '<button data-bm="' + o[0] + '" class="' + (bm === o[0] ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="' + (bm === 'xyz' ? '' : 'hidden') + '" style="margin-top:8px"><input class="input small mono" id="xyz-url" placeholder="https://server/{z}/{x}/{y}.png" value="' + esc(LS.get('umg_xyz') || '') + '"><button class="btn sm" id="xyz-save" style="margin-top:6px">Terapkan</button></div>' +
+      '<h4>Layer data</h4>' + (lyrs.length ? lyrs.map(function (l) { return '<label class="lyr"><input type="checkbox" data-ly="' + esc(l.id) + '"' + (S.hiddenLayers.has(l.id) ? '' : ' checked') + '><span class="swatch" style="background:' + esc(l.style.color) + '"></span><span class="grow">' + esc(l.name) + '</span><span class="small muted">' + countLayer(l.id) + '</span></label>'; }).join('') : '<div class="small muted">Belum ada layer.</div>') +
+      '<h4>Foto udara (PMTiles)</h4><div id="pmt-box"></div>';
+    p.classList.remove('hidden');
+    PMT.renderBox($('#pmt-box'));
+    $('[data-close]', p).onclick = function () { p.classList.add('hidden'); };
+    $$('[data-bm]', p).forEach(function (b) { b.onclick = function () { LS.set('umg_basemap', b.getAttribute('data-bm')); MapView.restyle(); p.classList.add('hidden'); MapView.layerPanel(); }; });
+    var xs = $('#xyz-save', p); if (xs) xs.onclick = function () { var u = $('#xyz-url').value.trim(); if (!/^https:\/\/.+\{z\}.+\{x\}.+\{y\}/.test(u)) return toast('URL XYZ harus HTTPS dan memuat {z}/{x}/{y}.', 'err'); LS.set('umg_xyz', u); MapView.restyle(); };
+    $$('[data-ly]', p).forEach(function (c) { c.onchange = function () { var id = c.getAttribute('data-ly'); if (c.checked) S.hiddenLayers.delete(id); else S.hiddenLayers.add(id); MapView.refreshData(); }; });
+  }
+};
+function countLayer(id) { var n = 0; S.features.forEach(function (f) { if (f.layer_id === id && !f.deleted) n++; }); return n; }
+
+// ======================================================= PMTiles (online & offline)
+var PMT = {
+  protocol: null, active: null,
+  init: function () {
+    if (PMT.protocol || !window.pmtiles) return;
+    PMT.protocol = new pmtiles.Protocol();
+    maplibregl.addProtocol('pmtiles', PMT.protocol.tile);
+  },
+  okUrl: function (u) { return /^https:\/\//.test(u) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//.test(u); },
+  allowedOffline: function () { return CONFIG.MODE === 'demo' || S.license.offline_pmtiles !== false; },
+  blobSource: function (name, blob) {
+    return { getKey: function () { return 'local/' + name; }, getBytes: function (offset, length) { return blob.slice(offset, offset + length).arrayBuffer().then(function (data) { return { data: data }; }); } };
+  },
+  /** Pasang arsip PMTiles ke peta. src: URL https (online) atau {name, blob} (offline). */
+  attach: async function (src, opts) {
+    opts = opts || {};
+    if (!window.pmtiles || !MapView.map) throw new Error('Pustaka PMTiles/peta belum termuat.');
+    PMT.init();
+    var p = typeof src === 'string' ? new pmtiles.PMTiles(src) : new pmtiles.PMTiles(PMT.blobSource(src.name, src.blob));
+    var header = await p.getHeader();
+    PMT.protocol.add(p);
+    var key = p.source.getKey();
+    PMT.detach();
+    var m = MapView.map, before = m.getLayer('f-fill') ? 'f-fill' : undefined, opacity = Number(LS.get('umg_pmt_opacity') || 1);
+    var raster = header.tileType === 2 || header.tileType === 3 || header.tileType === 4 || header.tileType === 5;
+    if (raster) {
+      m.addSource('pmt', { type: 'raster', url: 'pmtiles://' + key, tileSize: Number(opts.tileSize || LS.get('umg_pmt_ts') || 256) });
+      m.addLayer({ id: 'pmt-raster', type: 'raster', source: 'pmt', paint: { 'raster-opacity': opacity } }, before);
+    } else if (header.tileType === 1) {
+      var meta = await p.getMetadata().catch(function () { return {}; });
+      m.addSource('pmt', { type: 'vector', url: 'pmtiles://' + key });
+      (meta.vector_layers || []).slice(0, 30).forEach(function (vl, i) {
+        var col = ['#0ea5e9', '#a855f7', '#22c55e', '#f43f5e', '#eab308'][i % 5];
+        m.addLayer({ id: 'pmt-v-f-' + i, type: 'fill', source: 'pmt', 'source-layer': vl.id, filter: ['==', ['geometry-type'], 'Polygon'], paint: { 'fill-color': col, 'fill-opacity': 0.15 * opacity } }, before);
+        m.addLayer({ id: 'pmt-v-l-' + i, type: 'line', source: 'pmt', 'source-layer': vl.id, paint: { 'line-color': col, 'line-width': 1, 'line-opacity': opacity } }, before);
+      });
+    } else throw new Error('Tipe tile PMTiles tidak dikenal (' + header.tileType + ').');
+    PMT.active = { key: key, label: opts.label || key, raster: raster, header: header, src: typeof src === 'string' ? { url: src } : { name: src.name } };
+    LS.set('umg_pmt_active', JSON.stringify(PMT.active.src));
+    if (opts.fit !== false && header.minLon < header.maxLon) m.fitBounds([[header.minLon, header.minLat], [header.maxLon, header.maxLat]], { padding: 30, duration: 600, maxZoom: Math.min(header.maxZoom, 19) });
+    return PMT.active;
+  },
+  detach: function () {
+    var m = MapView.map; if (!m) return;
+    (m.getStyle().layers || []).forEach(function (l) { if (l.id.indexOf('pmt-') === 0) m.removeLayer(l.id); });
+    if (m.getSource('pmt')) m.removeSource('pmt');
+    PMT.active = null;
+  },
+  setOpacity: function (v) {
+    LS.set('umg_pmt_opacity', String(v)); var m = MapView.map; if (!m) return;
+    if (m.getLayer('pmt-raster')) m.setPaintProperty('pmt-raster', 'raster-opacity', Number(v));
+  },
+  restore: async function () {
+    var a = JSON.parse(LS.get('umg_pmt_active') || 'null');
+    try {
+      if (a && a.name) { var rec = await IDB.get('pmtiles', a.name); if (rec) await PMT.attach({ name: rec.name, blob: rec.blob }, { fit: false, label: rec.name + ' (offline)' }); }
+      else if (a && a.url && S.online) await PMT.attach(a.url, { fit: false });
+    } catch (e) { console.warn('PMTiles restore', e); }
+  },
+  /** Unduh seluruh arsip ke IndexedDB agar dapat dipakai tanpa internet. */
+  download: async function (url, onProgress) {
+    if (!PMT.allowedOffline()) throw new Error('PMTiles offline tersedia mulai lisensi Pro.');
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function () { });
+    var r = await fetch(url, { credentials: 'omit' });
+    if (!r.ok) throw new Error('Gagal mengunduh (HTTP ' + r.status + ').');
+    var total = Number(r.headers.get('content-length') || 0);
+    if (navigator.storage && navigator.storage.estimate && total) { var est = await navigator.storage.estimate(); if (est.quota && est.usage + total > est.quota * 0.9) throw new Error('Ruang penyimpanan browser tidak cukup (' + fmtNum(total / 1048576, 0) + ' MB diperlukan).'); }
+    var reader = r.body.getReader(), chunks = [], got = 0;
+    for (;;) { var x = await reader.read(); if (x.done) break; chunks.push(x.value); got += x.value.length; if (onProgress) onProgress(got, total); }
+    var blob = new Blob(chunks, { type: 'application/octet-stream' });
+    var head = new Uint8Array(await blob.slice(0, 7).arrayBuffer());
+    if (String.fromCharCode.apply(null, head) !== 'PMTiles') throw new Error('File yang diunduh bukan arsip PMTiles yang valid.');
+    var name = decodeURIComponent(url.split('?')[0].split('/').pop() || 'arsip.pmtiles');
+    await IDB.put('pmtiles', { name: name, blob: blob, size: blob.size, url: url, saved_at: new Date().toISOString() });
+    return { name: name, blob: blob };
+  },
+  importFile: async function (file) {
+    if (!PMT.allowedOffline()) throw new Error('PMTiles offline tersedia mulai lisensi Pro.');
+    var head = new Uint8Array(await file.slice(0, 7).arrayBuffer());
+    if (String.fromCharCode.apply(null, head) !== 'PMTiles') throw new Error('File bukan arsip PMTiles (header tidak cocok).');
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function () { });
+    await IDB.put('pmtiles', { name: file.name, blob: file, size: file.size, url: '', saved_at: new Date().toISOString() });
+    return { name: file.name, blob: file };
+  },
+  renderBox: async function (box) {
+    if (!box) return;
+    var list = await IDB.all('pmtiles').catch(function () { return []; });
+    var def = S.settings.pmtiles_default || '';
+    var op = Number(LS.get('umg_pmt_opacity') || 1);
+    box.innerHTML = (PMT.active ? '<div class="small" style="margin-bottom:6px">Aktif: <b>' + esc(PMT.active.label) + '</b> · z' + PMT.active.header.minZoom + '–' + PMT.active.header.maxZoom + ' <button class="btn sm" id="pmt-off">Lepas</button></div>' : '<div class="small muted" style="margin-bottom:6px">Belum ada foto udara aktif.</div>') +
+      '<label class="f small">Opasitas<input type="range" min="0.1" max="1" step="0.05" value="' + op + '" id="pmt-op"></label>' +
+      '<label class="f small" style="margin-top:6px">URL PMTiles (HTTPS, mendukung HTTP Range &amp; CORS)<input class="input small mono" id="pmt-url" placeholder="https://…/ortho.pmtiles" value="' + esc(def) + '"></label>' +
+      '<div class="row wrap" style="margin-top:6px"><button class="btn sm primary" id="pmt-online">Muat online</button><button class="btn sm" id="pmt-dl"' + (PMT.allowedOffline() ? '' : ' disabled title="Butuh lisensi Pro"') + '>Unduh untuk offline</button>' +
+      '<label class="btn sm"' + (PMT.allowedOffline() ? '' : ' style="opacity:.5;pointer-events:none"') + '>Buka file lokal<input type="file" accept=".pmtiles" id="pmt-file" hidden></label></div>' +
+      '<div class="progress hidden" id="pmt-prog" style="margin-top:8px"><div></div></div><div class="small muted" id="pmt-msg"></div>' +
+      '<div style="margin-top:8px">' + (list.length ? list.map(function (r) { return '<div class="lyr"><span class="grow small"><b>' + esc(r.name) + '</b><br><span class="muted">' + fmtNum(r.size / 1048576, 1) + ' MB · ' + fmtDate(r.saved_at) + '</span></span><button class="btn sm" data-use="' + esc(r.name) + '">Pakai</button><button class="btn sm danger" data-rm="' + esc(r.name) + '">Hapus</button></div>'; }).join('') : '<div class="small muted">Tidak ada arsip offline tersimpan.</div>') + '</div>' +
+      (PMT.allowedOffline() ? '' : '<div class="small" style="color:var(--warn)">Penyimpanan PMTiles offline tersedia pada lisensi Pro/Enterprise.</div>');
+    var msg = $('#pmt-msg', box);
+    var run = async function (fn) { msg.textContent = 'Memproses…'; try { var a = await fn(); msg.textContent = a ? 'OK: ' + a.label : ''; PMT.renderBox(box); } catch (e) { msg.textContent = ''; toast(e.message, 'err', 6000); } };
+    var off = $('#pmt-off', box); if (off) off.onclick = function () { PMT.detach(); LS.set('umg_pmt_active', null); PMT.renderBox(box); };
+    $('#pmt-op', box).oninput = function (e) { PMT.setOpacity(e.target.value); };
+    $('#pmt-online', box).onclick = function () { var u = $('#pmt-url', box).value.trim(); if (!PMT.okUrl(u)) return toast('URL harus diawali https://', 'err'); run(function () { return PMT.attach(u); }); };
+    $('#pmt-dl', box).onclick = function () {
+      var u = $('#pmt-url', box).value.trim(); if (!PMT.okUrl(u)) return toast('URL harus diawali https://', 'err');
+      var pr = $('#pmt-prog', box); pr.classList.remove('hidden');
+      run(async function () { var rec = await PMT.download(u, function (g, t) { $('div', pr).style.width = t ? (g / t * 100).toFixed(1) + '%' : '50%'; msg.textContent = fmtNum(g / 1048576, 1) + (t ? ' / ' + fmtNum(t / 1048576, 1) : '') + ' MB'; }); return PMT.attach(rec, { label: rec.name + ' (offline)' }); });
+    };
+    $('#pmt-file', box).onchange = function (e) { var f = e.target.files[0]; if (f) run(async function () { var rec = await PMT.importFile(f); return PMT.attach(rec, { label: rec.name + ' (offline)' }); }); };
+    $$('[data-use]', box).forEach(function (b) { b.onclick = function () { run(async function () { var r = await IDB.get('pmtiles', b.getAttribute('data-use')); return PMT.attach({ name: r.name, blob: r.blob }, { label: r.name + ' (offline)' }); }); }; });
+    $$('[data-rm]', box).forEach(function (b) { b.onclick = async function () { var n = b.getAttribute('data-rm'); if (!(await confirmBox('Hapus arsip offline', 'Hapus "' + n + '" dari perangkat?', 'Hapus', true))) return; if (PMT.active && PMT.active.src.name === n) { PMT.detach(); LS.set('umg_pmt_active', null); } await IDB.del('pmtiles', n); PMT.renderBox(box); }; });
+  }
+};
+
+// ======================================================= Gambar geometri (titik/garis/poligon/ukur)
+var Draw = {
+  mode: null, coords: [], target: null, layer: null,
+  start: function (mode, opt) {
+    opt = opt || {};
+    if (mode !== 'measure') {
+      if (!can('feature.write.own') && !can('feature.write.any')) return toast('Role Anda hanya dapat melihat data.', 'err');
+      if (S.license.read_only) return toast(S.license.message || 'Lisensi baca-saja.', 'err');
+      var l = layerById(opt.layerId || S.layerId);
+      if (!l) return toast('Pilih/buat layer terlebih dahulu (menu Proyek & Layer).', 'err');
+      if (l.geom_type !== mode) { var alt = S.layers.find(function (x) { return x.project_id === S.projectId && x.geom_type === mode; }); if (!alt) return toast('Tidak ada layer ' + ({ Point: 'titik', LineString: 'garis', Polygon: 'poligon' }[mode]) + ' di proyek ini.', 'err'); l = alt; S.layerId = l.id; MapView.fillSelectors(); }
+      Draw.layer = l;
+    }
+    Draw.cancel(true);
+    Draw.mode = mode; Draw.target = opt.featureId || null; Draw.coords = [];
+    $$('[data-tool]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-tool') === mode); });
+    if (MapView.map) MapView.map.getCanvas().style.cursor = 'crosshair';
+    Draw.panel();
+  },
+  add: function (p, fromGps) {
+    if (!Draw.mode) return;
+    if (Draw.mode === 'Point') { Draw.coords = [p]; Draw.render(); Draw.finish(fromGps ? { accuracy: GPS.pos && GPS.pos.acc, altitude: GPS.pos && GPS.pos.alt, timestamp: new Date().toISOString(), source: 'device', samples: 1 } : null); return; }
+    Draw.coords.push(p); Draw.render(); Draw.panel();
+  },
+  undo: function () { Draw.coords.pop(); Draw.render(); Draw.panel(); },
+  geometry: function () {
+    var c = Draw.coords, m = Draw.mode;
+    if (m === 'Point') return c[0] ? { type: 'Point', coordinates: c[0] } : null;
+    if (m === 'LineString' || (m === 'measure' && Draw.measureType !== 'area')) return c.length >= 2 ? { type: 'LineString', coordinates: c.slice() } : null;
+    return c.length >= 3 ? { type: 'Polygon', coordinates: [c.concat([c[0]])] } : null;
+  },
+  render: function () {
+    if (!MapView.ready) return;
+    var g = Draw.geometry(), feats = Draw.coords.map(function (p) { return { type: 'Feature', geometry: { type: 'Point', coordinates: p }, properties: {} }; });
+    if (g && g.type !== 'Point') feats.unshift({ type: 'Feature', geometry: g, properties: {} });
+    var s = MapView.map.getSource('draft'); if (s) s.setData({ type: 'FeatureCollection', features: Draw.mode ? feats : [] });
+  },
+  panel: function () {
+    var p = $('#draw-panel');
+    if (!Draw.mode) { p.classList.add('hidden'); return; }
+    var g = Draw.geometry(), mt = g ? Geo.metrics(g) : {}, m = Draw.mode;
+    var name = m === 'measure' ? 'Pengukuran' : ('Rekam ' + ({ Point: 'titik', LineString: 'garis', Polygon: 'poligon' }[m]) + ' → ' + Draw.layer.name);
+    var info = mt.area_m2 ? 'Luas ' + fmtNum(mt.area_m2, 1) + ' m² (' + fmtNum(mt.area_ha, 4) + ' ha) · Keliling ' + fmtNum(mt.perimeter_m, 1) + ' m' : (mt.length_m ? 'Panjang ' + fmtNum(mt.length_m, 1) + ' m' : (m === 'Point' ? 'Ketuk peta atau gunakan GPS.' : 'Ketuk peta untuk menambah vertex.'));
+    p.innerHTML = '<div class="row"><b class="grow">' + esc(name) + '</b><span class="badge">' + Draw.coords.length + ' vertex</span></div><div class="small">' + info + '</div>' +
+      (m === 'measure' ? '<div class="seg"><button data-mt="line" class="' + (Draw.measureType !== 'area' ? 'on' : '') + '">Jarak</button><button data-mt="area" class="' + (Draw.measureType === 'area' ? 'on' : '') + '">Luas</button></div>' : '') +
+      '<div class="row wrap">' + (m === 'Point' ? '<button class="btn sm primary" data-d="gpsavg">Ambil GPS (rata-rata 5 dtk)</button><button class="btn sm" data-d="gps1">GPS sekarang</button>' : '<button class="btn sm" data-d="undo"' + (Draw.coords.length ? '' : ' disabled') + '>Undo</button><button class="btn sm" data-d="gpsv">+ Vertex GPS</button>' + (m !== 'measure' ? '<button class="btn sm ' + (GPS.track ? 'primary' : '') + '" data-d="track">' + (GPS.track ? 'Hentikan jejak' : 'Rekam jejak GPS') + '</button>' : '') + (m !== 'measure' ? '<button class="btn sm primary" data-d="done">Selesai</button>' : '')) +
+      '<button class="btn sm danger" data-d="cancel">' + (m === 'measure' ? 'Tutup' : 'Batal') + '</button></div>';
+    p.classList.remove('hidden');
+    $$('[data-mt]', p).forEach(function (b) { b.onclick = function () { Draw.measureType = b.getAttribute('data-mt'); Draw.render(); Draw.panel(); }; });
+    $$('[data-d]', p).forEach(function (b) {
+      b.onclick = async function () {
+        var a = b.getAttribute('data-d');
+        if (a === 'undo') Draw.undo();
+        else if (a === 'cancel') Draw.cancel();
+        else if (a === 'done') Draw.finish();
+        else if (a === 'gps1' || a === 'gpsv') { if (!GPS.pos || GPS.watch === null) { GPS.start(); return toast('Menyalakan GPS… tunggu posisi stabil lalu coba lagi.'); } if (GPS.age() > 10) return toast('Posisi GPS sudah lama (' + GPS.age() + ' dtk). Tunggu pembaruan.', 'err'); Draw.add([GPS.pos.lon, GPS.pos.lat], true); }
+        else if (a === 'gpsavg') { b.disabled = true; b.textContent = 'Mengambil sampel…'; try { var s = await GPS.sample(5); Draw.coords = [[s.lon, s.lat]]; Draw.render(); Draw.finish(s); } catch (e) { toast(e.message, 'err', 5000); Draw.panel(); } }
+        else if (a === 'track') { GPS.track = !GPS.track; GPS.trackLast = null; if (GPS.track) GPS.start(); Draw.panel(); }
+      };
+    });
+  },
+  finish: function (gpsMeta) {
+    var g = Draw.geometry();
+    if (!g) return toast('Geometri belum lengkap.', 'err');
+    var v = Geo.validate(g, Draw.layer.geom_type);
+    if (!v.ok) return toast(v.errors.join(' '), 'err', 6000);
+    var layer = Draw.layer, target = Draw.target;
+    Draw.cancel();
+    if (target) { var f = S.features.get(target); FeatureForm.open(Object.assign({}, f, { geometry: g, gps: gpsMeta || f.gps })); }
+    else FeatureForm.open({ id: uuid(), layer_id: layer.id, project_id: layer.project_id, geometry: g, attrs: {}, photos: [], gps: gpsMeta || null, status: 'draft', version: 0, _new: true });
+  },
+  cancel: function (silent) {
+    Draw.mode = null; Draw.coords = []; Draw.target = null; GPS.track = false;
+    $$('[data-tool]').forEach(function (b) { b.classList.remove('on'); });
+    if (MapView.map) MapView.map.getCanvas().style.cursor = '';
+    Draw.render(); if (!silent) Draw.panel(); else $('#draw-panel').classList.add('hidden');
+  }
+};
+
+// ======================================================= Formulir atribut fitur
+var FeatureForm = {
+  open: function (f) {
+    var l = layerById(f.layer_id); if (!l) return toast('Layer tidak ditemukan.', 'err');
+    var photos = (f.photos || []).slice(), mt = Geo.metrics(f.geometry);
+    var fields = (l.schema || []).map(function (fd) {
+      var v = (f.attrs || {})[fd.key]; v = v === undefined || v === null ? '' : v;
+      var req = fd.required ? ' <span class="req">*</span>' : '', id = 'fa-' + fd.key;
+      if (fd.type === 'select') return '<label class="f">' + esc(fd.label) + req + '<select class="input" id="' + id + '"><option value="">— pilih —</option>' + fd.options.map(function (o) { return '<option' + (String(v) === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select></label>';
+      if (fd.type === 'bool') return '<label class="row" style="font-weight:600"><input type="checkbox" id="' + id + '"' + (v === true ? ' checked' : '') + '> ' + esc(fd.label) + '</label>';
+      var t = fd.type === 'number' || fd.type === 'integer' ? 'number' : (fd.type === 'date' ? 'date' : 'text');
+      return '<label class="f">' + esc(fd.label) + req + '<input class="input" id="' + id + '" type="' + t + '"' + (fd.type === 'integer' ? ' step="1"' : (fd.type === 'number' ? ' step="any"' : '')) + ' value="' + esc(v) + '" maxlength="5000"></label>';
+    }).join('');
+    var gpsInfo = f.gps && f.gps.accuracy ? '<span class="badge">GPS ±' + fmtNum(f.gps.accuracy, 1) + ' m · ' + (f.gps.samples || 1) + ' sampel</span>' : '<span class="badge">Digitasi manual</span>';
+    var body = document.createElement('div'); body.className = 'col';
+    body.innerHTML = '<div class="row wrap small"><span class="badge">' + esc(l.name) + '</span>' + gpsInfo + (mt.area_ha ? '<span class="badge">' + fmtNum(mt.area_ha, 4) + ' ha</span>' : '') + (mt.length_m ? '<span class="badge">' + fmtNum(mt.length_m, 1) + ' m</span>' : '') + (f.geometry.type === 'Point' ? '<span class="badge mono">' + f.geometry.coordinates[1].toFixed(7) + ', ' + f.geometry.coordinates[0].toFixed(7) + '</span>' : '') + '</div>' +
+      (fields || '<div class="small muted">Layer ini belum memiliki atribut.</div>') +
+      '<div><b class="small">Foto (maks 6)</b><div class="thumbs" id="ff-thumbs" style="margin-top:6px"></div><label class="btn sm" style="margin-top:8px">+ Ambil / pilih foto<input type="file" accept="image/*" capture="environment" multiple hidden id="ff-photo"></label></div>' +
+      (f.review_note ? '<div class="card small" style="border-color:var(--warn)"><b>Catatan reviewer:</b> ' + esc(f.review_note) + '</div>' : '');
+    function renderThumbs() {
+      var box = $('#ff-thumbs', body);
+      box.innerHTML = photos.map(function (p, i) { return '<div class="thumb" data-i="' + i + '"><img alt="" data-ref="' + esc(p) + '"><button class="x" data-rm="' + i + '" aria-label="Hapus foto">✕</button></div>'; }).join('') || '<span class="small muted">Belum ada foto.</span>';
+      $$('img[data-ref]', box).forEach(function (im) { MediaCache.get(im.getAttribute('data-ref')).then(function (d) { im.src = d; }).catch(function () { im.alt = 'offline'; }); });
+      $$('.thumb', box).forEach(function (t) { t.onclick = function (e) { if (e.target.hasAttribute('data-rm')) { photos.splice(+e.target.getAttribute('data-rm'), 1); renderThumbs(); return; } var im = $('img', t); Zoom.open(im.src, 'Foto ' + (+t.getAttribute('data-i') + 1)); }; });
+    }
+    renderThumbs();
+    $('#ff-photo', body).onchange = async function (e) {
+      var files = Array.from(e.target.files || []);
+      for (var i = 0; i < files.length; i++) {
+        if (photos.length >= 6) { toast('Maksimal 6 foto.', 'err'); break; }
+        try { photos.push(await readImage(files[i], 1280, 0.75)); } catch (er) { toast(er.message, 'err'); }
+      }
+      e.target.value = ''; renderThumbs();
+    };
+    function collect() {
+      var attrs = {}, errs = [];
+      (l.schema || []).forEach(function (fd) {
+        var el = $('#fa-' + fd.key, body); var v = fd.type === 'bool' ? el.checked : el.value.trim();
+        if (fd.type !== 'bool' && v === '') { if (fd.required) errs.push(fd.label + ' wajib diisi.'); return; }
+        if (fd.type === 'number') v = Number(v); if (fd.type === 'integer') { if (!/^-?\d+$/.test(v)) errs.push(fd.label + ' harus bilangan bulat.'); v = parseInt(v, 10); }
+        attrs[fd.key] = v;
+      });
+      if (errs.length) throw new Error(errs.join(' '));
+      return attrs;
+    }
+    var btns = [{ label: 'Batal' }];
+    if (!f._new && f.geometry.type !== 'Point') btns.push({ label: 'Gambar ulang', onClick: function () { Draw.start(l.geom_type, { featureId: f.id, layerId: l.id }); toast('Gambar ulang geometri pada peta.'); App.show('map'); return true; } });
+    btns.push({ label: 'Simpan draft', onClick: async function () { await FeatureForm.save(f, collect(), photos, 'draft'); return true; } });
+    btns.push({ label: 'Simpan & ajukan', cls: 'primary', onClick: async function () { await FeatureForm.save(f, collect(), photos, 'submitted'); return true; } });
+    modal({ title: (f._new ? 'Data baru' : 'Edit data') + ' — ' + l.name, body: body, buttons: btns, sticky: true });
+  },
+  save: async function (f, attrs, photos, status) {
+    var keepStatus = can('feature.review') && ['approved', 'rejected'].indexOf(f.status) >= 0 && status === 'draft' ? f.status : status;
+    var data = { id: f.id, layer_id: f.layer_id, project_id: f.project_id, geometry: Geo.round(f.geometry), attrs: attrs, photos: photos, gps: f.gps || null, status: keepStatus };
+    await Sync.enqueue({ type: 'upsert', data: data });
+    toast(S.online ? 'Tersimpan. Menyinkronkan…' : 'Tersimpan di perangkat (offline).', 'ok');
+  }
+};
+
+// ======================================================= Detail fitur
+var Detail = {
+  open: function (id) {
+    var f = S.features.get(id); if (!f) return;
+    MapView.popupFeature = id; MapView.refreshData();
+    var l = layerById(f.layer_id) || { name: '?', schema: [] }, mt = f.metrics && Object.keys(f.metrics).length ? f.metrics : Geo.metrics(f.geometry);
+    var rows = (l.schema || []).map(function (fd) { var v = (f.attrs || {})[fd.key]; return '<tr><th>' + esc(fd.label) + '</th><td>' + esc(v === true ? 'Ya' : v === false ? 'Tidak' : v) + '</td></tr>'; }).join('');
+    var mine = f.created_by === S.user.id, editable = !S.license.read_only && (can('feature.write.any') || (can('feature.write.own') && mine && ['draft', 'revision', 'submitted'].indexOf(f.status) >= 0));
+    var body = '<div class="row wrap">' + badge(f.status) + (f._pending ? '<span class="badge b-pending">Belum tersinkron</span>' : '') + '<span class="badge">' + esc(l.name) + '</span><span class="badge">v' + (f.version || 0) + '</span></div>' +
+      '<div class="tscroll"><table class="t"><tbody>' + rows +
+      (mt.area_m2 ? '<tr><th>Luas</th><td>' + fmtNum(mt.area_m2, 1) + ' m² · ' + fmtNum(mt.area_ha, 4) + ' ha</td></tr><tr><th>Keliling</th><td>' + fmtNum(mt.perimeter_m, 1) + ' m</td></tr>' : '') +
+      (mt.length_m ? '<tr><th>Panjang</th><td>' + fmtNum(mt.length_m, 1) + ' m</td></tr>' : '') +
+      (f.geometry.type === 'Point' ? '<tr><th>Koordinat</th><td class="mono">' + f.geometry.coordinates[1].toFixed(7) + ', ' + f.geometry.coordinates[0].toFixed(7) + '<br>' + (function () { var u = Geo.toUTM(f.geometry.coordinates[0], f.geometry.coordinates[1]); return 'UTM ' + u.zone + u.hemi + ' (EPSG:' + u.epsg + ') ' + fmtNum(u.easting, 2) + ' E, ' + fmtNum(u.northing, 2) + ' N'; })() + '</td></tr>' : '') +
+      '<tr><th>Sumber posisi</th><td>' + (f.gps && f.gps.accuracy ? 'GPS perangkat, akurasi dilaporkan ±' + fmtNum(f.gps.accuracy, 1) + ' m (' + (f.gps.samples || 1) + ' sampel)' : 'Digitasi manual di peta') + '</td></tr>' +
+      '<tr><th>Dibuat</th><td>' + esc(userName(f.created_by)) + ' · ' + fmtDate(f.created_at) + '</td></tr><tr><th>Diubah</th><td>' + esc(userName(f.updated_by)) + ' · ' + fmtDate(f.updated_at) + '</td></tr>' +
+      (f.review_note ? '<tr><th>Catatan review</th><td>' + esc(f.review_note) + ' — ' + esc(userName(f.review_by)) + '</td></tr>' : '') + '</tbody></table></div>' +
+      ((f.photos || []).length ? '<div class="thumbs" id="dt-thumbs">' + f.photos.map(function (p, i) { return '<div class="thumb"><img alt="" data-ref="' + esc(p) + '" data-i="' + i + '"></div>'; }).join('') + '</div>' : '');
+    var btns = [{ label: 'Tutup' }, { label: 'Zoom', onClick: function () { App.show('map'); MapView.fit([f]); return true; } }];
+    if (editable) {
+      btns.push({ label: 'Hapus', cls: 'danger', onClick: async function () { if (!(await confirmBox('Hapus data', 'Hapus data ini? Penghapusan akan disinkronkan ke server.', 'Hapus', true))) return false; await Sync.enqueue({ type: 'delete', data: { id: f.id } }); toast('Dihapus.', 'ok'); return true; } });
+      btns.push({ label: 'Edit', cls: 'primary', onClick: function () { setTimeout(function () { FeatureForm.open(f); }, 0); return true; } });
+    }
+    if (can('feature.review') && !f._pending && ['submitted', 'approved', 'revision'].indexOf(f.status) >= 0) btns.push({ label: 'Review', cls: 'primary', onClick: function () { setTimeout(function () { Detail.review(f); }, 0); return true; } });
+    var md = modal({ title: (f.attrs && (f.attrs[(l.schema[0] || {}).key])) || l.name, body: body, buttons: btns, onClose: function () { MapView.popupFeature = null; MapView.refreshData(); } });
+    $$('img[data-ref]', md.body).forEach(function (im) { MediaCache.get(im.getAttribute('data-ref')).then(function (d) { im.src = d; }).catch(function () { im.alt = 'Foto belum tersedia offline'; }); im.parentNode.onclick = function () { Zoom.open(im.src, 'Foto ' + (+im.getAttribute('data-i') + 1)); }; });
+  },
+  review: function (f) {
+    modal({ title: 'Review data', body: '<div class="seg" id="rv-seg"><button data-v="approve" class="on">Setujui</button><button data-v="revision">Minta revisi</button><button data-v="reject">Tolak</button></div><label class="f">Catatan (wajib untuk revisi/tolak)<textarea class="input" id="rv-note" rows="3" maxlength="1000"></textarea></label>',
+      buttons: [{ label: 'Batal' }, { label: 'Kirim keputusan', cls: 'primary', onClick: async function (mb) {
+        var dec = $('#rv-seg .on', mb).getAttribute('data-v');
+        var r = await Api.call('features.review', { id: f.id, decision: dec, note: $('#rv-note', mb).value, base_version: f.version });
+        Sync.acceptServer(r); Sync.persistFeatures(); MapView.refreshData(); App.rerender(); toast('Keputusan tersimpan.', 'ok');
+      } }] });
+    $$('#rv-seg button').forEach(function (b) { b.onclick = function () { $$('#rv-seg button').forEach(function (x) { x.classList.remove('on'); }); b.classList.add('on'); }; });
+  }
+};
+
+// ======================================================= Sinkronisasi offline-first
+var Sync = {
+  running: false, timer: null, backoff: 2000, lastSync: LS.get('umg_last_sync') || '', lastError: '',
+  pendingOps: async function () { if (!S.user) return []; var all = await IDB.all('ops').catch(function () { return []; }); return all.filter(function (o) { return o.user_id === S.user.id; }).sort(function (a, b) { return a.seq - b.seq; }); },
+  loadLocal: async function (serverFeatures, fromCache) {
+    var cached = fromCache ? (await IDB.kvGet('features')) || [] : null;
+    var list = fromCache ? cached : (serverFeatures || []);
+    if (fromCache) { S.features = new Map(); }
+    else { var keep = new Map(); S.features.forEach(function (f, id) { if (f._pending) keep.set(id, f); }); S.features = keep; }
+    list.forEach(function (f) { var c = Object.assign({}, f); delete c._pending; S.features.set(f.id, c); S.serverVer[f.id] = f._sv !== undefined ? f._sv : f.version; });
+    (await Sync.pendingOps()).forEach(function (op) { Sync.applyLocal(op); });
+    Sync.persistFeatures();
+  },
+  persistFeatures: debounce(function () {
+    var arr = []; S.features.forEach(function (f) { var c = Object.assign({}, f); c._sv = S.serverVer[f.id] || 0; if (c._pending) { delete c._pending; delete c._localOnly; if (c._new_unsynced) return; } arr.push(c); });
+    IDB.kvSet('features', arr);
+  }, 300),
+  acceptServer: function (f) {
+    if (!f) return;
+    S.serverVer[f.id] = f.version;
+    var cur = S.features.get(f.id);
+    if (cur && cur._pending) return; // biarkan tampilan lokal hingga semua op selesai
+    if (f.deleted) S.features.delete(f.id); else S.features.set(f.id, f);
+  },
+  applyLocal: function (op) {
+    var cur = S.features.get(op.data.id);
+    if (op.type === 'delete') { if (cur) S.features.set(cur.id, Object.assign({}, cur, { deleted: true, _pending: true })); return; }
+    var l = layerById(op.data.layer_id) || {};
+    S.features.set(op.data.id, Object.assign({}, cur || { created_by: S.user.id, created_at: op.created_at, version: 0 }, op.data, {
+      project_id: l.project_id || op.data.project_id, geom_type: op.data.geometry.type, metrics: Geo.metrics(op.data.geometry), bbox: Geo.bbox(op.data.geometry),
+      updated_by: S.user.id, updated_at: op.created_at, _pending: true, _new_unsynced: !cur || cur._new_unsynced
+    }));
+  },
+  enqueue: async function (op) {
+    var all = await Sync.pendingOps();
+    var cur = S.features.get(op.data.id);
+    // Gabungkan dengan op yang BELUM PERNAH dikirim untuk fitur yang sama (aman untuk idempotensi)
+    var same = all.find(function (o) { return o.data.id === op.data.id && o.state === 'pending' && !o.attempts; });
+    if (same && !(same.type === 'upsert' && op.type === 'delete' && !S.serverVer[op.data.id])) {
+      same.type = op.type; same.data = op.type === 'delete' ? { id: op.data.id } : op.data; same.updated_at = new Date().toISOString();
+      await IDB.put('ops', same); Sync.applyLocal(same);
+    } else if (same && op.type === 'delete') {
+      await IDB.del('ops', same.op_id); S.features.delete(op.data.id); // dibuat & dihapus sebelum pernah terkirim
+    } else {
+      var chained = all.some(function (o) { return o.data.id === op.data.id; });
+      var rec = { op_id: uuid(), user_id: S.user.id, seq: Date.now() + Math.random(), created_at: new Date().toISOString(), type: op.type, data: op.data,
+        base_version: chained ? null : (S.serverVer[op.data.id] || (cur && cur.version) || 0), state: 'pending', attempts: 0 };
+      await IDB.put('ops', rec); Sync.applyLocal(rec);
+    }
+    Sync.persistFeatures(); MapView.refreshData(); Sync.updateBadge(); App.rerender();
+    Sync.schedule(300);
+  },
+  schedule: function (ms) { clearTimeout(Sync.timer); Sync.timer = setTimeout(Sync.run, ms || 0); },
+  run: async function () {
+    if (Sync.running || !S.user || !S.token) return;
+    if (CONFIG.MODE !== 'demo' && !navigator.onLine) { Sync.updateBadge(); return; }
+    Sync.running = true; Sync.updateBadge();
+    var progressed = false;
+    try {
+      for (var guard = 0; guard < 200; guard++) {
+        var ops = (await Sync.pendingOps()).filter(function (o) { return o.state === 'pending'; });
+        if (!ops.length) break;
+        var batch = [], ids = {}, size = 0;
+        for (var i = 0; i < ops.length && batch.length < 10; i++) {
+          var o = ops[i]; if (ids[o.data.id]) continue;
+          var sz = JSON.stringify(o.data).length; if (batch.length && size + sz > 4000000) break;
+          ids[o.data.id] = 1; size += sz; batch.push(o);
+        }
+        var send = batch.map(function (o) { return { op_id: o.op_id, type: o.type, data: o.data, force: !!o.force, base_version: o.base_version === null ? (S.serverVer[o.data.id] || 0) : o.base_version }; });
+        batch.forEach(function (o) { o.attempts++; o.last_try = new Date().toISOString(); });
+        await Promise.all(batch.map(function (o) { return IDB.put('ops', o); }));
+        var res = await Api.call('sync.push', { ops: send }, { timeout: 90000 });
+        for (var j = 0; j < res.results.length; j++) await Sync.handle(batch.find(function (b) { return b.op_id === res.results[j].op_id; }), res.results[j]);
+        progressed = true;
+      }
+      Sync.backoff = 2000; Sync.lastError = '';
+      if (progressed) { Sync.lastSync = new Date().toISOString(); LS.set('umg_last_sync', Sync.lastSync); }
+    } catch (e) {
+      Sync.lastError = e.message;
+      if (e.network || e.code === 'BUSY' || e.code === 'RATE_LIMIT') { Sync.backoff = Math.min(Sync.backoff * 2, 300000); Sync.schedule(Sync.backoff); }
+    } finally {
+      Sync.running = false; Sync.persistFeatures(); MapView.refreshData(); Sync.updateBadge(); if (progressed) App.rerender();
+    }
+  },
+  handle: async function (op, r) {
+    if (!op) return;
+    if (r.status === 'applied' || r.status === 'duplicate') {
+      await IDB.del('ops', op.op_id);
+      var rest = (await Sync.pendingOps()).filter(function (o) { return o.data.id === op.data.id; });
+      if (r.feature) { S.serverVer[r.feature.id] = r.feature.version; if (!rest.length) { if (r.feature.deleted) S.features.delete(r.feature.id); else S.features.set(r.feature.id, r.feature); } }
+      else if (op.type === 'delete' && !rest.length) S.features.delete(op.data.id);
+    } else if (r.status === 'conflict') {
+      op.state = 'conflict'; op.server = r.server; op.error = 'Data telah diubah di server (v' + r.server.version + ') sejak Anda mengeditnya.'; await IDB.put('ops', op);
+      toast('Konflik data terdeteksi — tinjau di menu Sinkronisasi.', 'err', 5000);
+    } else if (r.permanent) {
+      op.state = 'failed'; op.error = r.message; op.code = r.code; await IDB.put('ops', op);
+      toast('Sinkron gagal: ' + r.message, 'err', 6000);
+    } else { op.error = r.message; await IDB.put('ops', op); }
+  },
+  resolve: async function (opId, choice) {
+    var op = await IDB.get('ops', opId); if (!op) return;
+    if (choice === 'mine') { await IDB.del('ops', opId); op.op_id = uuid(); op.force = true; op.base_version = op.server ? op.server.version : op.base_version; op.state = 'pending'; op.attempts = 0; delete op.server; delete op.error; await IDB.put('ops', op); }
+    else if (choice === 'server') { await IDB.del('ops', opId); var sv = op.server; if (sv) { S.serverVer[sv.id] = sv.version; S.features.set(sv.id, sv); } else S.features.delete(op.data.id); }
+    else if (choice === 'retry') { op.state = 'pending'; op.attempts = 0; delete op.error; await IDB.put('ops', op); }
+    else if (choice === 'discard') { await IDB.del('ops', opId); if (op.server) S.features.set(op.server.id, op.server); else { var c = S.features.get(op.data.id); if (c && c._new_unsynced) S.features.delete(op.data.id); else App.refreshBoot(); } }
+    Sync.persistFeatures(); MapView.refreshData(); Sync.updateBadge(); App.rerender('sync'); Sync.schedule(100);
+  },
+  updateBadge: async function () {
+    var ops = await Sync.pendingOps(), n = ops.length, bad = ops.filter(function (o) { return o.state !== 'pending'; }).length;
+    S.pendingCount = n; S.conflictCount = ops.filter(function (o) { return o.state === 'conflict'; }).length;
+    var pill = $('#pill-sync'); if (!pill) return;
+    $('.lbl', pill).textContent = Sync.running ? 'Menyinkronkan…' : (bad ? bad + ' perlu tindakan' : (n ? n + ' antre' : 'Tersinkron'));
+    pill.style.color = bad ? 'var(--danger)' : (n ? 'var(--warn)' : '');
+    $$('[data-cnt]').forEach(function (c) { c.textContent = n; c.classList.toggle('hidden', !n); });
+  }
+};
+
+// ======================================================= Import / Export
+var IO = {
+  download: function (name, mime, text) {
+    var blob = new Blob([text], { type: mime }), a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+    if (CONFIG.MODE === 'gas') modal({ title: 'Ekspor ' + name, body: '<p class="small muted">Jika unduhan diblokir oleh bingkai Apps Script, salin isi berikut:</p><textarea class="input mono small" rows="10" readonly>' + esc(text.length > 500000 ? text.slice(0, 500000) + '\n…(terpotong, gunakan PWA untuk file besar)' : text) + '</textarea>', buttons: [{ label: 'Tutup' }] });
+  },
+  list: function () { return Tabs._dataFiltered || []; },
+  props: function (f) { var l = layerById(f.layer_id) || {}; return Object.assign({}, f.attrs, { _id: f.id, _layer: l.name, _status: f.status, _version: f.version, _surveyor: userName(f.created_by), _updated_at: f.updated_at, _gps_accuracy_m: f.gps && f.gps.accuracy, _area_ha: f.metrics && f.metrics.area_ha, _length_m: f.metrics && f.metrics.length_m }); },
+  geojson: function (list) { return JSON.stringify({ type: 'FeatureCollection', name: 'umg_export', features: list.map(function (f) { return { type: 'Feature', id: f.id, geometry: f.geometry, properties: IO.props(f) }; }) }); },
+  wkt: function (g) { var p = function (c) { return c[0] + ' ' + c[1]; }; if (g.type === 'Point') return 'POINT (' + p(g.coordinates) + ')'; if (g.type === 'LineString') return 'LINESTRING (' + g.coordinates.map(p).join(', ') + ')'; return 'POLYGON (' + g.coordinates.map(function (r) { return '(' + r.map(p).join(', ') + ')'; }).join(', ') + ')'; },
+  csv: function (list) {
+    var keys = []; list.forEach(function (f) { Object.keys(IO.props(f)).forEach(function (k) { if (keys.indexOf(k) < 0) keys.push(k); }); });
+    var q = function (v) { v = v === undefined || v === null ? '' : String(v); if (/^[=+\-@]/.test(v)) v = "'" + v; return /[",\n;]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    var lines = [['lat', 'lon', 'wkt'].concat(keys).join(',')];
+    list.forEach(function (f) { var pr = IO.props(f), c = f.geometry.type === 'Point' ? f.geometry.coordinates : ['', '']; lines.push([c[1], c[0], q(IO.wkt(f.geometry))].concat(keys.map(function (k) { return q(pr[k]); })).join(',')); });
+    return '﻿' + lines.join('\n');
+  },
+  kml: function (list) {
+    var x = function (s) { return esc(s); };
+    var coords = function (cs) { return cs.map(function (c) { return c[0] + ',' + c[1]; }).join(' '); };
+    var geom = function (g) { if (g.type === 'Point') return '<Point><coordinates>' + coords([g.coordinates]) + '</coordinates></Point>'; if (g.type === 'LineString') return '<LineString><coordinates>' + coords(g.coordinates) + '</coordinates></LineString>'; return '<Polygon>' + g.coordinates.map(function (r, i) { return '<' + (i ? 'inner' : 'outer') + 'BoundaryIs><LinearRing><coordinates>' + coords(r) + '</coordinates></LinearRing></' + (i ? 'inner' : 'outer') + 'BoundaryIs>'; }).join('') + '</Polygon>'; };
+    return '<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>UMG Export</name>' + list.map(function (f) { var pr = IO.props(f); return '<Placemark><name>' + x(pr[Object.keys(f.attrs || {})[0]] || f.id) + '</name><ExtendedData>' + Object.keys(pr).map(function (k) { return '<Data name="' + x(k) + '"><value>' + x(pr[k]) + '</value></Data>'; }).join('') + '</ExtendedData>' + geom(f.geometry) + '</Placemark>'; }).join('') + '</Document></kml>';
+  },
+  parseCsv: function (text) {
+    var rows = [], row = [], cur = '', q = false, i, c, delim = (text.split('\n')[0].match(/;/g) || []).length > (text.split('\n')[0].match(/,/g) || []).length ? ';' : ',';
+    text = text.replace(/^﻿/, '');
+    for (i = 0; i < text.length; i++) {
+      c = text[i];
+      if (q) { if (c === '"' && text[i + 1] === '"') { cur += '"'; i++; } else if (c === '"') q = false; else cur += c; }
+      else if (c === '"') q = true; else if (c === delim) { row.push(cur); cur = ''; } else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cur); rows.push(row); row = []; cur = ''; } else cur += c;
+    }
+    if (cur || row.length) { row.push(cur); rows.push(row); }
+    return rows.filter(function (r) { return r.some(function (v) { return v.trim(); }); });
+  },
+  /** Ubah file menjadi daftar kandidat {geometry, attrs, errors} untuk layer tujuan. */
+  parseFile: async function (file, layer) {
+    if (file.size > 30 * 1024 * 1024) throw new Error('File terlalu besar (maks 30 MB).');
+    var text = await file.text(), items = [];
+    var mapAttrs = function (props) {
+      var out = {}, warn = [];
+      Object.keys(props || {}).forEach(function (k) {
+        if (k.charAt(0) === '_') return;
+        var fd = layer.schema.find(function (s) { return s.key === k.toLowerCase() || s.label.toLowerCase() === k.toLowerCase(); });
+        if (fd) out[fd.key] = props[k]; else warn.push(k);
+      });
+      return { attrs: out, dropped: warn };
+    };
+    if (/\.(geo)?json$/i.test(file.name) || /^\s*\{/.test(text)) {
+      var j; try { j = JSON.parse(text); } catch (e) { throw new Error('GeoJSON tidak valid: ' + e.message); }
+      var feats = j.type === 'FeatureCollection' ? j.features : (j.type === 'Feature' ? [j] : null);
+      if (!Array.isArray(feats)) throw new Error('GeoJSON harus berupa Feature atau FeatureCollection.');
+      if (j.crs && j.crs.properties && !/4326|CRS84/i.test(JSON.stringify(j.crs))) throw new Error('CRS GeoJSON bukan WGS84 (EPSG:4326). Reproyeksikan dahulu (RFC 7946).');
+      feats.forEach(function (f) { var m = mapAttrs(f && f.properties); items.push({ geometry: f && f.geometry, attrs: m.attrs, dropped: m.dropped }); });
+    } else if (/\.csv$/i.test(file.name)) {
+      if (layer.geom_type !== 'Point') throw new Error('Impor CSV koordinat hanya untuk layer titik.');
+      var rows = IO.parseCsv(text); if (rows.length < 2) throw new Error('CSV kosong.');
+      var head = rows[0].map(function (h) { return h.trim(); }), low = head.map(function (h) { return h.toLowerCase(); });
+      var iLat = low.findIndex(function (h) { return ['lat', 'latitude', 'lintang', 'y'].indexOf(h) >= 0; }), iLon = low.findIndex(function (h) { return ['lon', 'lng', 'long', 'longitude', 'bujur', 'x'].indexOf(h) >= 0; });
+      if (iLat < 0 || iLon < 0) throw new Error('Kolom lat/lon (latitude/longitude) tidak ditemukan.');
+      rows.slice(1).forEach(function (r) {
+        var props = {}; head.forEach(function (h, i) { if (i !== iLat && i !== iLon) props[h] = r[i]; });
+        var lat = Number(String(r[iLat]).replace(',', '.')), lon = Number(String(r[iLon]).replace(',', '.'));
+        var m = mapAttrs(props); items.push({ geometry: { type: 'Point', coordinates: [lon, lat] }, attrs: m.attrs, dropped: m.dropped });
+      });
+    } else throw new Error('Format belum didukung. Gunakan GeoJSON (.geojson/.json) atau CSV koordinat. (GeoPackage/Shapefile: rencana fase berikutnya)');
+    if (items.length > 2000) throw new Error('Maksimal 2.000 fitur per impor (file berisi ' + items.length + ').');
+    items.forEach(function (it) {
+      var errs = [];
+      var v = Geo.validate(it.geometry, layer.geom_type); if (!v.ok) errs = errs.concat(v.errors);
+      layer.schema.forEach(function (fd) { if (fd.required && (it.attrs[fd.key] === undefined || it.attrs[fd.key] === '')) errs.push(fd.label + ' kosong.'); });
+      it.errors = errs;
+    });
+    return items;
+  }
+};
+
+// ======================================================= Tabs
+var Tabs = {
+  data: function () {
+    var el = $('[data-tab=data]');
+    el.innerHTML = '<div class="tab-h"><h2>Data Survei</h2><span class="grow"></span><button class="btn sm" id="dt-imp">Impor</button><button class="btn sm" data-ex="geojson">GeoJSON</button><button class="btn sm" data-ex="csv">CSV</button><button class="btn sm" data-ex="kml">KML</button></div>' +
+      '<div class="row wrap" style="margin-bottom:12px"><input class="input grow" id="dt-q" placeholder="Cari atribut…" style="min-width:180px;flex:2"><select class="input" id="dt-layer" style="flex:1;min-width:140px"><option value="">Semua layer</option>' + S.layers.filter(function (l) { return l.project_id === S.projectId; }).map(function (l) { return '<option value="' + esc(l.id) + '">' + esc(l.name) + '</option>'; }).join('') + '</select><select class="input" id="dt-st" style="flex:1;min-width:120px"><option value="">Semua status</option>' + Object.keys(STATUS_LBL).map(function (k) { return '<option value="' + k + '">' + STATUS_LBL[k] + '</option>'; }).join('') + '<option value="_pending">Belum tersinkron</option></select><label class="row small"><input type="checkbox" id="dt-mine"> Milik saya</label></div><div class="list" id="dt-list"></div>';
+    var draw = function () {
+      var q = $('#dt-q').value.toLowerCase(), ly = $('#dt-layer').value, st = $('#dt-st').value, mine = $('#dt-mine').checked;
+      var list = []; S.features.forEach(function (f) { if (f.deleted || f.project_id !== S.projectId) return; if (ly && f.layer_id !== ly) return; if (st === '_pending' ? !f._pending : (st && f.status !== st)) return; if (mine && f.created_by !== S.user.id) return; if (q && JSON.stringify(f.attrs || {}).toLowerCase().indexOf(q) < 0) return; list.push(f); });
+      list.sort(function (a, b) { return String(b.updated_at).localeCompare(String(a.updated_at)); });
+      Tabs._dataFiltered = list;
+      var show = list.slice(0, Tabs._dataLimit || 300);
+      $('#dt-list').innerHTML = show.length ? show.map(function (f) {
+        var l = layerById(f.layer_id) || { name: '?', style: {}, schema: [] }, a = f.attrs || {}, k = (l.schema[0] || {}).key, mt = f.metrics || {};
+        return '<div class="item" data-id="' + esc(f.id) + '"><div class="gicon" style="background:' + esc(l.style.color || '#64748b') + '">' + ({ Point: '●', LineString: '╱', Polygon: '▰' }[f.geometry.type] || '?') + '</div><div class="meta"><b>' + esc(a[k] || l.name) + '</b><span class="small muted">' + esc(l.name) + ' · ' + esc(userName(f.created_by)) + ' · ' + fmtDate(f.updated_at) + (mt.area_ha ? ' · ' + fmtNum(mt.area_ha, 3) + ' ha' : '') + (mt.length_m ? ' · ' + fmtNum(mt.length_m, 0) + ' m' : '') + '</span></div>' + badge(f.status) + (f._pending ? '<span class="badge b-pending">antre</span>' : '') + '</div>';
+      }).join('') + (list.length > show.length ? '<button class="btn" id="dt-more">Tampilkan lebih banyak (' + (list.length - show.length) + ')</button>' : '') : '<div class="empty">Tidak ada data yang cocok. Rekam data baru dari tab Peta.</div>';
+      $$('#dt-list .item').forEach(function (it) { it.onclick = function () { Detail.open(it.getAttribute('data-id')); }; });
+      var mo = $('#dt-more'); if (mo) mo.onclick = function () { Tabs._dataLimit = (Tabs._dataLimit || 300) + 300; draw(); };
+    };
+    ['#dt-q', '#dt-layer', '#dt-st', '#dt-mine'].forEach(function (s) { $(s).addEventListener(s === '#dt-q' ? 'input' : 'change', debounce(draw, 120)); });
+    draw();
+    $$('[data-ex]', el).forEach(function (b) { b.onclick = function () {
+      var list = IO.list(); if (!list.length) return toast('Tidak ada data untuk diekspor.', 'err');
+      var t = b.getAttribute('data-ex'), stamp = new Date().toISOString().slice(0, 10);
+      if (t === 'geojson') IO.download('umg_' + stamp + '.geojson', 'application/geo+json', IO.geojson(list));
+      if (t === 'csv') IO.download('umg_' + stamp + '.csv', 'text/csv;charset=utf-8', IO.csv(list));
+      if (t === 'kml') IO.download('umg_' + stamp + '.kml', 'application/vnd.google-earth.kml+xml', IO.kml(list));
+    }; });
+    $('#dt-imp').onclick = Tabs.importDialog;
+  },
+  importDialog: function () {
+    if (!can('feature.write.own') && !can('feature.write.any')) return toast('Role Anda tidak dapat mengimpor data.', 'err');
+    var lyrs = S.layers.filter(function (l) { return l.project_id === S.projectId; });
+    if (!lyrs.length) return toast('Buat layer terlebih dahulu.', 'err');
+    var items = null;
+    var md = modal({ title: 'Impor data GIS', wide: true, body: '<label class="f">Layer tujuan<select class="input" id="im-ly">' + lyrs.map(function (l) { return '<option value="' + esc(l.id) + '">' + esc(l.name) + ' (' + l.geom_type + ')</option>'; }).join('') + '</select></label><label class="f">File GeoJSON (EPSG:4326) atau CSV koordinat<input type="file" class="input" id="im-file" accept=".geojson,.json,.csv"></label><div id="im-prev" class="small muted">Pratinjau validasi akan tampil di sini. Kolom yang tidak ada di skema layer akan diabaikan.</div>',
+      buttons: [{ label: 'Batal' }, { label: 'Impor data valid', cls: 'primary', onClick: async function (mb) {
+        if (!items) throw new Error('Pilih file terlebih dahulu.');
+        var good = items.filter(function (i) { return !i.errors.length; }); if (!good.length) throw new Error('Tidak ada fitur valid.');
+        var l = layerById($('#im-ly', mb).value);
+        for (var i = 0; i < good.length; i++) await Sync.enqueue({ type: 'upsert', data: { id: uuid(), layer_id: l.id, project_id: l.project_id, geometry: Geo.round(good[i].geometry), attrs: good[i].attrs, photos: [], gps: null, status: 'draft' } });
+        toast(good.length + ' fitur masuk antrean sinkronisasi.', 'ok');
+      } }] });
+    var prev = function () {
+      var f = $('#im-file', md.body).files[0]; if (!f) return;
+      IO.parseFile(f, layerById($('#im-ly', md.body).value)).then(function (it) {
+        items = it; var bad = it.filter(function (i) { return i.errors.length; }), dropped = {};
+        it.forEach(function (i) { i.dropped.forEach(function (d) { dropped[d] = 1; }); });
+        $('#im-prev', md.body).innerHTML = '<b>' + it.length + '</b> fitur dibaca · <b style="color:var(--ok)">' + (it.length - bad.length) + ' valid</b> · <b style="color:var(--danger)">' + bad.length + ' tidak valid</b>' + (Object.keys(dropped).length ? '<br>Kolom diabaikan (tidak ada di skema): ' + esc(Object.keys(dropped).join(', ')) : '') +
+          (bad.length ? '<div class="tscroll" style="max-height:220px;margin-top:8px"><table class="t"><tr><th>#</th><th>Kesalahan</th></tr>' + bad.slice(0, 100).map(function (b) { return '<tr><td>' + (it.indexOf(b) + 1) + '</td><td>' + esc(b.errors.join(' ')) + '</td></tr>'; }).join('') + '</table></div>' : '');
+      }).catch(function (e) { items = null; $('#im-prev', md.body).innerHTML = '<span style="color:var(--danger)">' + esc(e.message) + '</span>'; });
+    };
+    $('#im-file', md.body).onchange = prev; $('#im-ly', md.body).onchange = prev;
+  },
+  sync: async function () {
+    var el = $('[data-tab=sync]'), ops = await Sync.pendingOps();
+    var est = navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate().catch(function () { return null; }) : null;
+    var persisted = navigator.storage && navigator.storage.persisted ? await navigator.storage.persisted().catch(function () { return false; }) : false;
+    var nm = function (o) { var f = S.features.get(o.data.id), l = f && layerById(f.layer_id); return (l ? l.name + ' · ' : '') + ((f && f.attrs && Object.values(f.attrs)[0]) || o.data.id.slice(0, 8)); };
+    el.innerHTML = '<div class="tab-h"><h2>Sinkronisasi</h2><span class="grow"></span><button class="btn primary" id="sy-run">Sinkron sekarang</button></div>' +
+      '<div class="kpi"><div class="card"><span>Koneksi</span><b style="color:' + (S.online ? 'var(--ok)' : 'var(--danger)') + '">' + (CONFIG.MODE === 'demo' ? 'Demo' : (S.online ? 'Online' : 'Offline')) + '</b></div><div class="card"><span>Antrean</span><b>' + ops.length + '</b></div><div class="card"><span>Perlu tindakan</span><b>' + ops.filter(function (o) { return o.state !== 'pending'; }).length + '</b></div><div class="card"><span>Sinkron terakhir</span><b style="font-size:14px">' + fmtDate(Sync.lastSync) + '</b></div></div>' +
+      (Sync.lastError ? '<div class="card small" style="border-color:var(--danger);margin-bottom:12px">Kesalahan terakhir: ' + esc(Sync.lastError) + '</div>' : '') +
+      '<div class="card" style="margin-bottom:12px"><h3>Antrean operasi</h3>' + (ops.length ? '<div class="tscroll"><table class="t"><tr><th>Data</th><th>Operasi</th><th>Status</th><th>Percobaan</th><th></th></tr>' + ops.map(function (o) {
+        var act = o.state === 'conflict' ? '<button class="btn sm primary" data-r="mine" data-op="' + o.op_id + '">Pakai versi saya</button> <button class="btn sm" data-r="server" data-op="' + o.op_id + '">Pakai versi server</button>' : (o.state === 'failed' ? '<button class="btn sm" data-r="retry" data-op="' + o.op_id + '">Coba lagi</button> <button class="btn sm danger" data-r="discard" data-op="' + o.op_id + '">Buang</button>' : '');
+        return '<tr><td>' + esc(nm(o)) + '<div class="small muted">' + fmtDate(o.created_at) + '</div></td><td>' + (o.type === 'delete' ? 'Hapus' : 'Simpan') + (o.force ? ' (timpa)' : '') + '</td><td>' + ({ pending: '<span class="badge b-submitted">Menunggu</span>', conflict: '<span class="badge b-revision">Konflik</span>', failed: '<span class="badge b-rejected">Gagal</span>' }[o.state]) + (o.error ? '<div class="small">' + esc(o.error) + '</div>' : '') + '</td><td>' + o.attempts + '</td><td>' + act + '</td></tr>';
+      }).join('') + '</table></div>' : '<div class="empty">Semua perubahan sudah tersinkron dengan server.</div>') + '</div>' +
+      '<div class="card"><h3>Penyimpanan perangkat</h3><div class="small">' + (est ? 'Terpakai ' + fmtNum(est.usage / 1048576, 1) + ' MB dari kuota ±' + fmtNum(est.quota / 1048576, 0) + ' MB' : 'Estimasi kuota tidak tersedia di browser ini.') + ' · Penyimpanan persisten: <b>' + (persisted ? 'Ya' : 'Tidak') + '</b></div>' +
+      '<p class="small muted">Data offline disimpan di IndexedDB browser dan <b>tidak terenkripsi</b>. Jangan gunakan perangkat bersama tanpa logout. Browser dapat menghapus data bila ruang penuh kecuali penyimpanan persisten diizinkan.</p><div class="row wrap"><button class="btn sm" id="sy-persist">Minta penyimpanan persisten</button><button class="btn sm danger" id="sy-clear">Hapus cache data (bukan antrean)</button></div></div>';
+    $('#sy-run').onclick = function () { Sync.schedule(0); setTimeout(function () { App.rerender('sync'); }, 1500); };
+    $$('[data-r]', el).forEach(function (b) { b.onclick = function () { Sync.resolve(b.getAttribute('data-op'), b.getAttribute('data-r')); }; });
+    $('#sy-persist').onclick = async function () { var ok = navigator.storage && navigator.storage.persist ? await navigator.storage.persist() : false; toast(ok ? 'Penyimpanan persisten diizinkan.' : 'Browser menolak/ tidak mendukung penyimpanan persisten.', ok ? 'ok' : 'err'); App.rerender('sync'); };
+    $('#sy-clear').onclick = async function () { if (!(await confirmBox('Hapus cache', 'Cache fitur & foto akan dihapus lalu dimuat ulang dari server. Antrean belum tersinkron TIDAK dihapus.', 'Hapus'))) return; await IDB.kvSet('features', null); MediaCache.mem.clear(); App.refreshBoot(); };
+  },
+  dash: function () {
+    var el = $('[data-tab=dash]'), list = []; S.features.forEach(function (f) { if (!f.deleted && f.project_id === S.projectId) list.push(f); });
+    var by = function (fn) { var m = {}; list.forEach(function (f) { var k = fn(f); m[k] = (m[k] || 0) + 1; }); return Object.keys(m).map(function (k) { return [k, m[k]]; }).sort(function (a, b) { return b[1] - a[1]; }); };
+    var area = 0, len = 0; list.forEach(function (f) { if (f.metrics) { area += f.metrics.area_ha || 0; len += f.metrics.length_m || 0; } });
+    var bars = function (rows, lbl) { var max = Math.max.apply(null, rows.map(function (r) { return r[1]; }).concat([1])); return rows.slice(0, 10).map(function (r) { return '<div class="bar"><span class="lbl">' + esc(lbl ? lbl(r[0]) : r[0]) + '</span><span class="trk"><span class="fill" style="display:block;width:' + (r[1] / max * 100) + '%"></span></span><b>' + r[1] + '</b></div>'; }).join('') || '<div class="small muted">Belum ada data.</div>'; };
+    var st = {}; list.forEach(function (f) { st[f.status] = (st[f.status] || 0) + 1; });
+    var proj = S.projects.find(function (p) { return p.id === S.projectId; });
+    el.innerHTML = '<div class="tab-h"><h2>Dashboard</h2><span class="muted">' + esc(proj ? proj.name : '-') + '</span>' + (CONFIG.MODE === 'demo' ? '<span class="badge b-pending">Data contoh DEMO</span>' : '') + '</div>' +
+      '<div class="kpi"><div class="card"><span>Total fitur</span><b>' + fmtNum(list.length, 0) + '</b></div><div class="card"><span>Disetujui</span><b style="color:var(--ok)">' + (st.approved || 0) + '</b></div><div class="card"><span>Menunggu review</span><b style="color:var(--info)">' + (st.submitted || 0) + '</b></div><div class="card"><span>Revisi / ditolak</span><b style="color:var(--warn)">' + ((st.revision || 0) + (st.rejected || 0)) + '</b></div><div class="card"><span>Total luas poligon</span><b>' + fmtNum(area, 2) + ' ha</b></div><div class="card"><span>Total panjang garis</span><b>' + fmtNum(len / 1000, 2) + ' km</b></div></div>' +
+      '<div class="grid2"><div class="card"><h3>Per status</h3>' + bars(by(function (f) { return f.status; }), function (k) { return STATUS_LBL[k] || k; }) + '</div><div class="card"><h3>Per layer</h3>' + bars(by(function (f) { return f.layer_id; }), function (k) { var l = layerById(k); return l ? l.name : k; }) + '</div><div class="card"><h3>Per surveyor</h3>' + bars(by(function (f) { return f.created_by; }), userName) + '</div>' +
+      '<div class="card"><h3>Aktivitas terbaru</h3>' + (list.slice().sort(function (a, b) { return String(b.updated_at).localeCompare(String(a.updated_at)); }).slice(0, 8).map(function (f) { var l = layerById(f.layer_id) || {}; return '<div class="row small" style="padding:4px 0;border-bottom:1px solid var(--line)"><span class="grow">' + esc(l.name) + ' — ' + esc(userName(f.updated_by)) + '</span>' + badge(f.status) + '<span class="muted">' + fmtDate(f.updated_at) + '</span></div>'; }).join('') || '<div class="small muted">Belum ada aktivitas.</div>') + '</div></div>' +
+      '<p class="small muted" style="margin-top:12px">Angka dihitung dari data yang termuat di perangkat ini (termasuk perubahan yang belum tersinkron). Luas & panjang dihitung geodesik pada bola WGS84 — bukan hasil ukur kadastral.</p>';
+  },
+  projects: function () {
+    var el = $('[data-tab=projects]'), canP = can('project.write'), canL = can('layer.write');
+    el.innerHTML = '<div class="tab-h"><h2>Proyek &amp; Layer</h2><span class="grow"></span>' + (canP ? '<button class="btn primary" id="pj-new">+ Proyek</button>' : '') + '</div>' +
+      (S.projects.length ? S.projects.map(function (p) {
+        var ls = S.layers.filter(function (l) { return l.project_id === p.id; });
+        return '<div class="card" style="margin-bottom:12px"><div class="row wrap"><h3 class="grow" style="margin:0">' + esc(p.name) + (p.status === 'archived' ? ' <span class="badge">Diarsipkan</span>' : '') + (p.id === S.projectId ? ' <span class="badge b-approved">Aktif</span>' : '') + '</h3>' +
+          (p.id !== S.projectId ? '<button class="btn sm" data-use="' + esc(p.id) + '">Jadikan aktif</button>' : '') + (canP ? '<button class="btn sm" data-ep="' + esc(p.id) + '">Edit</button>' : '') + (canL ? '<button class="btn sm primary" data-nl="' + esc(p.id) + '">+ Layer</button>' : '') + '</div>' +
+          (p.description ? '<p class="small muted" style="margin:6px 0">' + esc(p.description) + '</p>' : '') +
+          (ls.length ? '<div class="tscroll" style="margin-top:8px"><table class="t"><tr><th>Layer</th><th>Geometri</th><th>CRS</th><th>Atribut</th><th>Fitur</th><th></th></tr>' + ls.map(function (l) { return '<tr><td><span class="swatch" style="display:inline-block;vertical-align:middle;background:' + esc(l.style.color) + '"></span> ' + esc(l.name) + '</td><td>' + esc(l.geom_type) + '</td><td>EPSG:' + esc(l.srid) + '</td><td class="small">' + esc(l.schema.map(function (s) { return s.label + (s.required ? '*' : ''); }).join(', ') || '-') + '</td><td>' + countLayer(l.id) + '</td><td>' + (canL ? '<button class="btn sm" data-el="' + esc(l.id) + '">Edit</button>' : '') + '</td></tr>'; }).join('') + '</table></div>' : '<div class="small muted" style="margin-top:8px">Belum ada layer.</div>') + '</div>';
+      }).join('') : '<div class="empty">Belum ada proyek.' + (canP ? ' Klik "+ Proyek" untuk memulai.' : ' Hubungi admin/supervisor.') + '</div>');
+    var np = $('#pj-new'); if (np) np.onclick = function () { Tabs.projectForm({}); };
+    $$('[data-use]', el).forEach(function (b) { b.onclick = function () { S.projectId = b.getAttribute('data-use'); MapView.refreshData(); App.rerender(); toast('Proyek aktif diganti.'); }; });
+    $$('[data-ep]', el).forEach(function (b) { b.onclick = function () { Tabs.projectForm(S.projects.find(function (p) { return p.id === b.getAttribute('data-ep'); })); }; });
+    $$('[data-nl]', el).forEach(function (b) { b.onclick = function () { Tabs.layerForm({ project_id: b.getAttribute('data-nl'), schema: [], style: { color: '#e11d48' } }); }; });
+    $$('[data-el]', el).forEach(function (b) { b.onclick = function () { Tabs.layerForm(layerById(b.getAttribute('data-el'))); }; });
+  },
+  projectForm: function (p) {
+    var wa = p.work_area || ['', '', '', ''];
+    modal({ title: p.id ? 'Edit proyek' : 'Proyek baru', body: '<label class="f">Nama proyek <span class="req">*</span><input class="input" id="pf-name" maxlength="120" value="' + esc(p.name) + '"></label><label class="f">Deskripsi<textarea class="input" id="pf-desc" rows="3" maxlength="2000">' + esc(p.description) + '</textarea></label>' +
+      '<label class="f">Status<select class="input" id="pf-st"><option value="active">Aktif</option><option value="archived"' + (p.status === 'archived' ? ' selected' : '') + '>Diarsipkan (baca-saja)</option></select></label>' +
+      '<div><b class="small">Area kerja (opsional, WGS84) — data di luar area ditolak server</b><div class="row wrap" style="margin-top:6px">' + ['Min lon', 'Min lat', 'Max lon', 'Max lat'].map(function (t, i) { return '<input class="input" style="flex:1;min-width:100px" data-wa="' + i + '" placeholder="' + t + '" value="' + esc(wa[i]) + '" inputmode="decimal">'; }).join('') + '</div>' + (MapView.map ? '<button class="btn sm" id="pf-view" style="margin-top:6px">Pakai batas tampilan peta</button>' : '') + '</div>',
+      buttons: [{ label: 'Batal' }].concat(p.id ? [{ label: 'Hapus', cls: 'danger', onClick: async function () { if (!(await confirmBox('Hapus proyek', 'Proyek hanya dapat dihapus jika tidak berisi fitur.', 'Hapus', true))) return false; await Api.call('projects.delete', { id: p.id }); await App.refreshBoot(); toast('Proyek dihapus.', 'ok'); } }] : []).concat([{ label: 'Simpan', cls: 'primary', onClick: async function (mb) {
+        var w = $$('[data-wa]', mb).map(function (i) { return i.value.trim(); }), area = w.every(function (v) { return v === ''; }) ? null : w.map(Number);
+        var r = await Api.call('projects.save', { id: p.id, name: $('#pf-name', mb).value, description: $('#pf-desc', mb).value, status: $('#pf-st', mb).value, work_area: area });
+        if (!p.id) S.projectId = r.id; await App.refreshBoot(); toast('Proyek tersimpan.', 'ok');
+      } }]) });
+    var pv = $('#pf-view'); if (pv) pv.onclick = function () { var b = MapView.map.getBounds(); [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].forEach(function (v, i) { $('[data-wa="' + i + '"]').value = v.toFixed(6); }); };
+  },
+  layerForm: function (l) {
+    var fields = (l.schema || []).map(function (f) { return Object.assign({}, f); });
+    var body = document.createElement('div'); body.className = 'col';
+    body.innerHTML = '<div class="row wrap"><label class="f grow">Nama layer <span class="req">*</span><input class="input" id="lf-name" maxlength="120" value="' + esc(l.name) + '"></label><label class="f">Geometri<select class="input" id="lf-geom"' + (l.id && countLayer(l.id) ? ' disabled' : '') + '>' + ['Point', 'LineString', 'Polygon'].map(function (g) { return '<option' + (l.geom_type === g ? ' selected' : '') + '>' + g + '</option>'; }).join('') + '</select></label><label class="f">Warna<input type="color" class="input" id="lf-color" value="' + esc(l.style.color || '#e11d48') + '" style="width:64px;padding:4px"></label></div>' +
+      '<div class="small muted">CRS penyimpanan: EPSG:4326 (WGS84, GeoJSON RFC 7946). Luas/panjang dihitung geodesik.</div><b class="small">Skema atribut</b><div id="lf-fields" class="col"></div><button class="btn sm" id="lf-add" type="button">+ Atribut</button>';
+    function draw() {
+      $('#lf-fields', body).innerHTML = fields.map(function (f, i) {
+        return '<div class="row wrap" style="padding:8px;border:1px solid var(--line);border-radius:9px"><input class="input" data-k="key" data-i="' + i + '" placeholder="kunci (mis. kode_blok)" value="' + esc(f.key) + '" style="flex:1;min-width:120px"><input class="input" data-k="label" data-i="' + i + '" placeholder="Label" value="' + esc(f.label) + '" style="flex:1;min-width:120px"><select class="input" data-k="type" data-i="' + i + '" style="width:120px">' + [['text', 'Teks'], ['number', 'Angka'], ['integer', 'Bulat'], ['select', 'Pilihan'], ['date', 'Tanggal'], ['bool', 'Ya/Tidak']].map(function (t) { return '<option value="' + t[0] + '"' + (f.type === t[0] ? ' selected' : '') + '>' + t[1] + '</option>'; }).join('') + '</select><label class="row small"><input type="checkbox" data-k="required" data-i="' + i + '"' + (f.required ? ' checked' : '') + '> Wajib</label><button class="btn sm danger" data-del="' + i + '" type="button">✕</button>' + (f.type === 'select' ? '<input class="input" data-k="options" data-i="' + i + '" placeholder="Opsi dipisah koma" value="' + esc((f.options || []).join(',')) + '" style="flex-basis:100%">' : '') + '</div>';
+      }).join('') || '<div class="small muted">Belum ada atribut.</div>';
+      $$('[data-k]', body).forEach(function (inp) { inp.onchange = function () { var f = fields[+inp.getAttribute('data-i')], k = inp.getAttribute('data-k'); f[k] = k === 'required' ? inp.checked : (k === 'options' ? inp.value.split(',').map(function (s) { return s.trim(); }).filter(String) : inp.value.trim()); if (k === 'type') draw(); }; });
+      $$('[data-del]', body).forEach(function (b) { b.onclick = function () { fields.splice(+b.getAttribute('data-del'), 1); draw(); }; });
+    }
+    draw();
+    $('#lf-add', body).onclick = function () { fields.push({ key: '', label: '', type: 'text', required: false, options: [] }); draw(); };
+    modal({ title: l.id ? 'Edit layer' : 'Layer baru', body: body, wide: true, buttons: [{ label: 'Batal' }].concat(l.id ? [{ label: 'Hapus', cls: 'danger', onClick: async function () { if (!(await confirmBox('Hapus layer', 'Layer hanya dapat dihapus jika kosong.', 'Hapus', true))) return false; await Api.call('layers.delete', { id: l.id }); await App.refreshBoot(); } }] : []).concat([{ label: 'Simpan', cls: 'primary', onClick: async function () {
+      fields.forEach(function (f) { if (!f.key && f.label) f.key = f.label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').replace(/^(\d)/, 'f_$1'); });
+      await Api.call('layers.save', { id: l.id, project_id: l.project_id, name: $('#lf-name', body).value, geom_type: $('#lf-geom', body).value, style: { color: $('#lf-color', body).value }, schema: fields });
+      await App.refreshBoot(); toast('Layer tersimpan.', 'ok');
+    } }]) });
+  },
+  admin: function () {
+    var el = $('[data-tab=admin]');
+    el.innerHTML = '<div class="tab-h"><h2>Administrasi</h2></div><div class="seg" id="ad-seg" style="margin-bottom:14px"><button data-s="users" class="on">Pengguna</button><button data-s="brand">Branding</button><button data-s="lic">Lisensi</button><button data-s="audit">Audit</button></div><div id="ad-body"><div class="skeleton"></div></div>';
+    var go = function (s) { Admin.current = s; $$('#ad-seg button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-s') === s); }); Admin[s]($('#ad-body')); };
+    $$('#ad-seg button').forEach(function (b) { b.onclick = function () { go(b.getAttribute('data-s')); }; });
+    go('users');
+  },
+  profile: function () {
+    var el = $('[data-tab=profile]'), u = S.user;
+    el.innerHTML = '<div class="tab-h"><h2>Profil Saya</h2></div><div class="grid2"><div class="card" style="text-align:center"><div class="avatar" id="pf-av" style="width:132px;height:132px;margin:6px auto 12px;font-size:42px;cursor:zoom-in">' + (u.photo ? '<img alt="" src="' + esc(u.photo) + '">' : esc(initials(u.name))) + '</div><div class="small muted">Klik foto untuk memperbesar (scroll / pinch untuk zoom)</div><div class="row wrap" style="justify-content:center;margin-top:10px"><label class="btn sm primary">Ganti foto<input type="file" accept="image/*" hidden id="pf-photo"></label>' + (u.photo ? '<button class="btn sm danger" id="pf-rm">Hapus foto</button>' : '') + '</div></div>' +
+      '<div class="card col"><h3>Data akun</h3><label class="f">Nama<input class="input" id="pf-name" value="' + esc(u.name) + '" maxlength="80"></label><div class="small">Username: <b class="mono">' + esc(u.username) + '</b> · Role: <b>' + esc(ROLE_LBL[u.role]) + '</b><br>Organisasi: <b>' + esc(S.org.name) + '</b><br>Login terakhir: ' + fmtDate(u.last_login) + '</div><button class="btn primary" id="pf-save">Simpan nama</button></div>' +
+      '<div class="card col"><h3>Ganti password</h3><input class="input" type="password" id="pw-old" placeholder="Password lama" autocomplete="current-password"><input class="input" type="password" id="pw-new" placeholder="Password baru (min 8, huruf & angka)" autocomplete="new-password"><input class="input" type="password" id="pw-new2" placeholder="Ulangi password baru" autocomplete="new-password"><button class="btn" id="pw-save">Ganti password</button><div class="small muted">Semua sesi akan dicabut setelah password diganti.</div></div></div>';
+    $('#pf-av').onclick = function () { if (u.photo) Zoom.open(u.photo, u.name); };
+    var savePhoto = async function (data) { try { var me = await Api.call('profile.save', { photo: data }); S.user = Object.assign(S.user, me); IDB.kvSet('boot', null); App.renderAvatar(); App.rerender('profile'); toast('Foto profil diperbarui.', 'ok'); } catch (e) { toast(e.message, 'err'); } };
+    $('#pf-photo').onchange = async function (e) { var f = e.target.files[0]; if (!f) return; try { savePhoto(await readImage(f, 360, 0.82, true)); } catch (er) { toast(er.message, 'err'); } };
+    var rm = $('#pf-rm'); if (rm) rm.onclick = function () { savePhoto(''); };
+    $('#pf-save').onclick = async function () { try { var me = await Api.call('profile.save', { name: $('#pf-name').value }); S.user = Object.assign(S.user, me); App.renderAvatar(); toast('Tersimpan.', 'ok'); } catch (e) { toast(e.message, 'err'); } };
+    $('#pw-save').onclick = async function () { if ($('#pw-new').value !== $('#pw-new2').value) return toast('Konfirmasi password tidak sama.', 'err'); try { await Api.call('profile.password', { old_password: $('#pw-old').value, new_password: $('#pw-new').value }); toast('Password diganti. Silakan login kembali.', 'ok'); App.leave(); } catch (e) { toast(e.message, 'err'); } };
+  },
+  about: function () {
+    var el = $('[data-tab=about]');
+    el.innerHTML = '<div class="tab-h"><h2>Tentang &amp; Legal</h2></div><div class="grid2"><div class="card"><h3>Informasi aplikasi</h3><table class="t"><tr><th>Aplikasi</th><td>Universal Mobile Mapping GIS — Edisi Apps Script</td></tr><tr><th>Versi klien</th><td>' + APP_VERSION + ' (build ' + APP_BUILD + ')</td></tr><tr><th>Versi server</th><td id="ab-sv">' + esc(S.serverApp && S.serverApp.version ? S.serverApp.version + ' (' + S.serverApp.build + ')' : '-') + '</td></tr><tr><th>Mode</th><td>' + ({ gas: 'Apps Script (HtmlService)', remote: 'PWA (GitHub Pages)', demo: 'DEMO (data di browser)' }[CONFIG.MODE]) + '</td></tr><tr><th>Lisensi</th><td>' + esc(S.license.label || '-') + (S.license.exp ? ' · s/d ' + esc(S.license.exp) : '') + '</td></tr><tr><th>CRS data</th><td>EPSG:4326 (WGS84)</td></tr></table><div class="row wrap" style="margin-top:10px"><button class="btn sm" id="ab-health">Cek kesehatan server</button>' + (CONFIG.MODE === 'demo' ? '<button class="btn sm danger" id="ab-reset">Reset data demo</button>' : '') + '</div><div id="ab-h" class="small mono" style="margin-top:8px"></div></div>' +
+      '<div class="card"><h3>Komponen pihak ketiga</h3><ul class="small"><li>MapLibre GL JS 4.7.1 — BSD-3-Clause</li><li>PMTiles (protomaps) 3.2.1 — BSD-3-Clause</li><li>Data peta © OpenStreetMap contributors — ODbL; tile OSM tunduk pada Tile Usage Policy OSMF</li><li>Google Apps Script, Sheets, Drive — Ketentuan Layanan Google</li></ul><p class="small muted">Ikon & logo bawaan dibuat khusus untuk aplikasi ini.</p></div></div>' +
+      '<div class="card legal" style="margin-top:12px">' + LEGAL.terms + '</div><div class="card legal" style="margin-top:12px">' + LEGAL.privacy + '</div>';
+    $('#ab-health').onclick = async function () { try { var h = await Api.call('health'); $('#ab-h').textContent = JSON.stringify(h); $('#ab-sv').textContent = h.version + ' (' + h.build + ')'; } catch (e) { $('#ab-h').textContent = 'Gagal: ' + e.message; } };
+    var rs = $('#ab-reset'); if (rs) rs.onclick = async function () { if (!(await confirmBox('Reset demo', 'Semua data demo di browser ini dihapus dan dibuat ulang.', 'Reset', true))) return; Demo.reset(); await IDB.clear('ops').catch(function () { }); await IDB.clear('kv').catch(function () { }); LS.set('umg_token', null); location.reload(); };
+  }
+};
+
+var Admin = {
+  users: async function (box) {
+    box.innerHTML = '<div class="skeleton"></div>';
+    try {
+      var users = await Api.call('users.list'), lic = await Api.call('license.status');
+      if (Admin.current !== 'users') return;
+      box.innerHTML = '<div class="row wrap" style="margin-bottom:10px"><span class="grow small muted">Pengguna aktif: <b>' + lic.used_users + '</b> / ' + fmtNum(lic.max_users, 0) + ' (lisensi ' + esc(lic.label) + ')</span><button class="btn primary sm" id="us-new">+ Pengguna</button></div><div class="tscroll"><table class="t"><tr><th>Nama</th><th>Username</th><th>Role</th><th>Status</th><th>Login terakhir</th><th></th></tr>' +
+        users.map(function (u) { return '<tr><td>' + esc(u.name) + '</td><td class="mono">' + esc(u.username) + '</td><td>' + esc(ROLE_LBL[u.role]) + '</td><td>' + (u.status === 'active' ? '<span class="badge b-approved">Aktif</span>' : '<span class="badge b-rejected">Nonaktif</span>') + '</td><td class="small">' + fmtDate(u.last_login) + '</td><td><button class="btn sm" data-u="' + esc(u.id) + '">Edit</button></td></tr>'; }).join('') + '</table></div>';
+      var form = function (u) {
+        modal({ title: u.id ? 'Edit pengguna' : 'Pengguna baru', body: (u.id ? '' : '<label class="f">Username<input class="input mono" id="uf-un" maxlength="40" autocapitalize="none"></label>') + '<label class="f">Nama<input class="input" id="uf-nm" value="' + esc(u.name) + '" maxlength="80"></label><label class="f">Role<select class="input" id="uf-rl">' + ['admin', 'supervisor', 'surveyor', 'viewer'].map(function (r) { return '<option value="' + r + '"' + (u.role === r ? ' selected' : '') + '>' + ROLE_LBL[r] + '</option>'; }).join('') + '</select></label><label class="f">Status<select class="input" id="uf-st"><option value="active">Aktif</option><option value="disabled"' + (u.status === 'disabled' ? ' selected' : '') + '>Nonaktif</option></select></label><label class="f">' + (u.id ? 'Reset password (kosongkan jika tidak diubah)' : 'Password awal') + '<input class="input" type="password" id="uf-pw" autocomplete="new-password"></label><div class="small muted">Role: Admin (semua), Supervisor (proyek, layer, review), Surveyor (rekam & ajukan data sendiri), Viewer (lihat & ekspor).</div>',
+          buttons: [{ label: 'Batal' }, { label: 'Simpan', cls: 'primary', onClick: async function (mb) { await Api.call('users.save', { id: u.id, username: u.id ? undefined : $('#uf-un', mb).value, name: $('#uf-nm', mb).value, role: $('#uf-rl', mb).value, status: $('#uf-st', mb).value, password: $('#uf-pw', mb).value || undefined }); toast('Pengguna tersimpan.', 'ok'); Admin.users(box); App.refreshBoot(); } }] });
+      };
+      $('#us-new', box).onclick = function () { form({ role: 'surveyor', status: 'active' }); };
+      $$('[data-u]', box).forEach(function (b) { b.onclick = function () { form(users.find(function (x) { return x.id === b.getAttribute('data-u'); })); }; });
+    } catch (e) { box.innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; }
+  },
+  brand: function (box) {
+    var d = Brand.data, logo = d.logo || '';
+    box.innerHTML = '<div class="grid2"><div class="card col"><h3>Identitas aplikasi</h3><label class="f">Judul header<input class="input" id="br-title" maxlength="80" value="' + esc(d.title) + '"></label><label class="f">Subjudul<input class="input" id="br-sub" maxlength="120" value="' + esc(d.subtitle) + '"></label><label class="f">Warna aksen tema<input type="color" class="input" id="br-acc" value="' + esc(d.accent || '#0f766e') + '" style="width:80px;padding:4px"></label><label class="f">URL PMTiles foto udara bawaan (opsional)<input class="input mono small" id="br-pmt" value="' + esc(S.settings.pmtiles_default || '') + '" placeholder="https://…/ortho.pmtiles"></label><button class="btn primary" id="br-save">Simpan</button></div>' +
+      '<div class="card col" style="align-items:center;text-align:center"><h3>Logo</h3><img id="br-logo" src="' + esc(logo || DEFAULT_LOGO) + '" alt="Logo" style="width:140px;height:140px;object-fit:contain;border:1px solid var(--line);border-radius:16px;background:var(--panel-2);cursor:zoom-in"><div class="small muted">Klik untuk memperbesar. PNG/JPEG/WebP, otomatis diperkecil ke 512 px.</div><div class="row wrap" style="justify-content:center"><label class="btn sm primary">Unggah logo<input type="file" accept="image/png,image/jpeg,image/webp" hidden id="br-file"></label>' + (logo ? '<button class="btn sm danger" id="br-rm">Pakai logo bawaan</button>' : '') + '</div></div></div>';
+    $('#br-logo', box).onclick = function () { Zoom.open($('#br-logo', box).src, 'Logo'); };
+    var saveLogo = async function (data) { try { await Api.call('settings.save', { logo: data }); Brand.apply({ logo: data }); IDB.kvSet('branding', Object.assign({}, Brand.data)); Admin.brand(box); toast('Logo diperbarui.', 'ok'); } catch (e) { toast(e.message, 'err'); } };
+    $('#br-file', box).onchange = async function (e) { var f = e.target.files[0]; if (!f) return; try { var url = await readLogo(f); saveLogo(url); } catch (er) { toast(er.message, 'err'); } };
+    var rm = $('#br-rm', box); if (rm) rm.onclick = function () { saveLogo(''); };
+    $('#br-save', box).onclick = async function () { try { var s = await Api.call('settings.save', { title: $('#br-title').value, subtitle: $('#br-sub').value, accent: $('#br-acc').value, pmtiles_default: $('#br-pmt').value }); S.settings = Object.assign(S.settings, s); Brand.apply(s); IDB.kvSet('branding', Object.assign({}, Brand.data)); toast('Branding tersimpan.', 'ok'); } catch (e) { toast(e.message, 'err'); } };
+  },
+  lic: async function (box) {
+    box.innerHTML = '<div class="skeleton"></div>';
+    try {
+      var l = await Api.call('license.status');
+      if (Admin.current !== 'lic') return;
+      box.innerHTML = '<div class="grid2"><div class="card"><h3>Status lisensi</h3><table class="t"><tr><th>Tier</th><td><b>' + esc(l.label) + '</b> ' + (l.valid ? '<span class="badge b-approved">Valid</span>' : '<span class="badge b-rejected">Tidak aktif</span>') + '</td></tr><tr><th>Pemegang</th><td>' + esc(l.licensee || '-') + '</td></tr><tr><th>Berlaku s/d</th><td>' + esc(l.exp || '-') + '</td></tr><tr><th>Pengguna</th><td>' + l.used_users + ' / ' + fmtNum(l.max_users, 0) + '</td></tr><tr><th>Fitur</th><td>' + fmtNum(l.used_features, 0) + ' / ' + fmtNum(l.max_features, 0) + '</td></tr><tr><th>PMTiles offline</th><td>' + (l.offline_pmtiles ? 'Ya' : 'Tidak') + '</td></tr><tr><th>Script ID</th><td class="mono small">' + esc(l.script_id || '-') + '</td></tr></table>' + (l.message ? '<p class="small" style="color:var(--warn)">' + esc(l.message) + '</p>' : '') + '</div>' +
+        '<div class="card col"><h3>Aktivasi</h3><p class="small muted">Tempel kunci lisensi dari penyedia (format UMG1.…). Kirim Script ID di samping ke penyedia bila lisensi ingin diikat ke instalasi ini.</p><textarea class="input mono small" id="lc-key" rows="6" placeholder="UMG1.xxxxx.yyyyy"></textarea><button class="btn primary" id="lc-act">Aktifkan</button></div></div>';
+      $('#lc-act', box).onclick = async function () { try { var s = await Api.call('license.activate', { key: $('#lc-key').value.trim() }); S.license = s; toast('Lisensi aktif: ' + s.label, 'ok'); Admin.lic(box); } catch (e) { toast(e.message, 'err', 6000); } };
+    } catch (e) { box.innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; }
+  },
+  audit: async function (box) {
+    box.innerHTML = '<div class="skeleton"></div>';
+    try {
+      var rows = await Api.call('audit.list', { limit: 300 });
+      if (Admin.current !== 'audit') return;
+      box.innerHTML = '<div class="tscroll"><table class="t"><tr><th>Waktu</th><th>Pengguna</th><th>Aksi</th><th>Objek</th><th>Detail</th></tr>' + rows.map(function (a) { return '<tr><td class="small">' + fmtDate(a.ts) + '</td><td>' + esc(userName(a.user_id)) + '</td><td class="mono small">' + esc(a.action) + '</td><td class="small">' + esc(a.entity) + ' ' + esc((a.entity_id || '').slice(0, 8)) + '</td><td class="small mono" style="max-width:320px;word-break:break-all">' + esc(a.detail) + '</td></tr>'; }).join('') + '</table></div>';
+    } catch (e) { box.innerHTML = '<div class="empty">' + esc(e.message) + '</div>'; }
+  }
+};
+function readLogo(file) {
+  return new Promise(function (res, rej) {
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) return rej(new Error('Logo harus PNG/JPEG/WebP.'));
+    var url = URL.createObjectURL(file), img = new Image();
+    img.onload = function () { var k = Math.min(1, 512 / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); var out = c.toDataURL('image/png'); if (out.length > 380000) out = c.toDataURL('image/webp', 0.9); if (out.indexOf('data:image/webp') !== 0 && out.length > 380000) out = c.toDataURL('image/jpeg', 0.85); if (out.length > 380000) return rej(new Error('Logo terlalu kompleks; gunakan gambar yang lebih sederhana.')); res(out); };
+    img.onerror = function () { URL.revokeObjectURL(url); rej(new Error('Logo tidak dapat dibaca.')); };
+    img.src = url;
+  });
+}
+
+// ======================================================= Legal
+var LEGAL = {
+  terms: '<h3>Syarat &amp; Ketentuan Penggunaan</h3><p class="small muted">Berlaku sejak 30 Oktober 2026 · Versi 1.0</p>' +
+    '<h4>1. Para pihak & ruang lingkup</h4><p>Aplikasi Universal Mobile Mapping GIS ("Aplikasi") dilisensikan oleh penyedia kepada organisasi pemegang lisensi ("Pelanggan"). Pengguna adalah personel yang diberi akun oleh admin Pelanggan. Dengan login, pengguna menyetujui ketentuan ini dan kebijakan internal Pelanggan.</p>' +
+    '<h4>2. Lisensi</h4><p>Lisensi bersifat non-eksklusif, tidak dapat dialihkan, untuk satu instalasi Apps Script dan sesuai batas tier (jumlah pengguna, jumlah fitur, masa berlaku). Dilarang menyalin, menjual kembali, membongkar pengaman lisensi, atau mendistribusikan kode tanpa izin tertulis penyedia. Lisensi kedaluwarsa menjadikan Aplikasi mode baca-saja; data tetap milik Pelanggan.</p>' +
+    '<h4>3. Infrastruktur Google</h4><p>Aplikasi berjalan di akun Google milik Pelanggan (Apps Script, Sheets, Drive) dan tunduk pada Ketentuan Layanan serta kuota Google. Penyedia tidak bertanggung jawab atas gangguan, perubahan kebijakan, atau pembatasan kuota dari Google.</p>' +
+    '<h4>4. Akurasi data spasial</h4><p>Posisi berasal dari GPS perangkat dengan akurasi yang dilaporkan perangkat dan dapat meleset beberapa hingga puluhan meter. Luas & panjang dihitung geodesik untuk keperluan operasional. <b>Hasil Aplikasi bukan pengukuran kadastral/berkekuatan hukum</b> dan tidak menggantikan pengukuran oleh surveyor berlisensi atau instansi pertanahan.</p>' +
+    '<h4>5. Kewajiban pengguna</h4><ul><li>Menjaga kerahasiaan password dan logout di perangkat bersama.</li><li>Mengisi data secara benar dan hanya di area/proyek yang ditugaskan.</li><li>Memperoleh izin yang diperlukan sebelum memasuki lahan atau memotret orang/properti pihak lain.</li><li>Tidak mengunggah konten melanggar hukum, malware, atau data pribadi yang tidak relevan.</li></ul>' +
+    '<h4>6. Data offline</h4><p>Data yang belum tersinkron tersimpan di perangkat dan dapat hilang bila perangkat rusak, data browser dihapus, atau ruang penuh. Pengguna wajib melakukan sinkronisasi secara berkala.</p>' +
+    '<h4>7. Batasan tanggung jawab</h4><p>Aplikasi disediakan "sebagaimana adanya". Sepanjang diizinkan hukum, penyedia tidak bertanggung jawab atas kerugian tidak langsung, kehilangan keuntungan, atau keputusan yang diambil berdasarkan data Aplikasi. Tanggung jawab maksimal penyedia sebesar biaya lisensi 12 bulan terakhir.</p>' +
+    '<h4>8. Hukum yang berlaku</h4><p>Ketentuan ini tunduk pada hukum Republik Indonesia. Sengketa diselesaikan secara musyawarah, kemudian melalui pengadilan negeri domisili penyedia.</p>',
+  privacy: '<h3>Pemberitahuan Privasi</h3><p class="small muted">Disusun dengan mengacu pada UU No. 27 Tahun 2022 tentang Pelindungan Data Pribadi (UU PDP)</p>' +
+    '<h4>1. Pengendali data</h4><p>Pelanggan (organisasi yang memasang Aplikasi) adalah <b>pengendali data pribadi</b>. Penyedia Aplikasi tidak menerima salinan data operasional, kecuali Pelanggan memberikan akses untuk dukungan teknis berdasarkan perjanjian terpisah (penyedia bertindak sebagai prosesor).</p>' +
+    '<h4>2. Data yang diproses</h4><ul><li>Akun: nama, username, role, foto profil (opsional), waktu login, hash password (PBKDF2 — password asli tidak disimpan).</li><li>Data lapangan: koordinat, akurasi GPS, atribut survei, foto lapangan, waktu & pembuat data.</li><li>Lokasi perangkat: dibaca <b>hanya saat Anda menyalakan GPS</b> di peta; tidak dilacak di latar belakang dan posisi langsung tidak dikirim ke server kecuali Anda menyimpan data.</li><li>Log audit: aksi pengguna untuk keamanan dan akuntabilitas.</li></ul>' +
+    '<h4>3. Tujuan & dasar pemrosesan</h4><p>Pelaksanaan pekerjaan survei & pemetaan, pengendalian mutu (review), keamanan sistem, dan kewajiban kontraktual/kepegawaian antara pengguna dan Pelanggan.</p>' +
+    '<h4>4. Penyimpanan & keamanan</h4><p>Data disimpan di Google Sheets/Drive milik Pelanggan. Di perangkat, data offline disimpan di IndexedDB browser <b>tanpa enkripsi tambahan</b>. Komunikasi menggunakan HTTPS. Akses dibatasi role dan organisasi di sisi server.</p>' +
+    '<h4>5. Retensi</h4><p>Data disimpan selama dibutuhkan proyek sesuai kebijakan retensi Pelanggan. Sesi login kedaluwarsa otomatis (' + 12 + ' jam). Log audit disimpan untuk keperluan keamanan.</p>' +
+    '<h4>6. Pihak ketiga</h4><p>Google LLC (infrastruktur), penyedia tile peta (OpenStreetMap atau server yang dikonfigurasi Pelanggan — menerima alamat IP & area peta yang dilihat), dan CDN unpkg.com (memuat pustaka peta). Tidak ada pelacakan iklan atau analitik pihak ketiga.</p>' +
+    '<h4>7. Hak subjek data</h4><p>Anda berhak mengakses, memperbaiki, meminta penghapusan, membatasi pemrosesan, dan menarik persetujuan sesuai UU PDP dengan menghubungi admin/Petugas Pelindungan Data Pribadi Pelanggan. Foto profil dan nama dapat Anda ubah sendiri di menu Profil.</p>' +
+    '<h4>8. Perubahan</h4><p>Pemberitahuan ini dapat diperbarui; versi terbaru selalu tersedia di menu Tentang &amp; Legal.</p>'
+};
+
+// ======================================================= Event & inisialisasi
+function bindGlobal() {
+  $('#lg-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var btn = $('#lg-btn'), u = $('#lg-user').value.trim(), p = $('#lg-pass').value;
+    $('#lg-err').textContent = ''; btn.disabled = true; btn.textContent = 'Memeriksa…';
+    try { await Auth.login(u, p); } catch (er) { $('#lg-err').textContent = er.network ? 'Tidak dapat terhubung ke server. Periksa koneksi / URL server.' : er.message; }
+    finally { btn.disabled = false; btn.textContent = 'Masuk'; }
+  });
+  $('#lg-eye').onclick = function () { var i = $('#lg-pass'); i.type = i.type === 'password' ? 'text' : 'password'; this.textContent = i.type === 'password' ? 'Lihat' : 'Sembunyi'; };
+  $('#lg-logo').onclick = function () { Zoom.open(this.src, 'Logo'); };
+  $('#hd-logo').onclick = function () { Zoom.open(this.src, 'Logo'); };
+  $$('[data-demo]').forEach(function (b) { b.onclick = function () { $('#lg-user').value = b.getAttribute('data-demo'); $('#lg-pass').value = 'demo1234'; $('#lg-form').requestSubmit(); }; });
+  $$('[data-legal]').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); modal({ title: 'Legal', body: '<div class="legal">' + LEGAL[a.getAttribute('data-legal')] + '</div>', buttons: [{ label: 'Tutup' }], wide: true }); }; });
+  if (CONFIG.MODE === 'remote') {
+    $('#lg-server').classList.remove('hidden'); $('#lg-api').value = Api.url();
+    $('#lg-api-save').onclick = async function () {
+      var u = $('#lg-api').value.trim(); if (!PMT.okUrl(u)) return ($('#lg-api-msg').textContent = 'URL harus HTTPS (contoh: https://script.google.com/macros/s/…/exec).');
+      LS.set('umg_api_url', u); $('#lg-api-msg').textContent = 'Menguji…';
+      try { var h = await Api.call('health'); $('#lg-api-msg').textContent = 'Terhubung: ' + h.app + ' v' + h.version + ' · DB ' + (h.db.ok ? 'OK' : 'bermasalah'); Brand.refresh(); } catch (e) { $('#lg-api-msg').textContent = 'Gagal: ' + e.message; }
+    };
+  }
+  if (CONFIG.MODE === 'demo') $('#lg-demo').classList.remove('hidden');
+  document.addEventListener('click', function (e) {
+    var n = e.target.closest('[data-nav]'); if (n) { App.show(n.getAttribute('data-nav')); return; }
+    if (e.target.closest('[data-more]')) { popMenu(e.target.closest('[data-more]'), NAV.filter(function (x) { return ['projects', 'admin', 'profile', 'about'].indexOf(x.id) >= 0 && (!x.perm || can(x.perm)); }).map(function (x) { return { label: x.label, icon: x.icon, onClick: function () { App.show(x.id); } }; }).concat([{ label: 'Tema gelap/terang', icon: 'theme', onClick: Theme.toggle }, { label: 'Keluar', icon: 'logout', onClick: Auth.logout }])); }
+  });
+  $('#btn-menu').onclick = function () { $('#sidenav').classList.toggle('open'); };
+  $('#hd-avatar').onclick = function () { popMenu(this, [{ label: S.user.name + ' (' + ROLE_LBL[S.user.role] + ')', icon: 'profile', onClick: function () { App.show('profile'); } }].concat(S.user.photo ? [{ label: 'Lihat foto profil', icon: 'profile', onClick: function () { Zoom.open(S.user.photo, S.user.name); } }] : []).concat([{ label: 'Tema gelap/terang', icon: 'theme', onClick: Theme.toggle }, { label: 'Tentang & legal', icon: 'about', onClick: function () { App.show('about'); } }, { label: 'Keluar', icon: 'logout', onClick: Auth.logout }])); };
+  $('#pill-sync').onclick = function () { App.show('sync'); };
+  $('#pill-net').onclick = function () { App.show('sync'); };
+  $$('[data-tool]').forEach(function (b) { b.onclick = function () { var t = b.getAttribute('data-tool'); if (Draw.mode === t) Draw.cancel(); else Draw.start(t); }; });
+  $('#btn-gps').onclick = function () { if (GPS.watch === null) { GPS.start(); GPS.follow = true; } else if (!GPS.follow) { GPS.follow = true; if (GPS.pos) MapView.map.easeTo({ center: [GPS.pos.lon, GPS.pos.lat], zoom: Math.max(MapView.map.getZoom(), 17) }); } else { GPS.stop(); MapView.drawGps(); } };
+  $('#btn-layers').onclick = MapView.layerPanel;
+  $('#btn-fit').onclick = function () { MapView.fit(); };
+  $('#sel-project').onchange = function (e) { S.projectId = e.target.value; MapView.refreshData(); S.rendered = {}; };
+  $('#sel-layer').onchange = function (e) { S.layerId = e.target.value; };
+  function net() { S.online = navigator.onLine; var p = $('#pill-net'); $('.dot', p).className = 'dot' + (S.online ? '' : ' off'); $('.lbl', p).textContent = CONFIG.MODE === 'demo' ? 'Demo' : (S.online ? 'Online' : 'Offline'); if (S.online) { Sync.backoff = 2000; Sync.schedule(500); } }
+  window.addEventListener('online', net); window.addEventListener('offline', net); net();
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && S.user) Sync.schedule(300); });
+}
+
+async function boot() {
+  Theme.init();
+  bindGlobal();
+  $('#lg-ver').textContent = 'v' + APP_VERSION;
+  await IDB.open();
+  if (!IDB.db) toast('Penyimpanan offline tidak tersedia (mode privat?). Data tidak dapat disimpan offline.', 'err', 6000);
+  Demo.init();
+  var br = await IDB.kvGet('branding'); Brand.apply(br || {});
+  S.token = LS.get('umg_token') || '';
+  var cached = S.token ? await IDB.kvGet('boot') : null;
+  if (S.token && cached && cached.user) {
+    await App.enter(cached, true);                      // tampil instan dari cache
+    if (S.online || CONFIG.MODE === 'demo') App.refreshBoot();   // validasi sesi & data terbaru di latar
+  } else {
+    $('#login').classList.remove('hidden');
+    if (S.token && (S.online || CONFIG.MODE === 'demo')) { try { var b = await Api.call('boot'); await App.enter(b, false); } catch (e) { S.token = ''; LS.set('umg_token', null); } }
+    Brand.refresh();
+  }
+  if (CONFIG.SW && 'serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('./sw.js').catch(function (e) { console.warn('SW', e); });
+}
+document.addEventListener('DOMContentLoaded', boot);
+
+</script>
+</body>
+</html>
