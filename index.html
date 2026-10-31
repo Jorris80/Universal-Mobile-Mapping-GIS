@@ -382,7 +382,7 @@ var Geo = (function () {
  * Mode: 'gas' (HtmlService/google.script.run), 'remote' (PWA GitHub Pages -> fetch Web App), 'demo' (backend emulasi di browser).
  */
 'use strict';
-var APP_VERSION = '1.2.0', APP_BUILD = '2026-10-30';
+var APP_VERSION = '1.3.0', APP_BUILD = '2026-10-31';
 var S = { token: '', user: null, org: null, perms: [], settings: {}, license: {}, projects: [], layers: [], users: [],
   features: new Map(), serverVer: {}, projectId: '', layerId: '', hiddenLayers: new Set(), online: navigator.onLine, tab: 'map', rendered: {} };
 
@@ -635,6 +635,7 @@ var App = {
     if (!fromCache) IDB.kvSet('boot', Object.assign({}, boot, { features: undefined }));
     await Sync.loadLocal(boot.features, fromCache);
     MapView.refreshData();
+    if (MapView.ready) setTimeout(Draw.restore, 300);
     Sync.updateBadge();
     if (!fromCache) Brand.refresh(boot.settings.logo_ver);
     if (boot.features_next) App.loadMoreFeatures(boot.features_next);
@@ -746,7 +747,7 @@ var GPS = {
       GPS.pos = { lon: p.coords.longitude, lat: p.coords.latitude, acc: p.coords.accuracy, alt: p.coords.altitude, ts: p.timestamp };
       GPS.err = ''; GPS.chip(); MapView.drawGps();
       if (GPS.follow && MapView.map) MapView.map.easeTo({ center: [GPS.pos.lon, GPS.pos.lat], duration: 400 });
-      if (GPS.track && Draw.mode && Draw.mode !== 'Point') GPS.trackPoint();
+      if (GPS.track && !GPS.trackPaused && Draw.mode && Draw.mode !== 'Point' && Draw.mode !== 'measure') GPS.trackPoint();
     }, function (e) {
       GPS.err = e.code === 1 ? 'Izin lokasi ditolak. Aktifkan izin lokasi di pengaturan browser.' : (e.code === 2 ? 'Posisi tidak tersedia (sinyal GPS lemah / di dalam ruangan).' : 'Waktu tunggu GPS habis.');
       GPS.chip(); if (e.code === 1) { GPS.stop(); toast(GPS.err, 'err', 6000); }
@@ -754,7 +755,7 @@ var GPS = {
     GPS.chip();
     clearInterval(GPS._t); GPS._t = setInterval(GPS.chip, 2000);
   },
-  stop: function () { if (GPS.watch !== null) navigator.geolocation.clearWatch(GPS.watch); GPS.watch = null; GPS.follow = false; GPS.track = false; clearInterval(GPS._t); GPS.chip(); },
+  stop: function () { if (GPS.watch !== null) navigator.geolocation.clearWatch(GPS.watch); GPS.watch = null; GPS.follow = false; GPS.track = false; GPS.trackPaused = false; clearInterval(GPS._t); GPS.chip(); },
   age: function () { return GPS.pos ? Math.round((Date.now() - GPS.pos.ts) / 1000) : Infinity; },
   chip: function () {
     var c = $('#gps-chip'); if (!c) return;
@@ -823,7 +824,7 @@ var MapView = {
     var m = MapView.map = new maplibregl.Map({ container: 'map', style: MapView.basemapStyle(), center: view.center, zoom: view.zoom, attributionControl: { compact: true }, maxZoom: 22, dragRotate: false });
     m.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
     m.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-right');
-    m.on('load', function () { MapView.ready = true; MapView.addLayers(); Overlays.restoreAll(); MapView.refreshData(); PMT.restore(); });
+    m.on('load', function () { MapView.ready = true; MapView.addLayers(); Overlays.restoreAll(); MapView.refreshData(); PMT.restore(); setTimeout(Draw.restore, 300); });
     m.on('moveend', debounce(function () { LS.set('umg_view', JSON.stringify({ center: m.getCenter().toArray(), zoom: m.getZoom() })); }, 500));
     m.on('click', MapView.onClick);
     m.on('error', function (e) { console.warn('MapLibre:', e && e.error ? e.error.message : e); });
@@ -1031,7 +1032,8 @@ var PMT = {
 
 // ======================================================= Gambar geometri (titik/garis/poligon/ukur)
 var Draw = {
-  mode: null, coords: [], target: null, layer: null,
+  mode: null, coords: [], target: null, layer: null, sidePoints: 0,
+  key: function () { return 'umg_draft_' + (S.user ? S.user.id : ''); },
   start: function (mode, opt) {
     opt = opt || {};
     if (mode !== 'measure') {
@@ -1042,19 +1044,64 @@ var Draw = {
       if (l.geom_type !== mode) { var alt = S.layers.find(function (x) { return x.project_id === S.projectId && x.geom_type === mode; }); if (!alt) return toast('Tidak ada layer ' + ({ Point: 'titik', LineString: 'garis', Polygon: 'poligon' }[mode]) + ' di proyek ini.', 'err'); l = alt; S.layerId = l.id; MapView.fillSelectors(); }
       Draw.layer = l;
     }
-    Draw.cancel(true);
-    Draw.mode = mode; Draw.target = opt.featureId || null; Draw.coords = [];
-    Draw._hist = Hist.push(function () { Draw._hist = null; Draw.cancel(false, true); }, 'draw');
+    Draw.cancel(true, false, true);
+    Draw.mode = mode; Draw.target = opt.featureId || null; Draw.coords = (opt.coords || []).slice(); Draw.sidePoints = opt.sidePoints || 0;
+    Draw._hist = Hist.push(Draw.onBack, 'draw');
     $$('[data-tool]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-tool') === mode); });
     if (MapView.map) MapView.map.getCanvas().style.cursor = 'crosshair';
-    Draw.panel();
+    Draw.render(); Draw.panel(); Draw.save();
+  },
+  /** Tombol Back saat merekam: jangan langsung membuang vertex. */
+  onBack: async function () {
+    Draw._hist = null;
+    if (Draw.mode && Draw.mode !== 'measure' && Draw.coords.length) {
+      var wasTrack = Draw.trackState();
+      if (wasTrack === 'on') Draw.setTrack('paused');
+      var ok = await confirmBox('Hentikan rekaman?', Draw.coords.length + ' vertex akan dibuang. Pilih "Lanjut merekam" untuk meneruskan (rekaman tetap tersimpan sebagai draf).', 'Buang rekaman', true);
+      if (!ok) { if (Draw.mode) Draw._hist = Hist.push(Draw.onBack, 'draw'); if (wasTrack === 'on') Draw.setTrack('on'); return; }
+    }
+    Draw.cancel(false, true);
   },
   add: function (p, fromGps) {
     if (!Draw.mode) return;
     if (Draw.mode === 'Point') { Draw.coords = [p]; Draw.render(); Draw.finish(fromGps ? { accuracy: GPS.pos && GPS.pos.acc, altitude: GPS.pos && GPS.pos.alt, timestamp: new Date().toISOString(), source: 'device', samples: 1 } : null); return; }
-    Draw.coords.push(p); Draw.render(); Draw.panel();
+    Draw.coords.push(p); Draw.render(); Draw.panel(); Draw.save();
   },
-  undo: function () { Draw.coords.pop(); Draw.render(); Draw.panel(); },
+  undo: function () { Draw.coords.pop(); Draw.render(); Draw.panel(); Draw.save(); },
+  // ---- status rekam jejak: off | on | paused ----
+  trackState: function () { return !GPS.track ? 'off' : (GPS.trackPaused ? 'paused' : 'on'); },
+  setTrack: function (st) {
+    if (st === 'off') { GPS.track = false; GPS.trackPaused = false; }
+    else if (st === 'on') { if (!GPS.track) GPS.trackLast = null; GPS.track = true; GPS.trackPaused = false; GPS.start(); if (GPS.pos && GPS.age() <= 10) GPS.trackPoint(); }
+    else if (st === 'paused') { GPS.track = true; GPS.trackPaused = true; }
+    if (Draw.mode) { Draw.panel(); Draw.save(); }
+  },
+  pointLayers: function () { return S.layers.filter(function (x) { return x.project_id === (Draw.layer ? Draw.layer.project_id : S.projectId) && x.geom_type === 'Point'; }); },
+  /** Ambil titik GPS (fitur titik terpisah) di tengah rekaman garis/poligon tanpa menghentikan rekaman. */
+  sidePoint: async function (btn) {
+    var pls = Draw.pointLayers(); if (!pls.length) return toast('Proyek ini belum punya layer titik.', 'err');
+    var lid = (LS.get('umg_side_layer') && pls.find(function (x) { return x.id === LS.get('umg_side_layer'); })) ? LS.get('umg_side_layer') : pls[0].id;
+    var avg = LS.get('umg_side_avg') !== '0', autoPause = LS.get('umg_side_pause') !== '0';
+    var before = Draw.trackState();
+    if (autoPause && before === 'on') Draw.setTrack('paused');
+    var meta;
+    try {
+      if (btn) { btn.disabled = true; btn.textContent = avg ? 'Mengambil sampel 5 dtk…' : 'Membaca GPS…'; }
+      if (avg) meta = await GPS.sample(5);
+      else {
+        if (!GPS.pos || GPS.watch === null) { GPS.start(); throw new Error('Menyalakan GPS… tunggu posisi stabil lalu coba lagi.'); }
+        if (GPS.age() > 10) throw new Error('Posisi GPS sudah lama (' + GPS.age() + ' dtk). Tunggu pembaruan.');
+        meta = { lon: GPS.pos.lon, lat: GPS.pos.lat, accuracy: GPS.pos.acc, altitude: GPS.pos.alt, samples: 1, timestamp: new Date().toISOString(), source: 'device' };
+      }
+    } catch (e) { toast(e.message, 'err', 5000); if (autoPause && before === 'on') Draw.setTrack('on'); else Draw.panel(); return; }
+    var l = layerById(lid);
+    var resume = function (saved) {
+      if (saved) { Draw.sidePoints++; toast('Titik tersimpan. Rekaman ' + ({ LineString: 'garis', Polygon: 'poligon' }[Draw.mode] || '') + ' dilanjutkan.', 'ok'); }
+      if (Draw.mode && autoPause && before === 'on' && Draw.trackState() === 'paused') Draw.setTrack('on'); else if (Draw.mode) { Draw.panel(); Draw.save(); }
+    };
+    FeatureForm.open({ id: uuid(), layer_id: l.id, project_id: l.project_id, geometry: { type: 'Point', coordinates: [meta.lon, meta.lat] }, attrs: {}, photos: [], gps: { accuracy: meta.accuracy, altitude: meta.altitude, samples: meta.samples, timestamp: meta.timestamp, source: meta.source }, status: 'draft', version: 0, _new: true },
+      { onDone: resume, note: 'Rekaman ' + ({ LineString: 'garis', Polygon: 'poligon' }[Draw.mode]) + ' (' + Draw.coords.length + ' vertex) ' + (Draw.trackState() === 'paused' ? 'dijeda' : 'tetap berjalan') + ' dan tidak hilang.' });
+  },
   geometry: function () {
     var c = Draw.coords, m = Draw.mode;
     if (m === 'Point') return c[0] ? { type: 'Point', coordinates: c[0] } : null;
@@ -1067,43 +1114,82 @@ var Draw = {
     if (g && g.type !== 'Point') feats.unshift({ type: 'Feature', geometry: g, properties: {} });
     var s = MapView.map.getSource('draft'); if (s) s.setData({ type: 'FeatureCollection', features: Draw.mode ? feats : [] });
   },
+  /** Draf disimpan setiap perubahan agar rekaman tidak hilang (reload, aplikasi tertutup, baterai habis). */
+  save: function () {
+    if (!S.user) return;
+    if (!Draw.mode || Draw.mode === 'measure' || Draw.mode === 'Point' || !Draw.coords.length) { LS.set(Draw.key(), null); return; }
+    LS.set(Draw.key(), JSON.stringify({ mode: Draw.mode, layerId: Draw.layer.id, target: Draw.target, coords: Draw.coords, track: Draw.trackState(), sidePoints: Draw.sidePoints, ts: new Date().toISOString() }));
+  },
+  restore: async function () {
+    var d; try { d = JSON.parse(LS.get(Draw.key()) || 'null'); } catch (e) { d = null; }
+    if (!d || !d.coords || !d.coords.length || Draw.mode) return;
+    var l = layerById(d.layerId);
+    if (!l) { LS.set(Draw.key(), null); return; }
+    var ok = await confirmBox('Lanjutkan rekaman?', 'Ada rekaman ' + ({ LineString: 'garis', Polygon: 'poligon' }[d.mode]) + ' "' + l.name + '" yang belum selesai (' + d.coords.length + ' vertex, ' + fmtDate(d.ts) + ').', 'Lanjutkan');
+    if (!ok) { if (await confirmBox('Buang rekaman?', 'Rekaman ' + d.coords.length + ' vertex akan dihapus permanen.', 'Buang', true)) LS.set(Draw.key(), null); return; }
+    if (l.project_id !== S.projectId) { S.projectId = l.project_id; MapView.refreshData(); }
+    Draw.start(d.mode, { layerId: l.id, featureId: d.target, coords: d.coords, sidePoints: d.sidePoints });
+    if (d.track !== 'off') Draw.setTrack('paused');
+    toast('Rekaman dipulihkan' + (d.track !== 'off' ? ' — rekam jejak dijeda, tekan Lanjutkan.' : '.'), 'ok', 4000);
+  },
   panel: function () {
     var p = $('#draw-panel');
     if (!Draw.mode) { p.classList.add('hidden'); return; }
-    var g = Draw.geometry(), mt = g ? Geo.metrics(g) : {}, m = Draw.mode;
+    var g = Draw.geometry(), mt = g ? Geo.metrics(g) : {}, m = Draw.mode, ts = Draw.trackState(), rec = m === 'LineString' || m === 'Polygon';
     var name = m === 'measure' ? 'Pengukuran' : ('Rekam ' + ({ Point: 'titik', LineString: 'garis', Polygon: 'poligon' }[m]) + ' → ' + Draw.layer.name);
     var info = mt.area_m2 ? 'Luas ' + fmtNum(mt.area_m2, 1) + ' m² (' + fmtNum(mt.area_ha, 4) + ' ha) · Keliling ' + fmtNum(mt.perimeter_m, 1) + ' m' : (mt.length_m ? 'Panjang ' + fmtNum(mt.length_m, 1) + ' m' : (m === 'Point' ? 'Ketuk peta atau gunakan GPS.' : 'Ketuk peta untuk menambah vertex.'));
-    p.innerHTML = '<div class="row"><b class="grow">' + esc(name) + '</b><span class="badge">' + Draw.coords.length + ' vertex</span></div><div class="small">' + info + '</div>' +
+    var trackBadge = rec && ts === 'on' ? '<span class="badge b-approved">● Merekam jejak</span>' : (rec && ts === 'paused' ? '<span class="badge b-revision">⏸ Dijeda</span>' : '');
+    var pls = rec ? Draw.pointLayers() : [], side = LS.get('umg_side_layer');
+    var trackBtns = !rec ? '' : (ts === 'off' ? '<button class="btn sm" data-d="track-on">Rekam jejak GPS</button>' :
+      (ts === 'on' ? '<button class="btn sm" data-d="track-pause">⏸ Jeda</button>' : '<button class="btn sm primary" data-d="track-on">▶ Lanjutkan</button>') + '<button class="btn sm" data-d="track-off" title="Hentikan penambahan vertex otomatis (vertex tetap)">■ Stop jejak</button>');
+    p.innerHTML = '<div class="row wrap"><b class="grow">' + esc(name) + '</b>' + trackBadge + '<span class="badge">' + Draw.coords.length + ' vertex</span>' + (Draw.sidePoints ? '<span class="badge">' + Draw.sidePoints + ' titik diambil</span>' : '') + '</div><div class="small">' + info + '</div>' +
       (m === 'measure' ? '<div class="seg"><button data-mt="line" class="' + (Draw.measureType !== 'area' ? 'on' : '') + '">Jarak</button><button data-mt="area" class="' + (Draw.measureType === 'area' ? 'on' : '') + '">Luas</button></div>' : '') +
-      '<div class="row wrap">' + (m === 'Point' ? '<button class="btn sm primary" data-d="gpsavg">Ambil GPS (rata-rata 5 dtk)</button><button class="btn sm" data-d="gps1">GPS sekarang</button>' : '<button class="btn sm" data-d="undo"' + (Draw.coords.length ? '' : ' disabled') + '>Undo</button><button class="btn sm" data-d="gpsv">+ Vertex GPS</button>' + (m !== 'measure' ? '<button class="btn sm ' + (GPS.track ? 'primary' : '') + '" data-d="track">' + (GPS.track ? 'Hentikan jejak' : 'Rekam jejak GPS') + '</button>' : '') + (m !== 'measure' ? '<button class="btn sm primary" data-d="done">Selesai</button>' : '')) +
-      '<button class="btn sm danger" data-d="cancel">' + (m === 'measure' ? 'Tutup' : 'Batal') + '</button></div>';
+      '<div class="row wrap">' + (m === 'Point' ? '<button class="btn sm primary" data-d="gpsavg">Ambil GPS (rata-rata 5 dtk)</button><button class="btn sm" data-d="gps1">GPS sekarang</button>' : '<button class="btn sm" data-d="undo"' + (Draw.coords.length ? '' : ' disabled') + '>Undo</button><button class="btn sm" data-d="gpsv">+ Vertex GPS</button>' + trackBtns + (m !== 'measure' ? '<button class="btn sm primary" data-d="done">Selesai</button>' : '')) +
+      '<button class="btn sm danger" data-d="cancel">' + (m === 'measure' ? 'Tutup' : 'Batal') + '</button></div>' +
+      (rec ? '<div class="row wrap" style="border-top:1px solid var(--line);padding-top:8px">' + (pls.length ?
+        '<button class="btn sm primary" data-d="side">📍 Ambil titik GPS</button><select class="input" id="dp-side" style="width:auto;min-height:32px;padding:4px 8px" aria-label="Layer titik">' + pls.map(function (x) { return '<option value="' + esc(x.id) + '"' + (x.id === side ? ' selected' : '') + '>' + esc(x.name) + '</option>'; }).join('') + '</select>' +
+        '<label class="row small"><input type="checkbox" id="dp-avg"' + (LS.get('umg_side_avg') !== '0' ? ' checked' : '') + '> rata-rata 5 dtk</label><label class="row small"><input type="checkbox" id="dp-pause"' + (LS.get('umg_side_pause') !== '0' ? ' checked' : '') + '> jeda otomatis</label>'
+        : '<span class="small muted">Tambahkan layer titik di proyek ini untuk mengambil titik GPS di tengah rekaman.</span>') + '</div>' : '');
     p.classList.remove('hidden');
     $$('[data-mt]', p).forEach(function (b) { b.onclick = function () { Draw.measureType = b.getAttribute('data-mt'); Draw.render(); Draw.panel(); }; });
+    var sel = $('#dp-side', p); if (sel) { if (!side) LS.set('umg_side_layer', sel.value); sel.onchange = function () { LS.set('umg_side_layer', sel.value); }; }
+    var ca = $('#dp-avg', p); if (ca) ca.onchange = function () { LS.set('umg_side_avg', ca.checked ? '1' : '0'); };
+    var cp = $('#dp-pause', p); if (cp) cp.onchange = function () { LS.set('umg_side_pause', cp.checked ? '1' : '0'); };
     $$('[data-d]', p).forEach(function (b) {
       b.onclick = async function () {
         var a = b.getAttribute('data-d');
         if (a === 'undo') Draw.undo();
-        else if (a === 'cancel') Draw.cancel();
+        else if (a === 'cancel') Draw.confirmCancel();
         else if (a === 'done') Draw.finish();
         else if (a === 'gps1' || a === 'gpsv') { if (!GPS.pos || GPS.watch === null) { GPS.start(); return toast('Menyalakan GPS… tunggu posisi stabil lalu coba lagi.'); } if (GPS.age() > 10) return toast('Posisi GPS sudah lama (' + GPS.age() + ' dtk). Tunggu pembaruan.', 'err'); Draw.add([GPS.pos.lon, GPS.pos.lat], true); }
         else if (a === 'gpsavg') { b.disabled = true; b.textContent = 'Mengambil sampel…'; try { var s = await GPS.sample(5); Draw.coords = [[s.lon, s.lat]]; Draw.render(); Draw.finish(s); } catch (e) { toast(e.message, 'err', 5000); Draw.panel(); } }
-        else if (a === 'track') { GPS.track = !GPS.track; GPS.trackLast = null; if (GPS.track) GPS.start(); Draw.panel(); }
+        else if (a === 'track-on') Draw.setTrack('on');
+        else if (a === 'track-pause') Draw.setTrack('paused');
+        else if (a === 'track-off') Draw.setTrack('off');
+        else if (a === 'side') Draw.sidePoint(b);
       };
     });
+  },
+  confirmCancel: async function () {
+    if (Draw.mode && Draw.mode !== 'measure' && Draw.coords.length >= 2 && !(await confirmBox('Batalkan rekaman?', Draw.coords.length + ' vertex akan dibuang.', 'Buang', true))) return;
+    Draw.cancel();
   },
   finish: function (gpsMeta) {
     var g = Draw.geometry();
     if (!g) return toast('Geometri belum lengkap.', 'err');
     var v = Geo.validate(g, Draw.layer.geom_type);
     if (!v.ok) return toast(v.errors.join(' '), 'err', 6000);
-    var layer = Draw.layer, target = Draw.target;
-    Draw.cancel();
-    if (target) { var f = S.features.get(target); FeatureForm.open(Object.assign({}, f, { geometry: g, gps: gpsMeta || f.gps })); }
-    else FeatureForm.open({ id: uuid(), layer_id: layer.id, project_id: layer.project_id, geometry: g, attrs: {}, photos: [], gps: gpsMeta || null, status: 'draft', version: 0, _new: true });
+    var layer = Draw.layer, target = Draw.target, saved = { mode: Draw.mode, layerId: layer.id, target: target, coords: Draw.coords.slice(), sidePoints: Draw.sidePoints };
+    Draw.cancel(false, false, true);
+    // Bila formulir dibatalkan, rekaman dikembalikan (tidak hilang).
+    var back = function (ok) { if (!ok && saved.mode !== 'Point') { Draw.start(saved.mode, { layerId: saved.layerId, featureId: saved.target, coords: saved.coords, sidePoints: saved.sidePoints }); toast('Rekaman dikembalikan — lanjutkan atau tekan Selesai lagi.'); } else LS.set(Draw.key(), null); };
+    if (target) { var f = S.features.get(target); FeatureForm.open(Object.assign({}, f, { geometry: g, gps: gpsMeta || f.gps }), { onDone: back }); }
+    else FeatureForm.open({ id: uuid(), layer_id: layer.id, project_id: layer.project_id, geometry: g, attrs: {}, photos: [], gps: gpsMeta || null, status: 'draft', version: 0, _new: true }, { onDone: back });
   },
-  cancel: function (silent, fromBack) {
+  cancel: function (silent, fromBack, keepDraft) {
     if (!fromBack && Draw._hist) { var h = Draw._hist; Draw._hist = null; Hist.release(h); }
-    Draw.mode = null; Draw.coords = []; Draw.target = null; GPS.track = false;
+    Draw.mode = null; Draw.coords = []; Draw.target = null; GPS.track = false; GPS.trackPaused = false;
+    if (!keepDraft && S.user) LS.set(Draw.key(), null);
     $$('[data-tool]').forEach(function (b) { b.classList.remove('on'); });
     if (MapView.map) MapView.map.getCanvas().style.cursor = '';
     Draw.render(); if (!silent) Draw.panel(); else $('#draw-panel').classList.add('hidden');
@@ -1112,7 +1198,8 @@ var Draw = {
 
 // ======================================================= Formulir atribut fitur
 var FeatureForm = {
-  open: function (f) {
+  open: function (f, opts) {
+    opts = opts || {}; var done = false;
     var l = layerById(f.layer_id); if (!l) return toast('Layer tidak ditemukan.', 'err');
     var photos = (f.photos || []).slice(), mt = Geo.metrics(f.geometry);
     var fields = (l.schema || []).map(function (fd) {
@@ -1156,10 +1243,11 @@ var FeatureForm = {
       return attrs;
     }
     var btns = [{ label: 'Batal' }];
-    if (!f._new && f.geometry.type !== 'Point') btns.push({ label: 'Gambar ulang', onClick: function () { Draw.start(l.geom_type, { featureId: f.id, layerId: l.id }); toast('Gambar ulang geometri pada peta.'); App.show('map'); return true; } });
-    btns.push({ label: 'Simpan draft', onClick: async function () { await FeatureForm.save(f, collect(), photos, 'draft'); return true; } });
-    btns.push({ label: 'Simpan & ajukan', cls: 'primary', onClick: async function () { await FeatureForm.save(f, collect(), photos, 'submitted'); return true; } });
-    modal({ title: (f._new ? 'Data baru' : 'Edit data') + ' — ' + l.name, body: body, buttons: btns, sticky: true });
+    if (!f._new && f.geometry.type !== 'Point') btns.push({ label: 'Gambar ulang', onClick: function () { done = true; Draw.start(l.geom_type, { featureId: f.id, layerId: l.id }); toast('Gambar ulang geometri pada peta.'); App.show('map'); return true; } });
+    btns.push({ label: 'Simpan draft', onClick: async function () { await FeatureForm.save(f, collect(), photos, 'draft'); done = true; return true; } });
+    btns.push({ label: 'Simpan & ajukan', cls: 'primary', onClick: async function () { await FeatureForm.save(f, collect(), photos, 'submitted'); done = true; return true; } });
+    if (opts.note) body.insertAdjacentHTML('afterbegin', '<div class="card small" style="padding:8px 10px;border-color:var(--accent)">' + esc(opts.note) + '</div>');
+    modal({ title: (f._new ? 'Data baru' : 'Edit data') + ' — ' + l.name, body: body, buttons: btns, sticky: true, onClose: function () { if (opts.onDone) opts.onDone(done); } });
   },
   save: async function (f, attrs, photos, status) {
     var keepStatus = can('feature.review') && ['approved', 'rejected'].indexOf(f.status) >= 0 && status === 'draft' ? f.status : status;
