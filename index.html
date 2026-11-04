@@ -30,7 +30,7 @@ a{color:var(--accent)}
 .btn.icon{padding:0;width:40px;min-width:40px}
 .input,select.input,textarea.input{width:100%;border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:9px 11px;min-height:40px;outline:none}
 .input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
-label.f{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:13px}label.f span.req{color:var(--danger)}
+label.f{display:block;font-weight:600;font-size:13px}label.f>.input,label.f>input,label.f>select,label.f>textarea{display:block;width:100%;margin-top:5px}label.f>.small.muted:last-child{display:block;margin-top:3px;font-weight:400}label.f span.req{color:var(--danger)}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
 .card h3{margin:0 0 10px;font-size:15px}
 .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;font-size:11.5px;font-weight:700;background:var(--panel-2);border:1px solid var(--line);white-space:nowrap}
@@ -142,6 +142,26 @@ table.t th{background:var(--panel-2);font-size:12px;text-transform:uppercase;let
 }
 @media (min-width: 861px){.show-m{display:none!important}}
 @media (max-width: 520px){#pill-net .lbl{display:none}.topbar{gap:6px;padding:0 8px}.topbar .logo{width:32px;height:32px}.pill{padding:4px 8px}}
+/* v1.5 — formulir & relasi 1:N */
+.ff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px 14px;align-items:start}
+.ff-grid .relpick{grid-column:1/-1}
+.relpick{position:relative;display:flex;flex-direction:column;gap:6px;padding:10px;border:1px dashed var(--accent);border-radius:10px;background:color-mix(in srgb,var(--accent) 6%,transparent);font-weight:600}
+.rp-card{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--panel);font-weight:400}
+.rp-card.empty{border-style:dashed}
+.rp-list{position:absolute;left:10px;right:10px;top:100%;z-index:30;max-height:240px;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,.18);font-weight:400}
+.rp-opt{display:block;width:100%;text-align:left;padding:9px 12px;border:0;border-bottom:1px solid var(--line);background:none;color:inherit;font:inherit;cursor:pointer;min-height:40px}
+.rp-opt:hover,.rp-opt:focus{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.rp-opt[disabled]{opacity:.55;cursor:not-allowed}
+.badge.pk{background:color-mix(in srgb,#f59e0b 18%,transparent);color:#b45309;border-color:#f59e0b}
+table.sortable th{padding:0}
+.th-sort{all:unset;box-sizing:border-box;display:flex;gap:4px;align-items:center;width:100%;padding:7px 9px;cursor:pointer;font-weight:700;white-space:nowrap}
+.th-sort .arr{opacity:.45;font-size:10px}.th-sort.on .arr{opacity:1;color:var(--accent)}
+.th-sort:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+table.t tr.click{cursor:pointer}table.t tr.click:hover td{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+table.t td.num,table.t th.num{width:1%;text-align:right;color:var(--muted)}
+.rel-cfg{padding:8px;border-radius:8px;background:color-mix(in srgb,var(--accent) 6%,transparent)}
+.demo-wm{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:4;font:800 clamp(64px,16vw,180px)/1 system-ui,sans-serif;letter-spacing:.12em;color:rgba(220,38,38,.10);transform:rotate(-24deg);user-select:none}
+.lang-sw{display:flex;gap:6px;justify-content:center;margin-top:12px}.lang-sw .btn.on{background:color-mix(in srgb,var(--accent) 14%,transparent);border-color:var(--accent);color:var(--accent)}
 
 </style>
 </head>
@@ -165,9 +185,10 @@ table.t th{background:var(--panel-2);font-size:12px;text-transform:uppercase;let
       </details>
     </div>
     <div id="lg-demo" class="demo-box hidden">
-      <b>Mode Demo</b><div class="small muted" style="margin:4px 0 8px">Semua data contoh berlabel [DEMO] dan disimpan hanya di browser ini. Password: <span class="mono">demo1234</span></div>
+      <b>Mode Demo</b><div class="small muted" style="margin:4px 0 8px">Data contoh [DEMO] hanya tersimpan di tab ini dan <b>direset saat tab ditutup / setelah 60 menit</b>. 1 proyek, maks. 60 data, tanpa ekspor. Password: <span class="mono">demo1234</span></div>
       <div class="row wrap"><button class="btn sm" data-demo="admin">Admin</button><button class="btn sm" data-demo="supervisor">Supervisor</button><button class="btn sm" data-demo="surveyor">Surveyor</button><button class="btn sm" data-demo="viewer">Viewer</button></div>
     </div>
+    <div class="lang-sw" role="group" aria-label="Bahasa / Language" translate="no"><button type="button" class="btn sm ghost" data-lang="id">🇮🇩 Indonesia</button><button type="button" class="btn sm ghost" data-lang="en">🇬🇧 English</button></div>
     <div class="login-foot"><span id="lg-ver"></span> · <a href="#" data-legal="terms">Syarat &amp; Ketentuan</a> · <a href="#" data-legal="privacy">Pemberitahuan Privasi</a></div>
   </div>
 </div>
@@ -185,7 +206,7 @@ table.t th{background:var(--panel-2);font-size:12px;text-transform:uppercase;let
   <nav class="sidenav" id="sidenav"></nav>
   <main id="main">
     <section class="tab map" data-tab="map">
-      <div id="map"></div>
+      <div id="map"></div><div class="demo-wm hidden" id="demo-wm" aria-hidden="true">DEMO</div>
       <div class="map-top">
         <select class="input" id="sel-project" aria-label="Proyek"></select>
         <select class="input" id="sel-layer" aria-label="Layer untuk data baru"></select>
@@ -385,11 +406,336 @@ var Geo = (function () {
   return { validate: validate, metrics: metrics, bbox: bbox, round: round, haversine: haversine, lineLength: lineLength, ringArea: ringArea, toUTM: toUTM, ringSelfIntersects: ringSelfIntersects };
 })();
 
+// ======================================================= Dua bahasa (Indonesia / English)
+/**
+ * Sumber teks antarmuka ditulis dalam Bahasa Indonesia. Saat bahasa = 'en', penerjemah:
+ *  1) mencocokkan teks persis di kamus I18N_EN (teks node & atribut placeholder/title/aria-label),
+ *  2) mencoba pola dinamis I18N_EN_PATTERNS (teks berisi angka/nama),
+ *  3) mengamati DOM (MutationObserver) sehingga dialog, toast & tab yang dirender belakangan ikut diterjemahkan.
+ * Data pengguna (nama layer, atribut, isian survei) ditandai translate="no" dan tidak disentuh.
+ * Mode Indonesia = tanpa observer (tanpa biaya kinerja). Teks asli disimpan agar bisa kembali ke Indonesia tanpa reload.
+ */
+var I18N = {
+  lang: 'id',
+  missing: {},
+  ATTRS: ['placeholder', 'title', 'aria-label'],
+  init: function () {
+    var l = null; try { l = localStorage.getItem('umg_lang'); } catch (e) { l = null; }
+    I18N.lang = l === 'en' ? 'en' : 'id';
+    document.documentElement.lang = I18N.lang;
+    if (I18N.lang === 'en') { I18N.apply(document.body); I18N.observe(); }
+  },
+  locale: function () { return I18N.lang === 'en' ? 'en-GB' : 'id-ID'; },
+  /** Terjemahkan satu string (tanpa mengubah spasi di tepi). */
+  t: function (s) {
+    if (I18N.lang !== 'en' || s === null || s === undefined) return s;
+    var str = String(s), m = /^(\s*)([\s\S]*?)(\s*)$/.exec(str), core = m[2];
+    if (!core || !/[A-Za-z]/.test(core)) return str;
+    var hit = I18N_EN[core];
+    if (hit === undefined) {
+      for (var i = 0; i < I18N_EN_PATTERNS.length; i++) {
+        var p = I18N_EN_PATTERNS[i];
+        if (p[0].test(core)) { hit = core.replace(p[0], p[1]); break; }
+      }
+    }
+    if (hit === undefined) { I18N.missing[core] = 1; return str; }
+    return m[1] + hit + m[3];
+  },
+  skip: function (el) {
+    for (var e = el; e && e.nodeType === 1; e = e.parentNode) {
+      if (e.getAttribute('translate') === 'no' || /^(SCRIPT|STYLE|TEXTAREA|CODE)$/.test(e.tagName) || e.isContentEditable) return true;
+      if (e.classList && e.classList.contains('maplibregl-ctrl-attrib')) return true;
+    }
+    return false;
+  },
+  /** Opsi <option> tanpa atribut value memakai teksnya sebagai nilai — jangan diterjemahkan (nilai data). */
+  isValueText: function (n) { var p = n.parentNode; return p && p.tagName === 'OPTION' && !p.hasAttribute('value'); },
+  textNode: function (n) {
+    if (n.__en !== undefined && n.nodeValue === n.__en) return;
+    if (I18N.isValueText(n) || I18N.skip(n.parentNode)) return;
+    var src = n.nodeValue, out = I18N.t(src);
+    if (out !== src) { n.__id = src; n.__en = out; n.nodeValue = out; }
+  },
+  element: function (el) {
+    if (I18N.skip(el)) return;
+    I18N.ATTRS.forEach(function (a) {
+      if (!el.hasAttribute(a)) return;
+      var v = el.getAttribute(a), k = 'i18nId' + a.replace(/-/g, '');
+      if (el.dataset[k + 'En'] === v) return;
+      var out = I18N.t(v);
+      if (out !== v) { el.dataset[k] = v; el.dataset[k + 'En'] = out; el.setAttribute(a, out); }
+    });
+  },
+  apply: function (root) {
+    if (!root || I18N.lang !== 'en') return;
+    if (root.nodeType === 3) return I18N.textNode(root);
+    if (root.nodeType !== 1) return;
+    I18N.element(root);
+    $$('[placeholder],[title],[aria-label]', root).forEach(I18N.element);
+    var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null), n, list = [];
+    while ((n = w.nextNode())) list.push(n);
+    list.forEach(I18N.textNode);
+  },
+  observe: function () {
+    if (I18N.mo) return;
+    I18N.mo = new MutationObserver(function (muts) {
+      if (I18N.lang !== 'en') return;
+      muts.forEach(function (m) {
+        if (m.type === 'characterData') I18N.textNode(m.target);
+        else if (m.type === 'attributes') I18N.element(m.target);
+        else m.addedNodes.forEach(function (n) { I18N.apply(n); });
+      });
+    });
+    I18N.mo.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: I18N.ATTRS });
+  },
+  /** Kembalikan teks asli Indonesia tanpa memuat ulang. */
+  restore: function () {
+    var w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null), n;
+    while ((n = w.nextNode())) if (n.__id !== undefined && n.nodeValue === n.__en) { n.nodeValue = n.__id; n.__en = undefined; }
+    $$('[placeholder],[title],[aria-label]').forEach(function (el) {
+      I18N.ATTRS.forEach(function (a) { var k = 'i18nId' + a.replace(/-/g, ''); if (el.dataset[k] !== undefined && el.getAttribute(a) === el.dataset[k + 'En']) { el.setAttribute(a, el.dataset[k]); delete el.dataset[k]; delete el.dataset[k + 'En']; } });
+    });
+  },
+  set: function (lang) {
+    lang = lang === 'en' ? 'en' : 'id';
+    if (lang === I18N.lang) return;
+    I18N.lang = lang; document.documentElement.lang = lang;
+    try { localStorage.setItem('umg_lang', lang); } catch (e) { /* abaikan */ }
+    if (window.Demo && Demo.reseed) Demo.reseed();
+    if (lang === 'en') { I18N.apply(document.body); I18N.observe(); } else { if (I18N.mo) { I18N.mo.disconnect(); I18N.mo = null; } I18N.restore(); }
+    $$('[data-lang]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-lang') === lang); });
+    if (window.App && S.user) { try { App.rerender(); } catch (e) { /* abaikan */ } }
+    if (window.MapView && MapView.map) { try { MapView.refreshData(); } catch (e) { /* abaikan */ } }
+  }
+};
+function t(s) { return I18N.t(s); }
+
+/* Kamus Indonesia → English untuk antarmuka. Kunci = teks antarmuka persis (tanpa spasi tepi).
+ * Tambah entri baru di sini; teks yang belum ada tetap tampil dalam Bahasa Indonesia (dicatat di I18N.missing). */
+var I18N_EN = {
+  // ---- umum
+  'Batal': 'Cancel', 'Simpan': 'Save', 'Tutup': 'Close', 'Hapus': 'Delete', 'Edit': 'Edit', 'Lihat': 'View', 'Detail': 'Details', 'Terapkan': 'Apply',
+  'Ya': 'Yes', 'Tidak': 'No', 'Mengerti': 'Got it', 'Selesai': 'Done', 'Undo': 'Undo', 'Zoom': 'Zoom', 'Zoom in': 'Zoom in', 'Zoom out': 'Zoom out',
+  'Menu': 'Menu', 'Lainnya': 'More', 'Keluar': 'Log out', 'Masuk': 'Sign in', 'Memeriksa…': 'Checking…', 'Kosong': 'Empty', 'Valid': 'Valid',
+  'Aktif': 'Active', 'Nonaktif': 'Disabled', 'Aksi': 'Action', 'Nama': 'Name', 'Deskripsi': 'Description', 'Status': 'Status', 'Role': 'Role',
+  'Waktu': 'Time', 'Objek': 'Object', 'Label': 'Label', 'Warna': 'Color', 'Wajib': 'Required', 'Mode': 'Mode', 'Tier': 'Tier', 'Fitur': 'Features',
+  'Username': 'Username', 'Username:': 'Username:', 'Password': 'Password', 'Logo': 'Logo', 'Organisasi:': 'Organization:', '· Role:': '· Role:',
+  'Tampilkan password': 'Show password', 'Tema gelap/terang': 'Dark/light theme', 'Bahasa Indonesia': 'Bahasa Indonesia', 'English': 'English',
+  'Aplikasi ini membutuhkan JavaScript.': 'This app requires JavaScript.', 'Klik untuk memperbesar': 'Click to enlarge',
+  'Opsi dipisah koma': 'Options, comma separated', 'Impor': 'Import', 'Semua layer': 'All layers', 'Semua status': 'All statuses', 'Milik saya': 'Mine only',
+  'Cari atribut…': 'Search attributes…', 'Urutkan': 'Sort', 'Urut: terbaru diubah': 'Sort: recently changed', 'Urut: terlama': 'Sort: oldest',
+  'Urut: nama / ID A→Z': 'Sort: name / ID A→Z', 'Urut: nama / ID Z→A': 'Sort: name / ID Z→A', 'tidak terenkripsi': 'not encrypted',
+  // ---- navigasi & header
+  'Peta': 'Map', 'Data Survei': 'Survey Data', 'Sinkronisasi': 'Sync', 'Dashboard': 'Dashboard', 'Proyek & Layer': 'Projects & Layers',
+  'Administrasi': 'Administration', 'Profil Saya': 'My Profile', 'Tentang & Legal': 'About & Legal', 'Tentang & legal': 'About & legal',
+  'Tersinkron': 'Synced', 'Menyinkronkan…': 'Syncing…', 'Online': 'Online', 'Offline': 'Offline', 'Demo': 'Demo', 'DEMO': 'DEMO',
+  'Status koneksi': 'Connection status', 'Mode demo: data contoh disimpan di browser': 'Demo mode: sample data stored in the browser',
+  'Enterprise Field Mapping': 'Enterprise Field Mapping',
+  // ---- login
+  'Pengaturan server': 'Server settings', 'URL Web App Apps Script': 'Apps Script Web App URL', 'Simpan & uji koneksi': 'Save & test connection',
+  'Mode Demo': 'Demo Mode', 'Syarat & Ketentuan': 'Terms & Conditions', 'Pemberitahuan Privasi': 'Privacy Notice',
+  'Data contoh [DEMO] hanya tersimpan di tab ini dan': 'Sample [DEMO] data is kept only in this tab and is', 'direset saat tab ditutup / setelah 60 menit': 'reset when the tab closes / after 60 minutes',
+  '. 1 proyek, maks. 60 data, tanpa ekspor. Password:': '. 1 project, max. 60 records, no export. Password:',
+  'Sesi berakhir. Silakan login kembali.': 'Session ended. Please sign in again.', 'Tidak dapat terhubung ke server. Periksa koneksi / URL server.': 'Cannot reach the server. Check your connection / server URL.',
+  'Username atau password salah.': 'Wrong username or password.', 'Username dan password wajib diisi.': 'Username and password are required.',
+  // ---- status data
+  'Draft': 'Draft', 'Diajukan': 'Submitted', 'Disetujui': 'Approved', 'Revisi': 'Revision', 'Ditolak': 'Rejected', 'Belum tersinkron': 'Not synced',
+  'antre': 'queued', 'Menunggu review': 'Awaiting review', 'Revisi / ditolak': 'Revision / rejected',
+  // ---- peta & rekam
+  'Rekam titik': 'Record point', 'Rekam garis': 'Record line', 'Rekam poligon': 'Record polygon', 'Ukur jarak/luas': 'Measure distance/area',
+  'GPS nyala/mati': 'GPS on/off', 'GPS mati': 'GPS off', 'Ikuti posisi GPS: MATI': 'Follow GPS position: OFF', 'Ikuti posisi GPS: NYALA': 'Follow GPS position: ON',
+  'Layer, basemap & foto udara PMTiles': 'Layers, basemap & PMTiles aerial imagery', 'Cetak peta A4/A3 (PDF)': 'Print map A4/A3 (PDF)', 'Zoom ke data': 'Zoom to data',
+  'Layer untuk data baru': 'Layer for new data', 'Ketuk peta untuk menambah vertex.': 'Tap the map to add a vertex.', '+ Vertex GPS': '+ GPS vertex',
+  'Rekam jejak GPS': 'GPS track recording', '📍 Ambil titik GPS': '📍 Take GPS point', 'Ringkas panel': 'Collapse panel', 'jeda otomatis': 'auto-paused',
+  '⏸ Jeda': '⏸ Pause', '▶ Lanjutkan': '▶ Resume', '■ Stop jejak': '■ Stop track', 'Merekam jejak': 'Recording track', 'Jejak dijeda': 'Track paused',
+  'Batalkan rekaman?': 'Discard recording?', 'Buang rekaman?': 'Discard recording?', 'Hentikan rekaman?': 'Stop recording?', 'Lanjutkan rekaman?': 'Continue recording?',
+  'Rekaman dikembalikan — lanjutkan atau tekan Selesai lagi.': 'Recording restored — continue or press Done again.', 'Rekaman dipulihkan': 'Recording recovered',
+  'Geometri belum lengkap.': 'Geometry is incomplete.', 'GPS tidak tersedia.': 'GPS is not available.', 'Menyalakan GPS… tunggu posisi stabil lalu coba lagi.': 'Turning on GPS… wait for a stable position and try again.',
+  'Tidak ada sampel GPS dengan akurasi ≤ 100 m.': 'No GPS sample with accuracy ≤ 100 m.', 'Gambar ulang geometri pada peta.': 'Redraw the geometry on the map.',
+  'Ikuti posisi dimatikan karena peta digeser. Ketuk tombol panah untuk mengaktifkan lagi.': 'Follow mode turned off because the map was moved. Tap the arrow button to turn it on again.',
+  'Pilih/buat layer terlebih dahulu (menu Proyek & Layer).': 'Select/create a layer first (Projects & Layers menu).', 'Proyek ini belum punya layer titik.': 'This project has no point layer yet.',
+  'Layer & Basemap': 'Layers & Basemap', 'Basemap': 'Basemap', 'OSM': 'OSM', 'MapTiler': 'MapTiler', 'XYZ': 'XYZ', 'Layer data': 'Data layers', 'Layer referensi': 'Reference layers',
+  'Foto udara (PMTiles)': 'Aerial imagery (PMTiles)', 'Belum ada foto udara aktif.': 'No active aerial imagery.', 'Buka file lokal': 'Open local file', 'Muat online': 'Load online',
+  'Unduh untuk offline': 'Download for offline', 'Opasitas': 'Opacity', 'PMTiles offline': 'Offline PMTiles', 'Tidak ada arsip offline tersimpan.': 'No offline archives saved.',
+  'URL PMTiles (HTTPS, mendukung HTTP Range & CORS)': 'PMTiles URL (HTTPS, with HTTP Range & CORS support)', 'SHP · KML/KMZ · GeoJSON · GeoTIFF · GeoPDF': 'SHP · KML/KMZ · GeoJSON · GeoTIFF · GeoPDF',
+  '. Shapefile: pilih .zip atau sekaligus .shp+.dbf+.prj. Tersimpan offline di perangkat.': '. Shapefile: choose a .zip or .shp+.dbf+.prj together. Stored offline on the device.',
+  '+ ArcGIS REST': '+ ArcGIS REST', '+ Layer': '+ Layer', 'Tekan Kembali sekali lagi untuk keluar': 'Press Back again to exit',
+  // ---- formulir & detail
+  'Data baru': 'New record', 'Edit data': 'Edit record', 'Simpan draft': 'Save draft', 'Simpan & ajukan': 'Save & submit', 'Gambar ulang': 'Redraw',
+  '+ Ambil / pilih foto': '+ Take / choose photo', 'Belum ada foto.': 'No photos yet.', 'Digitasi manual': 'Manual digitizing', 'Digitasi manual di peta': 'Digitized manually on the map',
+  'Tabel tanpa geometri': 'Table without geometry', 'Layer ini belum memiliki atribut.': 'This layer has no attributes yet.', 'Koordinat': 'Coordinates', 'Sumber posisi': 'Position source',
+  'Dibuat': 'Created', 'Diubah': 'Modified', 'Catatan review': 'Review note', 'Luas': 'Area', 'Keliling': 'Perimeter', 'Panjang': 'Length',
+  'Klik foto untuk memperbesar (scroll / pinch untuk zoom)': 'Click a photo to enlarge (scroll / pinch to zoom)', 'Catatan reviewer:': 'Reviewer note:',
+  '+ Tambah': '+ Add', 'Belum ada data terkait.': 'No related records yet.', 'Belum dipilih.': 'Not selected.', 'Cari ID / nama data induk…': 'Search parent ID / name…',
+  'Tidak ada data induk yang cocok.': 'No matching parent record.', 'terkunci': 'locked', '🔑 ID unik': '🔑 Unique ID', 'Ganti induk': 'Change parent',
+  'Biarkan kosong agar nomor dibuat otomatis oleh server saat sinkron.': 'Leave empty to let the server generate the number on sync.',
+  '🔒 terkunci, otomatis': '🔒 locked, automatic', '🔒 terkunci': '🔒 locked', 'otomatis hari ini': 'today automatically',
+  'Review': 'Review', 'Review data': 'Review record', 'Setujui': 'Approve', 'Minta revisi': 'Request revision', 'Tolak': 'Reject', 'Kirim keputusan': 'Send decision',
+  'Catatan (wajib untuk revisi/tolak)': 'Note (required for revision/rejection)', 'Keputusan tersimpan.': 'Decision saved.', 'Hapus data': 'Delete record',
+  'Tersimpan. Menyinkronkan…': 'Saved. Syncing…', 'Tersimpan di perangkat (offline).': 'Saved on the device (offline).', 'Tersimpan.': 'Saved.', 'Dihapus.': 'Deleted.',
+  'Data terkait tidak ditemukan di perangkat.': 'Related record not found on this device.', 'Role Anda hanya dapat melihat data.': 'Your role can only view data.',
+  'ID unik data induk belum terisi (menunggu sinkronisasi). Sinkronkan dulu, lalu tambah data terkait.': 'The parent\'s unique ID is not assigned yet (waiting for sync). Sync first, then add related records.',
+  'Hapus data ini? Penghapusan akan disinkronkan ke server.': 'Delete this record? The deletion will be synced to the server.',
+  'Tabel tanpa geometri (tabel)': 'Table without geometry (table)',
+  // ---- tab Data
+  '+ Data tabel': '+ Table record', 'Impor data GIS': 'Import GIS data', 'Impor data valid': 'Import valid data', 'Layer tujuan': 'Target layer',
+  '+ Layer baru dari file (skema otomatis)': '+ New layer from file (automatic schema)', 'Nama layer baru': 'New layer name',
+  'File: Shapefile (.zip, atau .shp + .dbf + .prj + .cpg sekaligus), .dbf (tabel), GeoJSON (EPSG:4326) atau CSV': 'File: Shapefile (.zip, or .shp + .dbf + .prj + .cpg together), .dbf (table), GeoJSON (EPSG:4326) or CSV',
+  'Pratinjau validasi akan tampil di sini. Kolom dicocokkan dengan kunci/label atribut (nama kolom DBF 10 karakter dari ekspor UMG cocok otomatis); kolom lain diabaikan.': 'A validation preview will appear here. Columns are matched to attribute keys/labels (10-character DBF names from UMG exports match automatically); other columns are ignored.',
+  'Kolom file': 'File column', '→ Atribut': '→ Attribute', 'Kesalahan': 'Error', 'valid': 'valid', 'tidak valid': 'invalid',
+  'Tidak ada data yang cocok. Rekam data baru dari tab Peta.': 'No matching records. Record new data from the Map tab.', 'Tidak ada data untuk diekspor.': 'No data to export.',
+  'Tidak ada data valid.': 'No valid records.', 'Pilih file terlebih dahulu.': 'Choose a file first.', 'Buat layer terlebih dahulu.': 'Create a layer first.',
+  'Role Anda tidak dapat mengimpor data.': 'Your role cannot import data.', 'CSV kosong.': 'CSV is empty.', 'Untuk GeoJSON/CSV pilih satu file saja.': 'For GeoJSON/CSV choose a single file.',
+  'Kolom lat/lon (latitude/longitude) tidak ditemukan.': 'Lat/lon (latitude/longitude) columns not found.', 'Impor CSV koordinat hanya untuk layer titik (atau layer tabel).': 'Coordinate CSV import is only for point layers (or table layers).',
+  'Format belum didukung. Gunakan Shapefile (.zip / .shp+.dbf+.prj), .dbf, GeoJSON atau CSV.': 'Format not supported yet. Use Shapefile (.zip / .shp+.dbf+.prj), .dbf, GeoJSON or CSV.',
+  'GeoJSON harus berupa Feature atau FeatureCollection.': 'GeoJSON must be a Feature or FeatureCollection.', 'CRS GeoJSON bukan WGS84 (EPSG:4326). Reproyeksikan dahulu (RFC 7946).': 'GeoJSON CRS is not WGS84 (EPSG:4326). Reproject it first (RFC 7946).',
+  'Koordinat Shapefile bukan derajat WGS84 dan file .prj tidak disertakan/terbaca. Sertakan .prj (mis. dalam ZIP) agar dapat direproyeksi ke EPSG:4326.': 'Shapefile coordinates are not WGS84 degrees and no readable .prj was provided. Include the .prj (e.g. in the ZIP) so it can be reprojected to EPSG:4326.',
+  'Pilih file .zip (berisi .shp/.dbf/.prj) atau .shp + .dbf (+ .prj, .cpg).': 'Choose a .zip (containing .shp/.dbf/.prj) or .shp + .dbf (+ .prj, .cpg).', 'File terlalu besar (maks 30 MB).': 'File too large (max 30 MB).',
+  'Pembaca DBF tidak tersedia.': 'DBF reader is not available.',
+  // ---- sinkronisasi
+  'Sinkron sekarang': 'Sync now', 'Koneksi': 'Connection', 'Antrean': 'Queue', 'Perlu tindakan': 'Needs action', 'Sinkron terakhir': 'Last sync',
+  'Antrean operasi': 'Operation queue', 'Antrean sinkronisasi': 'Sync queue', 'Semua perubahan sudah tersinkron dengan server.': 'All changes are synced with the server.',
+  'Penyimpanan perangkat': 'Device storage', 'Minta penyimpanan persisten': 'Request persistent storage', 'Hapus cache data (bukan antrean)': 'Clear data cache (not the queue)',
+  'Konflik data terdeteksi — tinjau di menu Sinkronisasi.': 'Data conflict detected — review it in the Sync menu.', 'Hapus cache': 'Clear cache',
+  'Data offline disimpan di IndexedDB browser dan': 'Offline data is stored in the browser\'s IndexedDB and is',
+  '. Jangan gunakan perangkat bersama tanpa logout. Browser dapat menghapus data bila ruang penuh kecuali penyimpanan persisten diizinkan.': '. Do not use shared devices without logging out. The browser may delete data when storage is full unless persistent storage is allowed.',
+  'Pakai versi saya': 'Keep my version', 'Pakai versi server': 'Use server version', 'Konflik': 'Conflict', 'Gagal': 'Failed', 'Menunggu': 'Pending',
+  // ---- dashboard
+  'Total fitur': 'Total features', 'Total luas poligon': 'Total polygon area', 'Total panjang garis': 'Total line length', 'Per layer': 'By layer', 'Per status': 'By status',
+  'Per surveyor': 'By surveyor', 'Aktivitas terbaru': 'Recent activity', 'Data contoh DEMO': 'DEMO sample data', 'Belum ada data untuk ditampilkan.': 'No data to show yet.',
+  'Angka dihitung dari data yang termuat di perangkat ini (termasuk perubahan yang belum tersinkron). Luas & panjang dihitung geodesik pada bola WGS84 — bukan hasil ukur kadastral.': 'Figures are computed from the data loaded on this device (including unsynced changes). Area & length are geodesic on the WGS84 sphere — not cadastral survey results.',
+  // ---- proyek & layer
+  'Proyek': 'Project', '+ Proyek': '+ Project', 'Proyek baru': 'New project', 'Nama proyek': 'Project name', '+ Tambah layer': '+ Add layer', 'Layer': 'Layer',
+  'Geometri': 'Geometry', 'CRS': 'CRS', 'Atribut': 'Attributes', 'Edit layer': 'Edit layer', 'Layer baru': 'New layer', 'Nama layer': 'Layer name', 'Skema atribut': 'Attribute schema',
+  '+ Atribut': '+ Attribute', 'Belum ada atribut.': 'No attributes yet.', 'Belum ada layer.': 'No layers yet.', 'Titik': 'Point', 'Garis': 'Line', 'Poligon': 'Polygon',
+  'Tanpa geometri (tabel)': 'No geometry (table)', 'Tanpa geometri': 'No geometry', 'Tabel (tanpa geometri)': 'Table (no geometry)', 'Point': 'Point', 'LineString': 'LineString', 'Polygon': 'Polygon',
+  'Teks': 'Text', 'Angka': 'Number', 'Bulat': 'Integer', 'Pilihan': 'Choice', 'Tanggal': 'Date', 'Ya/Tidak': 'Yes/No', 'Relasi': 'Relation',
+  'kunci (mis. kode_blok)': 'key (e.g. block_code)', 'Tanggal (YYYY-MM-DD)': 'Date (YYYY-MM-DD)', 'Tanggal & jam': 'Date & time', 'Isi otomatis tanggal sekarang': 'Fill today\'s date automatically',
+  '🔒 Kunci (tidak bisa diedit setelah tersimpan)': '🔒 Lock (cannot be edited after saving)', 'Nomor otomatis, prefix': 'Auto number, prefix', 'mis. TS-': 'e.g. TS-',
+  '🔑 ID unik (primary key) — tidak boleh kembar, bisa jadi kunci induk relasi': '🔑 Unique ID (primary key) — no duplicates, can be a relation parent key',
+  'Layer induk (1):': 'Parent layer (1):', 'Cocokkan dengan:': 'Match on:', 'ID internal sistem': 'Internal system ID', '— pilih layer —': '— choose layer —', '— pilih —': '— choose —', '— pilih data —': '— choose record —',
+  'CRS penyimpanan: EPSG:4326 (WGS84, GeoJSON RFC 7946). Luas/panjang dihitung geodesik.': 'Storage CRS: EPSG:4326 (WGS84, GeoJSON RFC 7946). Area/length are geodesic.',
+  '= tabel atribut (mis. inspeksi, pemilik) yang dapat direlasikan ke layer lain lewat atribut tipe': '= attribute table (e.g. inspections, owners) that can be related to another layer through an attribute of type',
+  'Area kerja (opsional, WGS84) — data di luar area ditolak server': 'Work area (optional, WGS84) — data outside the area is rejected by the server',
+  'Min lon': 'Min lon', 'Min lat': 'Min lat', 'Max lon': 'Max lon', 'Max lat': 'Max lat', 'Pakai batas tampilan peta': 'Use current map extent', 'Diarsipkan (baca-saja)': 'Archived (read-only)',
+  'Layer tersimpan.': 'Layer saved.', 'Proyek tersimpan.': 'Project saved.', 'Proyek dihapus.': 'Project deleted.', 'Proyek aktif diganti.': 'Active project changed.',
+  'Hapus layer': 'Delete layer', 'Hapus proyek': 'Delete project', 'Layer hanya dapat dihapus jika kosong.': 'A layer can only be deleted when it is empty.', 'Layer tidak ditemukan.': 'Layer not found.',
+  // ---- admin
+  'Pengguna': 'Users', '+ Pengguna': '+ User', 'Pengguna baru': 'New user', 'Branding': 'Branding', 'Lisensi': 'License', 'Audit': 'Audit', 'Login terakhir': 'Last login',
+  'Password awal': 'Initial password', 'Pengguna aktif:': 'Active users:', 'Pengguna tersimpan.': 'User saved.', 'Judul header': 'Header title', 'Subjudul': 'Subtitle',
+  'Warna aksen tema': 'Theme accent color', 'Unggah logo': 'Upload logo', 'Identitas aplikasi': 'App identity', 'URL PMTiles foto udara bawaan (opsional)': 'Default aerial PMTiles URL (optional)',
+  'Klik untuk memperbesar. PNG/JPEG/WebP, otomatis diperkecil ke 512 px.': 'Click to enlarge. PNG/JPEG/WebP, automatically resized to 512 px.', 'Branding tersimpan.': 'Branding saved.', 'Logo diperbarui.': 'Logo updated.',
+  'Status lisensi': 'License status', 'Pemegang': 'Licensee', 'Berlaku s/d': 'Valid until', 'Aktivasi': 'Activation', 'Aktifkan': 'Activate', 'Script ID': 'Script ID',
+  'Tempel kunci lisensi dari penyedia (format UMG1.…). Kirim Script ID di samping ke penyedia bila lisensi ingin diikat ke instalasi ini.': 'Paste the license key from the provider (format UMG1.…). Send the Script ID shown here to the provider if the license should be bound to this installation.',
+  'Role: Admin (semua), Supervisor (proyek, layer, review), Surveyor (rekam & ajukan data sendiri), Viewer (lihat & ekspor).': 'Roles: Admin (everything), Supervisor (projects, layers, review), Surveyor (record & submit own data), Viewer (view & export).',
+  // ---- profil
+  'Data akun': 'Account data', 'Akun': 'Account', 'ID unik (primary key)': 'Unique ID (primary key)', 'Layer titik': 'Point layer', 'Ganti foto': 'Change photo', 'Simpan nama': 'Save name', 'Ganti password': 'Change password', 'Password lama': 'Current password',
+  'Password baru (min 8, huruf & angka)': 'New password (min. 8, letters & digits)', 'Ulangi password baru': 'Repeat new password', 'Semua sesi akan dicabut setelah password diganti.': 'All sessions will be revoked after the password is changed.',
+  'Foto profil diperbarui.': 'Profile photo updated.', 'Konfirmasi password tidak sama.': 'Password confirmation does not match.', 'Password diganti. Silakan login kembali.': 'Password changed. Please sign in again.',
+  // ---- tentang
+  'Informasi aplikasi': 'App information', 'Aplikasi': 'App', 'Versi klien': 'Client version', 'Versi server': 'Server version', 'CRS data': 'Data CRS', 'Cek kesehatan server': 'Check server health',
+  'Reset data demo': 'Reset demo data', 'Reset demo': 'Reset demo', 'Komponen pihak ketiga': 'Third-party components', 'Universal Mobile Mapping GIS — Edisi Apps Script': 'Universal Mobile Mapping GIS — Apps Script Edition',
+  'DEMO (data di browser)': 'DEMO (data in the browser)', 'Apps Script (HtmlService)': 'Apps Script (HtmlService)', 'PWA (GitHub Pages)': 'PWA (GitHub Pages)', 'EPSG:4326 (WGS84)': 'EPSG:4326 (WGS84)',
+  'Ikon & logo bawaan dibuat khusus untuk aplikasi ini.': 'Built-in icons & logo were made specifically for this app.',
+  'Data peta © OpenStreetMap contributors — ODbL; tile OSM tunduk pada Tile Usage Policy OSMF': 'Map data © OpenStreetMap contributors — ODbL; OSM tiles are subject to the OSMF Tile Usage Policy',
+  'Google Apps Script, Sheets, Drive — Ketentuan Layanan Google': 'Google Apps Script, Sheets, Drive — Google Terms of Service', 'Syarat & Ketentuan Penggunaan': 'Terms & Conditions of Use',
+  'Batasan versi demo': 'Demo version limits', 'Data hanya di tab ini —': 'Data lives only in this tab —', 'hilang saat tab/aplikasi ditutup': 'it is lost when the tab/app is closed',
+  'Tidak dapat menambah pengguna, mengganti password, mengaktifkan lisensi, atau mengubah judul/logo.': 'Cannot add users, change passwords, activate a license, or change the title/logo.',
+  'Tanpa server & sinkronisasi multi-perangkat (semua emulasi di browser).': 'No server & multi-device sync (everything is emulated in the browser).',
+  'Penyimpanan demo penuh. Reset demo di menu Tentang.': 'Demo storage is full. Reset the demo in the About menu.', 'Sesi demo berakhir': 'Demo session ended', 'Mulai ulang': 'Start again',
+  '🔒 Versi penuh': '🔒 Full version', 'tidak tersedia di versi demo.': 'is not available in the demo version.',
+  'Demo hanya untuk mencoba alur kerja: data tersimpan sementara di tab ini dan direset otomatis. Versi penuh berjalan di Google Sheets milik Anda dengan sinkronisasi multi-pengguna, ekspor GeoJSON/CSV/KML/SHP, cetak resolusi tinggi tanpa watermark, dan lisensi resmi.': 'The demo is only for trying the workflow: data is stored temporarily in this tab and reset automatically. The full version runs on your own Google Sheets with multi-user sync, GeoJSON/CSV/KML/SHP export, high-resolution printing without watermark, and an official license.',
+  'Semua data demo di tab ini dihapus dan dibuat ulang.': 'All demo data in this tab will be deleted and recreated.', 'Data contoh — bukan data nyata.': 'Sample data — not real data.',
+  // ---- cetak
+  'Cetak peta (PDF)': 'Print map (PDF)', 'Buat PDF': 'Create PDF', 'Ukuran kertas': 'Paper size', 'Orientasi': 'Orientation', 'Lanskap': 'Landscape', 'Potret': 'Portrait',
+  'Skala': 'Scale', 'Sesuai tampilan peta': 'Match map view', 'Resolusi': 'Resolution', 'Draft (120 dpi)': 'Draft (120 dpi)', 'Standar (200 dpi)': 'Standard (200 dpi)', 'Tinggi (300 dpi, lambat)': 'High (300 dpi, slow)',
+  'Judul peta': 'Map title', 'Disusun oleh': 'Prepared by', 'Nomor lembar': 'Sheet number', 'Catatan': 'Notes', 'Grid koordinat': 'Coordinate grid', 'Legenda': 'Legend', 'Peta indeks': 'Index map',
+  'Layout mengikuti pola ArcGIS: bingkai peta dengan grid, panel judul, arah utara, skala batang & numerik, legenda, peta indeks, dan blok informasi.': 'The layout follows the ArcGIS pattern: map frame with grid, title panel, north arrow, bar & numeric scale, legend, index map, and information block.',
+  'Memproses…': 'Processing…', 'Merender peta indeks…': 'Rendering index map…', 'Menyusun layout…': 'Composing layout…', 'Memuat pustaka PDF…': 'Loading PDF library…', 'Menyimpan PDF…': 'Saving PDF…', 'Buka di tab baru': 'Open in new tab',
+  'PETA INDEKS': 'INDEX MAP', 'LEGENDA': 'LEGEND', 'INFORMASI': 'INFORMATION', 'SKALA': 'SCALE', 'Organisasi': 'Organization', 'Tanggal cetak': 'Print date',
+  'Sistem koordinat': 'Coordinate system', 'Geografis WGS 84 (EPSG:4326); tampilan Web Mercator': 'Geographic WGS 84 (EPSG:4326); Web Mercator display', 'Sumber data': 'Data source', 'Lembar': 'Sheet',
+  '(tidak tersedia)': '(not available)', 'Utara': 'North'
+};
+
+/** Pola untuk teks dinamis (angka, nama). Urutan penting: yang lebih spesifik di atas. */
+var I18N_EN_PATTERNS = [
+  [/^Data terkait: (.+)$/, 'Related records: $1'],
+  [/^Data baru — (.+)$/, 'New record — $1'], [/^Edit data — (.+)$/, 'Edit record — $1'],
+  [/^Rekam (titik|garis|poligon) → (.+)$/, function (_, a, b) { return 'Record ' + ({ titik: 'point', garis: 'line', poligon: 'polygon' }[a]) + ' → ' + b; }],
+  [/^(.+) \((titik|garis|poligon|tabel)\)$/, function (_, a, b) { return a + ' (' + ({ titik: 'point', garis: 'line', poligon: 'polygon', tabel: 'table' }[b]) + ')'; }],
+  [/^Relasi 1:N — satu data di "(.+)" dapat memiliki banyak data di layer ini \(anak\)\.$/, '1:N relation — one record in "$1" can have many records in this layer (children).'],
+  [/^Layer induk belum punya atribut 🔑 ID unik\. Tambahkan dulu di layer "(.+)" bila ingin relasi berbasis ID \(mis\. TS-0001\)\.$/, 'The parent layer has no 🔑 unique ID attribute yet. Add one in layer "$1" for ID-based relations (e.g. TS-0001).'],
+  [/^→ induk: (.+?)( · cocok by (.+))?$/, function (_, a, b, c) { return '→ parent: ' + a + (c ? ' · matched by ' + c : ''); }],
+  [/^🔒 dipakai (\d+) data anak$/, '🔒 used by $1 child records'], [/^kunci: (.+)$/, 'key: $1'],
+  [/^Foto \(maks (\d+)\)$/, 'Photos (max $1)'], [/^Foto (\d+)$/, 'Photo $1'],
+  [/^DEMO · (\d+) mnt$/, 'DEMO · $1 min'],
+  [/^Versi demo — data direset saat tab ditutup atau setelah (\d+) menit\.$/, 'Demo version — data is reset when the tab closes or after $1 minutes.'],
+  [/^dan direset otomatis setiap (\d+) menit \(sisa: (\d+) menit\)\.$/, 'and is reset automatically every $1 minutes ($2 minutes left).'],
+  [/^1 proyek; maks\. (\d+) layer, (\d+) data, (\d+) foto per data\.$/, '1 project; max. $1 layers, $2 records, $3 photos per record.'],
+  [/^Ekspor GeoJSON\/CSV\/KML\/SHP dinonaktifkan; impor maks\. (\d+) baris\.$/, 'GeoJSON/CSV/KML/SHP export disabled; import max. $1 rows.'],
+  [/^Cetak PDF resolusi draft \((\d+) dpi\) dengan watermark DEMO\.$/, 'PDF printing at draft resolution ($1 dpi) with a DEMO watermark.'],
+  [/^Versi demo: 1 proyek, maks\. (\d+) layer & (\d+) data\. .*$/, 'Demo version: 1 project, max. $1 layers & $2 records. Export, new users, license & branding are disabled; data resets automatically.'],
+  [/^Versi demo hanya (\d+) proyek\. Versi penuh: proyek tidak terbatas\.$/, 'The demo version allows only $1 project. Full version: unlimited projects.'],
+  [/^Versi demo: maks\. (\d+) (layer|data|atribut per layer|foto per data)(.*)$/, function (_, n, w) { return 'Demo version: max. ' + n + ' ' + ({ layer: 'layers', data: 'records', 'atribut per layer': 'attributes per layer', 'foto per data': 'photos per record' }[w]) + '.'; }],
+  [/^Versi demo: (impor|file PMTiles|layer referensi) maks\. (.+)$/, function (_, w, r) { return 'Demo version: ' + ({ impor: 'import', 'file PMTiles': 'PMTiles file', 'layer referensi': 'reference layer' }[w]) + ' max. ' + r.replace(/baris per file\.?/, 'rows per file.').replace(/\(hanya untuk sesi ini\)/, '(this session only)').replace(/per file/, 'per file'); }],
+  [/^(.+) tidak tersedia di versi demo\. Hubungi penyedia untuk versi penuh\.$/, function (_, w) { return (I18N_EN[w] || w) + ' is not available in the demo version. Contact the provider for the full version.'; }],
+  [/^Ekspor (.+)$/, 'Export $1'], [/^Ekspor \/ unduh data$/, 'Export / download data'],
+  [/^\/ (\d+) \(lisensi (.+)\)$/, '/ $1 ($2 license)'],
+  [/^Terpakai (.+) dari kuota ±(.+) · Penyimpanan persisten:$/, 'Used $1 of a ±$2 quota · Persistent storage:'],
+  [/^UTM Zona (\d+)([NS]) \((selatan|utara) khatulistiwa\) · EPSG:(\d+)$/, function (_, z, h, s, e) { return 'UTM Zone ' + z + h + ' (' + (s === 'selatan' ? 'south' : 'north') + ' of the equator) · EPSG:' + e; }],
+  [/^GPS perangkat, akurasi dilaporkan ±(.+) \((\d+) sampel\)$/, 'Device GPS, reported accuracy ±$1 ($2 samples)'], [/^GPS ±(.+) · (\d+) sampel$/, 'GPS ±$1 · $2 samples'],
+  [/^(\d+) vertex$/, '$1 vertices'], [/^(.*)data dibaca( dari (.+))? ·$/, function (_, a, b, c) { return a + 'records read' + (c ? ' from ' + c : '') + ' ·'; }],
+  [/^(\d+) data masuk antrean sinkronisasi ke "(.+)"\.$/, '$1 records queued for sync to "$2".'], [/^(\d+) fitur masuk antrean sinkronisasi\.$/, '$1 features queued for sync.'],
+  [/^(\d+) geometri multi-bagian dipecah menjadi fitur tunggal\.$/, '$1 multipart geometries were split into single features.'],
+  [/^Skema otomatis: (.+) · geometri (.+)$/, 'Automatic schema: $1 · geometry $2'], [/^Kolom diabaikan \(tidak ada di skema\): (.+)$/, 'Ignored columns (not in schema): $1'],
+  [/^Tampilkan lebih banyak \((\d+)\)$/, 'Show more ($1)'], [/^Masa trial tersisa (\d+) hari\.$/, 'Trial period: $1 days left.'],
+  [/^Merender peta (.+) px…$/, 'Rendering map $1 px…'],
+  [/^Selesai: (.+) · skala (.+)$/, 'Done: $1 · scale $2'], [/^Unduh PDF \((.+)\)$/, 'Download PDF ($1)'],
+  [/^Tidak bisa dihapus: masih ada (\d+) data terkait\. Hapus data terkait dulu\.$/, 'Cannot delete: there are still $1 related records. Delete the related records first.'],
+  [/^Shapefile \(ZIP\): (.+)$/, function (_, r) { return 'Shapefile (ZIP): ' + r.replace(/ baris \(\.dbf\)/g, ' rows (.dbf)').replace(/ fitur/g, ' features').replace(/teks >254 byte dipotong \(batas DBF\)/, 'texts >254 bytes truncated (DBF limit)'); }],
+  [/^ZIP berisi (\d+) shapefile — hanya "(.+)" yang diimpor\.$/, 'The ZIP contains $1 shapefiles — only "$2" was imported.'],
+  [/^Masih ada (\d+) perubahan belum tersinkron\. .*$/, 'There are still $1 unsynced changes. They stay on this device and will be sent when you sign in again with the same account. Log out anyway?'],
+  // pesan server umum
+  [/^"(.+)" wajib diisi\.$/, '"$1" is required.'], [/^(.+) wajib diisi\.$/, '$1 is required.'],
+  [/^"(.+)" harus angka\.$/, '"$1" must be a number.'], [/^"(.+)" harus bilangan bulat\.$/, '"$1" must be an integer.'], [/^(.+) harus bilangan bulat\.$/, '$1 must be an integer.'],
+  [/^"(.+)" harus salah satu pilihan\.$/, '"$1" must be one of the options.'],
+  [/^"(.+)" = "(.+)" sudah dipakai data lain \(ID unik\)\.$/, '"$1" = "$2" is already used by another record (unique ID).'],
+  [/^(.+) "(.+)" sudah dipakai data lain \(ID unik\)\.$/, '$1 "$2" is already used by another record (unique ID).'],
+  [/^(.+) "(.+)" duplikat \(ID unik\)\.$/, '$1 "$2" is a duplicate (unique ID).'], [/^(.+): induk "(.+)" tidak ditemukan\.$/, '$1: parent "$2" not found.'],
+  [/^"(.+)" merujuk data induk yang tidak ada \/ sudah dihapus(.*)\.$/, '"$1" refers to a parent record that does not exist / was deleted$2.'],
+  [/^ID unik data ini dipakai oleh (\d+) data anak\. .*$/, 'This record\'s unique ID is used by $1 child records. Change the child records first or keep the ID.'],
+  [/^Data ini masih direlasikan oleh (\d+) data lain \((.+)\)\. .*$/, 'This record is still referenced by $1 other records ($2). Delete or change the related records first.'],
+  [/^Batas pengguna lisensi tercapai \((\d+)\)\.$/, 'License user limit reached ($1).'], [/^Batas jumlah fitur lisensi tercapai \((\d+)\)\.$/, 'License feature limit reached ($1).'],
+  [/^Terlalu banyak percobaan gagal\. Coba lagi dalam (\d+) menit\.$/, 'Too many failed attempts. Try again in $1 minutes.'],
+  [/^(.+) kosong\.$/, '$1 is empty.'], [/^Lisensi aktif: (.+)$/, 'License active: $1'], [/^Sinkron gagal: (.+)$/, 'Sync failed: $1']
+];
+
+var LEGAL_EN = {
+  terms: '<h3>Terms &amp; Conditions of Use</h3><p class="small muted">Effective 30 October 2026 · Version 1.0 · English translation; the Indonesian version prevails in case of discrepancy.</p>' +
+    '<h4>1. Parties & scope</h4><p>The Universal Mobile Mapping GIS application ("Application") is licensed by the provider to the licensee organization ("Customer"). Users are personnel given an account by the Customer\'s admin. By signing in, users accept these terms and the Customer\'s internal policies.</p>' +
+    '<h4>2. License</h4><p>The license is non-exclusive, non-transferable, for one Apps Script installation and within the tier limits (number of users, number of features, validity period). Copying, reselling, circumventing license protection, or distributing the code without the provider\'s written permission is prohibited. An expired license puts the Application into read-only mode; the data remains the Customer\'s property.</p>' +
+    '<h4>3. Google infrastructure</h4><p>The Application runs in the Customer\'s Google account (Apps Script, Sheets, Drive) and is subject to Google\'s Terms of Service and quotas. The provider is not responsible for outages, policy changes, or quota limits imposed by Google.</p>' +
+    '<h4>4. Spatial data accuracy</h4><p>Positions come from the device GPS with the accuracy reported by the device and may be off by a few to tens of meters. Area & length are computed geodesically for operational purposes. <b>Application results are not cadastral/legally binding measurements</b> and do not replace surveys by licensed surveyors or land agencies.</p>' +
+    '<h4>5. User obligations</h4><ul><li>Keep passwords confidential and log out on shared devices.</li><li>Enter data correctly and only in assigned areas/projects.</li><li>Obtain the required permissions before entering land or photographing other people/property.</li><li>Do not upload unlawful content, malware, or irrelevant personal data.</li></ul>' +
+    '<h4>6. Offline data</h4><p>Unsynced data is stored on the device and may be lost if the device is damaged, browser data is cleared, or storage is full. Users must sync regularly.</p>' +
+    '<h4>7. Limitation of liability</h4><p>The Application is provided "as is". To the extent permitted by law, the provider is not liable for indirect damages, lost profits, or decisions made based on Application data. The provider\'s maximum liability equals the license fees of the last 12 months.</p>' +
+    '<h4>8. Governing law</h4><p>These terms are governed by the laws of the Republic of Indonesia. Disputes are settled amicably first, then through the district court of the provider\'s domicile.</p>',
+  privacy: '<h3>Privacy Notice</h3><p class="small muted">Prepared with reference to Indonesian Law No. 27 of 2022 on Personal Data Protection (UU PDP) · English translation</p>' +
+    '<h4>1. Data controller</h4><p>The Customer (the organization that installs the Application) is the <b>personal data controller</b>. The Application provider does not receive copies of operational data, unless the Customer grants access for technical support under a separate agreement (the provider then acts as a processor).</p>' +
+    '<h4>2. Data processed</h4><ul><li>Account: name, username, role, profile photo (optional), login time, password hash (PBKDF2 — the actual password is not stored).</li><li>Field data: coordinates, GPS accuracy, survey attributes, field photos, time & author of the data.</li><li>Device location: read <b>only while you turn on GPS</b> on the map; not tracked in the background, and the live position is not sent to the server unless you save data.</li><li>Audit log: user actions for security and accountability.</li></ul>' +
+    '<h4>3. Purpose & legal basis</h4><p>Performing survey & mapping work, quality control (review), system security, and contractual/employment obligations between users and the Customer.</p>' +
+    '<h4>4. Storage & security</h4><p>Data is stored in the Customer\'s Google Sheets/Drive. On the device, offline data is stored in the browser\'s IndexedDB <b>without additional encryption</b>. Communication uses HTTPS. Access is restricted by role and organization on the server side.</p>' +
+    '<h4>5. Retention</h4><p>Data is kept as long as the project requires, according to the Customer\'s retention policy. Login sessions expire automatically (12 hours). Audit logs are kept for security purposes.</p>' +
+    '<h4>6. Third parties</h4><p>Google LLC (infrastructure), map tile providers (OpenStreetMap or a server configured by the Customer — receives the IP address & viewed map area), and the unpkg.com CDN (loads map libraries). There is no advertising tracking or third-party analytics.</p>' +
+    '<h4>7. Data subject rights</h4><p>You have the right to access, correct, request deletion, restrict processing, and withdraw consent under the UU PDP by contacting the Customer\'s admin/Data Protection Officer. You can change your own profile photo and name in the Profile menu.</p>' +
+    '<h4>8. Changes</h4><p>This notice may be updated; the latest version is always available in the About &amp; Legal menu.</p>'
+};
+
 /* Universal Mobile Mapping GIS — frontend SPA (vanilla JS, tanpa build tool).
  * Mode: 'gas' (HtmlService/google.script.run), 'remote' (PWA GitHub Pages -> fetch Web App), 'demo' (backend emulasi di browser).
  */
 'use strict';
-var APP_VERSION = '1.4.0', APP_BUILD = '2026-11-04';
+var APP_VERSION = '1.5.0', APP_BUILD = '2026-11-04';
 var S = { token: '', user: null, org: null, perms: [], settings: {}, license: {}, projects: [], layers: [], users: [],
   features: new Map(), serverVer: {}, projectId: '', layerId: '', hiddenLayers: new Set(), online: navigator.onLine, tab: 'map', rendered: {} };
 
@@ -398,8 +744,8 @@ var $ = function (s, r) { return (r || document).querySelector(s); };
 var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 function esc(v) { return String(v === undefined || v === null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 function uuid() { if (crypto.randomUUID) return crypto.randomUUID(); var b = crypto.getRandomValues(new Uint8Array(16)); b[6] = (b[6] & 15) | 64; b[8] = (b[8] & 63) | 128; var h = Array.from(b, function (x) { return x.toString(16).padStart(2, '0'); }).join(''); return h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20); }
-function fmtDate(iso) { if (!iso) return '-'; var d = new Date(iso); return isNaN(d) ? esc(iso) : d.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
-function fmtNum(n, d) { return Number(n || 0).toLocaleString('id-ID', { maximumFractionDigits: d === undefined ? 2 : d }); }
+function fmtDate(iso) { if (!iso) return '-'; var d = new Date(iso); return isNaN(d) ? esc(iso) : d.toLocaleString(I18N.locale(), { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+function fmtNum(n, d) { return Number(n || 0).toLocaleString(I18N.locale(), { maximumFractionDigits: d === undefined ? 2 : d }); }
 function can(p) { return S.perms.indexOf('*') >= 0 || S.perms.indexOf(p) >= 0; }
 function debounce(fn, ms) { var t; return function () { var a = arguments, s = this; clearTimeout(t); t = setTimeout(function () { fn.apply(s, a); }, ms); }; }
 function initials(n) { return String(n || '?').split(/\s+/).map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase(); }
@@ -543,6 +889,7 @@ var Api = {
       }
       function fail(err) { var e = new Error((err && err.message) || 'Tidak dapat terhubung ke server.'); e.network = true; reject(e); }
       if (CONFIG.MODE === 'demo') { setTimeout(function () { try { done(Demo.api(action, payload || {}, tok)); } catch (e) { fail(e); } }, 60); return; }
+      // ↓ jalur server sungguhan (dibuang otomatis dari build demo.html)
       if (CONFIG.MODE === 'gas' && window.google && google.script) { google.script.run.withSuccessHandler(done).withFailureHandler(fail).api(action, payload || {}, tok); return; }
       var url = Api.url();
       if (!url) return reject(Object.assign(new Error('URL server belum diatur. Buka "Pengaturan server".'), { code: 'NO_SERVER' }));
@@ -557,13 +904,41 @@ var Api = {
 };
 
 // ======================================================= Demo backend (emulasi di browser)
+/**
+ * Versi DEMO — batasan dirancang agar demo tidak bisa dipakai sebagai pengganti versi penuh:
+ *  - data hanya di sessionStorage tab ini: hilang saat tab/aplikasi ditutup + reset otomatis tiap 60 menit;
+ *  - 1 proyek, maks. 6 layer / 60 data / 2 foto per data, tanpa pengguna baru, lisensi & branding (dikunci di server demo);
+ *  - ekspor data (GeoJSON/CSV/KML/SHP) dimatikan, cetak PDF ber-watermark "DEMO" & resolusi draft, impor maks. 25 baris;
+ *  - tidak ada koneksi ke server sungguhan (kode jalur server/PWA dibuang saat build demo).
+ */
 var Demo = {
   srv: null,
+  KEY: 'umg_demo_state_v2',
+  LIMIT: { importRows: 25, sessionMin: 60, overlayMB: 15, pmtilesMB: 30, printDpi: 120 },
+  on: function () { return CONFIG.MODE === 'demo'; },
+  store: function () { try { return window.sessionStorage; } catch (e) { return null; } },
+  /** Tampilkan info fitur yang hanya ada di versi penuh. */
+  locked: function (what) {
+    modal({ title: '🔒 Versi penuh', body: '<p><b>' + esc(what) + '</b> tidak tersedia di versi demo.</p><p class="small muted">Demo hanya untuk mencoba alur kerja: data tersimpan sementara di tab ini dan direset otomatis. Versi penuh berjalan di Google Sheets milik Anda dengan sinkronisasi multi-pengguna, ekspor GeoJSON/CSV/KML/SHP, cetak resolusi tinggi tanpa watermark, dan lisensi resmi.</p>', buttons: [{ label: 'Mengerti', cls: 'primary' }] });
+    return false;
+  },
   init: function () {
     if (CONFIG.MODE !== 'demo') return;
-    var KEY = 'umg_demo_state_v1', state = null;
-    try { state = JSON.parse(LS.get(KEY) || 'null'); } catch (e) { state = null; }
-    var save = debounce(function () { try { localStorage.setItem(KEY, JSON.stringify(env._state)); } catch (e) { toast('Penyimpanan demo penuh (localStorage). Reset demo di menu Tentang.', 'err', 6000); } }, 400);
+    var KEY = Demo.KEY, ss = Demo.store(), state = null;
+    try { state = JSON.parse((ss && ss.getItem(KEY)) || 'null'); } catch (e) { state = null; }
+    if (!state) {   // sesi demo baru: bersihkan sisa sesi sebelumnya (token, draf, cache, layer referensi, PMTiles)
+      LS.set('umg_demo_state_v1', null); LS.set('umg_token', null);
+      try { Object.keys(localStorage).forEach(function (k) { if (/^umg_(draft_|relsort_)/.test(k)) localStorage.removeItem(k); }); } catch (e) { /* abaikan */ }
+      try { indexedDB.deleteDatabase('umg-enterprise'); } catch (e) { /* abaikan */ }
+      if (ss) ss.setItem('umg_demo_t0', String(Date.now()));
+    }
+    Demo.build(state);
+    Demo.timer();
+  },
+  /** Bangun server demo dari state tersimpan, atau seed baru (data contoh mengikuti bahasa aktif). */
+  build: function (state) {
+    var KEY = Demo.KEY, ss = Demo.store();
+    var save = debounce(function () { try { ss.setItem(KEY, JSON.stringify(env._state)); } catch (e) { toast('Penyimpanan demo penuh. Reset demo di menu Tentang.', 'err', 6000); } }, 400);
     var env = GasShim.createGasEnv({ state: state || undefined, onWrite: save });
     Demo.srv = UMGServerFactory(env);
     if (!state) {
@@ -571,13 +946,26 @@ var Demo = {
       Demo.srv.setup();
       Demo.srv.Db.reset();
       var admin = Demo.srv.Db.all('Users')[0];
-      Demo.srv.Db.update('Users', admin, { pass_hash: Demo.srv.Sec.hashPassword('demo1234'), name: 'Admin Demo' });
-      Demo.srv.seedDemo('demo1234');
+      Demo.srv.Db.update('Users', admin, { pass_hash: Demo.srv.Sec.hashPassword('demo1234'), name: I18N.lang === 'en' ? 'Demo Admin' : 'Admin Demo' });
+      Demo.srv.seedDemo('demo1234', I18N.lang);   // data contoh mengikuti bahasa saat sesi demo dimulai
       save();
     }
   },
+  /** Ganti bahasa di layar login → data contoh dibuat ulang dalam bahasa tersebut (hanya sebelum login). */
+  reseed: function () { if (!Demo.on() || S.user) return; var ss = Demo.store(); if (ss) ss.removeItem(Demo.KEY); Demo.build(null); },
+  t0: function () { var ss = Demo.store(), t = ss && Number(ss.getItem('umg_demo_t0')); if (!t && ss) { t = Date.now(); ss.setItem('umg_demo_t0', String(t)); } return t || Date.now(); },
+  left: function () { return Math.max(0, Demo.LIMIT.sessionMin * 60000 - (Date.now() - Demo.t0())); },
+  /** Hitung mundur sesi demo; habis → data direset. */
+  timer: function () {
+    var tick = function () {
+      var ms = Demo.left(), b = $('#hd-demo');
+      if (b) { b.textContent = 'DEMO · ' + Math.ceil(ms / 60000) + ' mnt'; b.title = 'Versi demo — data direset saat tab ditutup atau setelah ' + Demo.LIMIT.sessionMin + ' menit.'; }
+      if (ms <= 0) { clearInterval(Demo._iv); Demo.reset(); modal({ title: 'Sesi demo berakhir', body: '<p>Sesi demo ' + Demo.LIMIT.sessionMin + ' menit telah habis. Data contoh dikembalikan ke awal.</p>', buttons: [{ label: 'Mulai ulang', cls: 'primary', onClick: function () { location.reload(); } }], sticky: true }); }
+    };
+    clearInterval(Demo._iv); Demo._iv = setInterval(tick, 15000); setTimeout(tick, 0);
+  },
   api: function (a, p, t) { return Demo.srv.api(a, JSON.parse(JSON.stringify(p)), t); },
-  reset: function () { LS.set('umg_demo_state_v1', null); }
+  reset: function () { var ss = Demo.store(); if (ss) { ss.removeItem(Demo.KEY); ss.removeItem('umg_demo_t0'); } LS.set('umg_demo_state_v1', null); LS.set('umg_token', null); try { indexedDB.deleteDatabase('umg-enterprise'); } catch (e) { /* abaikan */ } }
 };
 
 // ======================================================= Branding & tema
@@ -655,7 +1043,7 @@ var App = {
     Brand.apply({ title: S.settings.title, subtitle: S.settings.subtitle, accent: S.settings.accent });
     App.renderAvatar();
     S.rendered = {};
-    $('#hd-demo').classList.toggle('hidden', CONFIG.MODE !== 'demo');
+    $('#hd-demo').classList.toggle('hidden', CONFIG.MODE !== 'demo'); $('#demo-wm').classList.toggle('hidden', CONFIG.MODE !== 'demo');
   },
   loadMoreFeatures: async function (offset) {
     try {
@@ -931,13 +1319,54 @@ var MapView = {
     $$('[data-ly]', p).forEach(function (c) { c.onchange = function () { var id = c.getAttribute('data-ly'); if (c.checked) S.hiddenLayers.delete(id); else S.hiddenLayers.add(id); MapView.refreshData(); }; });
   }
 };
-/** Label ringkas sebuah data (atribut non-relasi pertama). */
+/** Atribut ID unik (primary key) utama sebuah layer. */
+function pkField(l) { return ((l && l.schema) || []).find(function (x) { return x.unique; }); }
+/** Nilai yang disimpan di atribut relasi untuk induk tertentu: ID unik induk (target_key) atau id internal. */
+function relValue(fd, parent) {
+  if (!parent) return '';
+  if (!fd.target_key) return parent.id;
+  var v = (parent.attrs || {})[fd.target_key];
+  return v === undefined || v === null ? '' : String(v);
+}
+/** Cari data induk dari nilai atribut relasi. */
+function relFind(fd, v) {
+  if (v === undefined || v === null || v === '') return null;
+  if (!fd.target_key) return S.features.get(v) || null;
+  var hit = null, sv = String(v);
+  S.features.forEach(function (x) { if (!hit && !x.deleted && x.layer_id === fd.target && String((x.attrs || {})[fd.target_key]) === sv) hit = x; });
+  return hit;
+}
+/** Label ringkas sebuah data: ID unik (bila ada) + atribut teks pertama, atau atribut non-relasi pertama. */
 function featLabel(f) {
   if (!f) return '(tidak ditemukan)';
   var l = layerById(f.layer_id) || { schema: [], name: '?' }, a = f.attrs || {};
   var has = function (x) { return a[x.key] !== undefined && a[x.key] !== ''; };
+  var pk = pkField(l);
+  if (pk && has(pk)) {
+    var sec = (l.schema || []).find(function (x) { return x !== pk && (x.type === 'text' || x.type === 'select') && has(x); });
+    return String(a[pk.key]) + (sec ? ' · ' + String(a[sec.key]) : '');
+  }
   var fd = (l.schema || []).find(function (x) { return (x.type === 'text' || x.type === 'select' || x.type === 'integer') && has(x); }) || (l.schema || []).find(function (x) { return x.type !== 'relation' && has(x); });
   return (fd ? String(a[fd.key]) : l.name) + ' · ' + String(f.id).slice(0, 6);
+}
+/** Perbandingan nilai untuk pengurutan (angka numerik, teks alami "TS-2" < "TS-10"). */
+function cmpVal(a, b) {
+  var ea = a === undefined || a === null || a === '', eb = b === undefined || b === null || b === '';
+  if (ea || eb) return ea === eb ? 0 : (ea ? 1 : -1);          // kosong selalu di bawah
+  if (typeof a === 'number' && typeof b === 'number') return a - b;
+  return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+}
+/** Nomor ID otomatis berikutnya (pratinjau di klien; nilai final ditetapkan server). */
+function nextAutoId(prefix, layerId, key) {
+  var max = 0;
+  S.features.forEach(function (x) {
+    if (x.deleted || x.layer_id !== layerId) return;
+    var v = String((x.attrs || {})[key] || '');
+    if (v.indexOf(prefix) !== 0) return;
+    var m = /^(\d+)$/.exec(v.slice(prefix.length)); if (m) max = Math.max(max, +m[1]);
+  });
+  var n = String(max + 1); while (n.length < 4) n = '0' + n;
+  return prefix + n;
 }
 /** Tanggal/waktu lokal sekarang untuk atribut tanggal. */
 function nowValue(fd) {
@@ -948,7 +1377,7 @@ function nowValue(fd) {
 function fmtAttr(fd, v) {
   if (v === undefined || v === null || v === '') return '';
   if (v === true) return 'Ya'; if (v === false) return 'Tidak';
-  if (fd && fd.type === 'relation') return featLabel(S.features.get(v));
+  if (fd && fd.type === 'relation') { var pr = relFind(fd, v); return pr ? featLabel(pr) : (fd.target_key ? String(v) + ' (induk tidak ditemukan)' : featLabel(null)); }
   if (fd && fd.type === 'date' && fd.format === 'datetime') return String(v).replace('T', ' ');
   return String(v);
 }
@@ -959,12 +1388,54 @@ function relatedGroups(f) {
     if (l.project_id !== f.project_id) return;
     (l.schema || []).forEach(function (fd) {
       if (fd.type !== 'relation' || fd.target !== f.layer_id) return;
-      var items = []; S.features.forEach(function (x) { if (!x.deleted && x.layer_id === l.id && (x.attrs || {})[fd.key] === f.id) items.push(x); });
-      out.push({ layer: l, field: fd, items: items });
+      var key = relValue(fd, f), items = [];
+      if (key !== '') S.features.forEach(function (x) { if (!x.deleted && x.layer_id === l.id && String((x.attrs || {})[fd.key]) === key) items.push(x); });
+      out.push({ layer: l, field: fd, items: items, key: key });
     });
   });
   return out;
 }
+/** Tabel data terkait (anak) yang dapat diurutkan per kolom; urutan diingat per layer anak. Default: naik (A→Z / 1→9). */
+var RelTable = {
+  cols: function (g) {
+    var c = (g.layer.schema || []).filter(function (fd) { return fd.key !== g.field.key; }).slice(0, 5).map(function (fd) { return { key: fd.key, label: fd.label, fd: fd }; });
+    c.push({ key: '_status', label: 'Status' });
+    return c;
+  },
+  state: function (g) {
+    var st = null; try { st = JSON.parse(LS.get('umg_relsort_' + g.layer.id) || 'null'); } catch (e) { st = null; }
+    var cols = RelTable.cols(g);
+    if (!st || !cols.some(function (c) { return c.key === st.k; })) {
+      var pk = pkField(g.layer), dt = (g.layer.schema || []).find(function (fd) { return fd.type === 'date' && fd.key !== g.field.key; });
+      st = { k: pk ? pk.key : (dt ? dt.key : cols[0].key), d: 1 };
+    }
+    return st;
+  },
+  sorted: function (g) {
+    var st = RelTable.state(g);
+    return g.items.slice().sort(function (a, b) {
+      var va = st.k === '_status' ? a.status : (a.attrs || {})[st.k], vb = st.k === '_status' ? b.status : (b.attrs || {})[st.k];
+      return cmpVal(va, vb) * st.d || cmpVal(a.created_at, b.created_at);
+    });
+  },
+  html: function (g, gi) {
+    if (!g.items.length) return '<div class="small muted" style="margin-top:6px">Belum ada data terkait.</div>';
+    var st = RelTable.state(g), cols = RelTable.cols(g);
+    return '<div class="tscroll rel-t" style="margin-top:8px"><table class="t sortable"><thead><tr><th class="num">#</th>' + cols.map(function (c) {
+      var on = st.k === c.key;
+      return '<th><button type="button" class="th-sort' + (on ? ' on' : '') + '" data-rsort="' + gi + '" data-k="' + esc(c.key) + '" aria-sort="' + (on ? (st.d > 0 ? 'ascending' : 'descending') : 'none') + '">' + esc(c.label) + ' <span class="arr">' + (on ? (st.d > 0 ? '▲' : '▼') : '↕') + '</span></button></th>';
+    }).join('') + '</tr></thead><tbody>' + RelTable.sorted(g).map(function (x, i) {
+      return '<tr class="click" data-goto="' + esc(x.id) + '"><td class="num muted">' + (i + 1) + '</td>' + cols.map(function (c) {
+        return c.key === '_status' ? '<td>' + badge(x.status) + (x._pending ? ' <span class="badge b-pending">antre</span>' : '') + '</td>' : '<td translate="no">' + esc(fmtAttr(c.fd, (x.attrs || {})[c.key])) + '</td>';
+      }).join('') + '</tr>';
+    }).join('') + '</tbody></table></div>';
+  },
+  toggle: function (g, key) {
+    var st = RelTable.state(g);
+    st = st.k === key ? { k: key, d: -st.d } : { k: key, d: 1 };
+    LS.set('umg_relsort_' + g.layer.id, JSON.stringify(st));
+  }
+};
 /** Teks UTM: X = Easting, Y = Northing (meter). "S" pada zona = belahan selatan; Northing selatan memakai false northing 10.000.000 m. */
 function utmText(u) {
   return 'UTM Zona ' + u.zone + u.hemi + ' (' + (u.hemi === 'S' ? 'selatan' : 'utara') + ' khatulistiwa) · EPSG:' + u.epsg +
@@ -1050,6 +1521,7 @@ var PMT = {
   },
   importFile: async function (file) {
     if (!PMT.allowedOffline()) throw new Error('PMTiles offline tersedia mulai lisensi Pro.');
+    if (Demo.on() && file.size > Demo.LIMIT.pmtilesMB * 1048576) throw new Error('Versi demo: file PMTiles maks. ' + Demo.LIMIT.pmtilesMB + ' MB (hanya untuk sesi ini).');
     var head = new Uint8Array(await file.slice(0, 7).arrayBuffer());
     if (String.fromCharCode.apply(null, head) !== 'PMTiles') throw new Error('File bukan arsip PMTiles (header tidak cocok).');
     if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function () { });
@@ -1269,11 +1741,17 @@ var FeatureForm = {
       var v = (f.attrs || {})[fd.key]; v = v === undefined || v === null ? '' : v;
       var req = fd.required ? ' <span class="req">*</span>' : '', id = 'fa-' + fd.key;
       if (fd.type === 'relation') {
-        var tl = layerById(fd.target), opts2 = [];
-        S.features.forEach(function (x) { if (!x.deleted && x.layer_id === fd.target) opts2.push(x); });
-        opts2.sort(function (a, b) { return featLabel(a).localeCompare(featLabel(b)); });
-        var fixed = opts.preset && opts.preset[fd.key];
-        return '<label class="f">' + esc(fd.label) + req + ' <span class="small muted">→ ' + esc(tl ? tl.name : '?') + '</span><select class="input" id="' + id + '"' + (fixed ? ' disabled' : '') + '><option value="">— pilih data —</option>' + opts2.map(function (x) { return '<option value="' + esc(x.id) + '"' + (x.id === v ? ' selected' : '') + '>' + esc(featLabel(x)) + (x._pending ? ' (belum sinkron)' : '') + '</option>'; }).join('') + '</select></label>';
+        var tl = layerById(fd.target), fixed = opts.preset && opts.preset[fd.key];
+        return '<div class="f relpick" data-key="' + esc(fd.key) + '"><span>' + esc(fd.label) + req + ' <span class="small muted">→ induk: ' + esc(tl ? tl.name : '?') + (fd.target_key ? ' · cocok by ' + esc(fd.target_key) : '') + '</span></span><input type="hidden" id="' + id + '" value="' + esc(v) + '"><div class="rp-sel"></div>' +
+          (fixed ? '' : '<input class="input rp-q" type="search" autocomplete="off" placeholder="Cari ID / nama data induk…"><div class="rp-list hidden" role="listbox"></div>') + '</div>';
+      }
+      if (fd.unique) {
+        var auto = fd.auto_id !== undefined && fd.auto_id !== null, kids = 0;
+        if (!f._new) relatedGroups(f).forEach(function (g) { if (g.field.target_key === fd.key) kids += g.items.length; });
+        var ro = kids > 0;
+        return '<label class="f">' + esc(fd.label) + (auto && f._new ? '' : req) + ' <span class="badge pk">🔑 ID unik</span>' + (ro ? ' <span class="small muted">🔒 dipakai ' + kids + ' data anak</span>' : '') +
+          '<input class="input mono" id="' + id + '" type="' + (fd.type === 'text' ? 'text' : 'number') + '" value="' + esc(v) + '" maxlength="120"' + (auto && f._new ? ' placeholder="otomatis: ' + esc(nextAutoId(fd.auto_id, l.id, fd.key)) + '"' : '') + (ro ? ' readonly style="opacity:.75"' : '') + '>' +
+          (auto && f._new ? '<span class="small muted">Biarkan kosong agar nomor dibuat otomatis oleh server saat sinkron.</span>' : '') + '</label>';
       }
       if (fd.type === 'date') {
         if (f._new && fd.auto_now && v === '') v = nowValue(fd);
@@ -1290,8 +1768,8 @@ var FeatureForm = {
     var body = document.createElement('div'); body.className = 'col';
     if (!f.geometry) gpsInfo = '<span class="badge">Tabel tanpa geometri</span>';
     body.innerHTML = '<div class="row wrap small"><span class="badge">' + esc(l.name) + '</span>' + gpsInfo + (mt.area_ha ? '<span class="badge">' + fmtNum(mt.area_ha, 4) + ' ha</span>' : '') + (mt.length_m ? '<span class="badge">' + fmtNum(mt.length_m, 1) + ' m</span>' : '') + (f.geometry && f.geometry.type === 'Point' ? '<span class="badge mono">' + f.geometry.coordinates[1].toFixed(7) + ', ' + f.geometry.coordinates[0].toFixed(7) + '</span>' : '') + '</div>' +
-      (fields || '<div class="small muted">Layer ini belum memiliki atribut.</div>') +
-      '<div><b class="small">Foto (maks 6)</b><div class="thumbs" id="ff-thumbs" style="margin-top:6px"></div><label class="btn sm" style="margin-top:8px">+ Ambil / pilih foto<input type="file" accept="image/*" capture="environment" multiple hidden id="ff-photo"></label></div>' +
+      (fields ? '<div class="ff-grid">' + fields + '</div>' : '<div class="small muted">Layer ini belum memiliki atribut.</div>') +
+      '<div><b class="small">Foto (maks ' + (Demo.on() ? 2 : 6) + ')</b><div class="thumbs" id="ff-thumbs" style="margin-top:6px"></div><label class="btn sm" style="margin-top:8px">+ Ambil / pilih foto<input type="file" accept="image/*" capture="environment" multiple hidden id="ff-photo"></label></div>' +
       (f.review_note ? '<div class="card small" style="border-color:var(--warn)"><b>Catatan reviewer:</b> ' + esc(f.review_note) + '</div>' : '');
     function renderThumbs() {
       var box = $('#ff-thumbs', body);
@@ -1300,10 +1778,36 @@ var FeatureForm = {
       $$('.thumb', box).forEach(function (t) { t.onclick = function (e) { if (e.target.hasAttribute('data-rm')) { photos.splice(+e.target.getAttribute('data-rm'), 1); renderThumbs(); return; } var im = $('img', t); Zoom.open(im.src, 'Foto ' + (+t.getAttribute('data-i') + 1)); }; });
     }
     renderThumbs();
+    $$('.relpick', body).forEach(function (box) {
+      var fd = (l.schema || []).find(function (x) { return x.key === box.getAttribute('data-key'); });
+      var hid = $('#fa-' + fd.key, box), sel = $('.rp-sel', box), q = $('.rp-q', box), list = $('.rp-list', box);
+      box.parentNode.insertBefore(box, box.parentNode.firstChild);               // relasi ditaruh paling atas
+      var cands = []; S.features.forEach(function (x) { if (!x.deleted && x.layer_id === fd.target) cands.push(x); });
+      cands.sort(function (a, b) { return cmpVal(featLabel(a), featLabel(b)); });
+      var card = function () {
+        var p = relFind(fd, hid.value);
+        if (!hid.value) { sel.innerHTML = '<div class="rp-card empty small muted">Belum dipilih.</div>'; return; }
+        var pl = p && layerById(p.layer_id);
+        sel.innerHTML = '<div class="rp-card"><div class="grow"><b>' + esc(p ? featLabel(p) : hid.value + ' (induk tidak ditemukan)') + '</b>' + (p ? '<div class="small muted">' + esc(pl ? pl.name : '') + ' · ' + esc((pl.schema || []).filter(function (x) { return x.type !== 'relation'; }).slice(0, 4).map(function (x) { return fmtAttr(x, (p.attrs || {})[x.key]); }).filter(String).join(' · ')) + '</div>' : '') + '</div>' + (q ? '<button type="button" class="btn sm ghost" data-rpx aria-label="Ganti induk">✕</button>' : '<span class="badge">terkunci</span>') + '</div>';
+        var x = $('[data-rpx]', sel); if (x) x.onclick = function () { hid.value = ''; card(); q.focus(); };
+      };
+      var fill = function () {
+        var t = q.value.trim().toLowerCase();
+        var hits = cands.filter(function (x) { return !t || (featLabel(x) + ' ' + JSON.stringify(x.attrs || {})).toLowerCase().indexOf(t) >= 0; }).slice(0, 40);
+        list.innerHTML = hits.length ? hits.map(function (x) { var rv = relValue(fd, x); return '<button type="button" class="rp-opt"' + (rv ? ' data-v="' + esc(rv) + '"' : ' disabled') + '><b>' + esc(featLabel(x)) + '</b>' + (rv ? '' : ' <span class="small muted">(ID belum terbit — sinkronkan dulu)</span>') + (x._pending ? ' <span class="badge b-pending">antre</span>' : '') + '</button>'; }).join('') + (cands.length > hits.length && !t ? '<div class="small muted" style="padding:6px 10px">Ketik untuk mencari dari ' + cands.length + ' data…</div>' : '') : '<div class="small muted" style="padding:8px 10px">Tidak ada data induk yang cocok.</div>';
+        list.classList.remove('hidden');
+      };
+      card();
+      if (!q) return;
+      q.addEventListener('focus', fill); q.addEventListener('input', debounce(fill, 80));
+      q.addEventListener('blur', function () { setTimeout(function () { list.classList.add('hidden'); }, 180); });
+      list.addEventListener('mousedown', function (e) { e.preventDefault(); });
+      list.addEventListener('click', function (e) { var o = e.target.closest('[data-v]'); if (!o) return; hid.value = o.getAttribute('data-v'); q.value = ''; list.classList.add('hidden'); card(); });
+    });
     $('#ff-photo', body).onchange = async function (e) {
       var files = Array.from(e.target.files || []);
       for (var i = 0; i < files.length; i++) {
-        if (photos.length >= 6) { toast('Maksimal 6 foto.', 'err'); break; }
+        if (photos.length >= (Demo.on() ? 2 : 6)) { toast(Demo.on() ? 'Versi demo: maks. 2 foto per data.' : 'Maksimal 6 foto.', 'err'); break; }
         try { photos.push(await readImage(files[i], 1280, 0.75)); } catch (er) { toast(er.message, 'err'); }
       }
       e.target.value = ''; renderThumbs();
@@ -1313,7 +1817,8 @@ var FeatureForm = {
       (l.schema || []).forEach(function (fd) {
         var el = $('#fa-' + fd.key, body); var v = fd.type === 'bool' ? el.checked : el.value.trim();
         if (fd.type === 'date' && fd.locked && !f._new && f.attrs && f.attrs[fd.key]) v = f.attrs[fd.key];   // nilai terkunci tidak berubah
-        if (fd.type !== 'bool' && v === '') { if (fd.required) errs.push(fd.label + ' wajib diisi.'); return; }
+        if (fd.type !== 'bool' && v === '') { if (fd.required && !(fd.unique && fd.auto_id !== undefined && fd.auto_id !== null)) errs.push(fd.label + ' wajib diisi.'); return; }
+        if (fd.unique) { var dup = false; S.features.forEach(function (x) { if (!x.deleted && x.layer_id === l.id && x.id !== f.id && String((x.attrs || {})[fd.key]).toLowerCase() === String(v).toLowerCase()) dup = true; }); if (dup) errs.push(fd.label + ' "' + v + '" sudah dipakai data lain (ID unik).'); }
         if (fd.type === 'number') v = Number(v); if (fd.type === 'integer') { if (!/^-?\d+$/.test(v)) errs.push(fd.label + ' harus bilangan bulat.'); v = parseInt(v, 10); }
         attrs[fd.key] = v;
       });
@@ -1341,7 +1846,7 @@ var Detail = {
     var f = S.features.get(id); if (!f) return;
     MapView.popupFeature = id; MapView.refreshData();
     var l = layerById(f.layer_id) || { name: '?', schema: [] }, mt = f.metrics && Object.keys(f.metrics).length ? f.metrics : (f.geometry ? Geo.metrics(f.geometry) : {});
-    var rows = (l.schema || []).map(function (fd) { var v = (f.attrs || {})[fd.key]; return '<tr><th>' + esc(fd.label) + '</th><td>' + (fd.type === 'relation' && v ? '<a href="#" data-goto="' + esc(v) + '">' + esc(fmtAttr(fd, v)) + '</a>' : esc(fmtAttr(fd, v))) + (fd.type === 'date' && fd.locked ? ' <span class="small muted">🔒</span>' : '') + '</td></tr>'; }).join('');
+    var rows = (l.schema || []).map(function (fd) { var v = (f.attrs || {})[fd.key], par = fd.type === 'relation' ? relFind(fd, v) : null; return '<tr><th translate="no">' + esc(fd.label) + (fd.unique ? ' <span class="badge pk" title="ID unik (primary key)">🔑</span>' : '') + '</th><td translate="no">' + (par ? '<a href="#" data-goto="' + esc(par.id) + '">' + esc(fmtAttr(fd, v)) + '</a>' : esc(fmtAttr(fd, v))) + (fd.type === 'date' && fd.locked ? ' <span class="small muted">🔒</span>' : '') + '</td></tr>'; }).join('');
     var groups = relatedGroups(f);
     var mine = f.created_by === S.user.id, editable = !S.license.read_only && (can('feature.write.any') || (can('feature.write.own') && mine && ['draft', 'revision', 'submitted'].indexOf(f.status) >= 0));
     var body = '<div class="row wrap">' + badge(f.status) + (f._pending ? '<span class="badge b-pending">Belum tersinkron</span>' : '') + '<span class="badge">' + esc(l.name) + '</span><span class="badge">v' + (f.version || 0) + '</span></div>' +
@@ -1355,8 +1860,7 @@ var Detail = {
       ((f.photos || []).length ? '<div class="thumbs" id="dt-thumbs">' + f.photos.map(function (p, i) { return '<div class="thumb"><img alt="" data-ref="' + esc(p) + '" data-i="' + i + '"></div>'; }).join('') + '</div>' : '') +
       groups.map(function (g, gi) {
         var canAdd = !f.deleted && (can('feature.write.own') || can('feature.write.any')) && !S.license.read_only && g.layer.geom_type === 'None';
-        return '<div class="card" style="padding:10px"><div class="row wrap"><b class="grow">Data terkait: ' + esc(g.layer.name) + ' <span class="badge">' + g.items.length + '</span></b>' + (canAdd ? '<button class="btn sm primary" data-addrel="' + gi + '">+ Tambah</button>' : '') + '</div>' +
-          (g.items.length ? '<div class="list" style="margin-top:8px">' + g.items.sort(function (a, b) { return String(b.updated_at).localeCompare(String(a.updated_at)); }).map(function (x) { return '<div class="item" style="padding:8px" data-goto="' + esc(x.id) + '"><div class="meta"><b>' + esc(featLabel(x)) + '</b><span class="small muted">' + esc((g.layer.schema || []).filter(function (fd) { return fd.key !== g.field.key; }).slice(0, 3).map(function (fd) { return fmtAttr(fd, (x.attrs || {})[fd.key]); }).filter(String).join(' · ')) + '</span></div>' + badge(x.status) + (x._pending ? '<span class="badge b-pending">antre</span>' : '') + '</div>'; }).join('') + '</div>' : '<div class="small muted" style="margin-top:6px">Belum ada data terkait.</div>') + '</div>';
+        return '<div class="card rel-card" style="padding:10px"><div class="row wrap"><b class="grow">Data terkait: ' + esc(g.layer.name) + ' <span class="badge">' + g.items.length + '</span></b>' + (g.field.target_key ? '<span class="small muted">kunci: ' + esc(g.key || '—') + '</span>' : '') + (canAdd ? '<button class="btn sm primary" data-addrel="' + gi + '">+ Tambah</button>' : '') + '</div><div data-relbox="' + gi + '">' + RelTable.html(g, gi) + '</div></div>';
       }).join('');
     var btns = [{ label: 'Tutup' }].concat(f.geometry ? [{ label: 'Zoom', onClick: function () { App.show('map'); MapView.fit([f]); return true; } }] : []);
     if (editable) {
@@ -1366,8 +1870,18 @@ var Detail = {
     if (can('feature.review') && !f._pending && ['submitted', 'approved', 'revision'].indexOf(f.status) >= 0) btns.push({ label: 'Review', cls: 'primary', onClick: function () { setTimeout(function () { Detail.review(f); }, 0); return true; } });
     var md = modal({ title: featLabel(f).replace(/ · [0-9a-f]{6}$/, ''), body: body, buttons: btns, onClose: function () { MapView.popupFeature = null; MapView.refreshData(); } });
     $$('img[data-ref]', md.body).forEach(function (im) { MediaCache.get(im.getAttribute('data-ref')).then(function (d) { im.src = d; }).catch(function () { im.alt = 'Foto belum tersedia offline'; }); im.parentNode.onclick = function () { Zoom.open(im.src, 'Foto ' + (+im.getAttribute('data-i') + 1)); }; });
-    $$('[data-goto]', md.body).forEach(function (a) { a.onclick = function (e) { e.preventDefault(); var id2 = a.getAttribute('data-goto'); if (!S.features.get(id2)) return toast('Data terkait tidak ditemukan di perangkat.', 'err'); md.close(); setTimeout(function () { Detail.open(id2); }, 0); }; });
-    $$('[data-addrel]', md.body).forEach(function (b) { b.onclick = function () { var g = groups[+b.getAttribute('data-addrel')]; md.close(); setTimeout(function () { Detail.newRecord(g.layer, (function () { var o = {}; o[g.field.key] = f.id; return o; })()); }, 0); }; });
+    md.body.addEventListener('click', function (e) {
+      var so = e.target.closest('[data-rsort]');
+      if (so) { var gi = +so.getAttribute('data-rsort'); RelTable.toggle(groups[gi], so.getAttribute('data-k')); $('[data-relbox="' + gi + '"]', md.body).innerHTML = RelTable.html(groups[gi], gi); return; }
+      var a = e.target.closest('[data-goto]');
+      if (a) { e.preventDefault(); var id2 = a.getAttribute('data-goto'); if (!S.features.get(id2)) return toast('Data terkait tidak ditemukan di perangkat.', 'err'); md.close(); setTimeout(function () { Detail.open(id2); }, 0); return; }
+      var b = e.target.closest('[data-addrel]');
+      if (b) {
+        var g = groups[+b.getAttribute('data-addrel')];
+        if (!g.key) return toast('ID unik data induk belum terisi (menunggu sinkronisasi). Sinkronkan dulu, lalu tambah data terkait.', 'err', 6000);
+        md.close(); setTimeout(function () { var o = {}; o[g.field.key] = g.key; Detail.newRecord(g.layer, o); }, 0);
+      }
+    });
   },
   /** Data baru pada layer tabel (tanpa geometri), opsional dengan relasi terisi. */
   newRecord: function (layer, preset) {
@@ -1505,12 +2019,103 @@ var Sync = {
 // ======================================================= Import / Export
 var IO = {
   download: function (name, mime, text) {
+    if (Demo.on()) return Demo.locked('Ekspor / unduh data');
     var blob = new Blob([text], { type: mime }), a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
     if (CONFIG.MODE === 'gas') modal({ title: 'Ekspor ' + name, body: '<p class="small muted">Jika unduhan diblokir oleh bingkai Apps Script, salin isi berikut:</p><textarea class="input mono small" rows="10" readonly>' + esc(text.length > 500000 ? text.slice(0, 500000) + '\n…(terpotong, gunakan PWA untuk file besar)' : text) + '</textarea>', buttons: [{ label: 'Tutup' }] });
   },
+  downloadBlob: function (name, blob) {
+    if (Demo.on()) return Demo.locked('Ekspor / unduh data');
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+  },
   list: function () { return Tabs._dataFiltered || []; },
+  /** Pemetaan kolom file → atribut skema (kunci, label, atau nama DBF 10 karakter hasil ekspor UMG). */
+  matcher: function (layer) {
+    var schema = layer.schema || [], dbfn = ShpIO.names(schema.map(function (f) { return f.key; }).concat(ShpIO.META.map(function (m) { return m[1]; })));
+    var meta = {}; ShpIO.META.forEach(function (m) { meta[m[1].toLowerCase()] = 1; meta[m[0].toLowerCase()] = 1; meta[dbfn[m[1]].toLowerCase()] = 1; });
+    return function (col) {
+      var c = String(col).trim().toLowerCase();
+      if (meta[c] || c.charAt(0) === '_') return { meta: true };
+      return { fd: schema.find(function (s) { return s.key === c || s.label.toLowerCase() === c || String(dbfn[s.key]).toLowerCase() === c || s.key.slice(0, 10) === c; }) };
+    };
+  },
+  /** Baca file impor (SHP/DBF/GeoJSON/CSV) → { items, mapping, format, schema?, geomType?, exploded }. layer=null → layer baru dari file. */
+  parseFiles: async function (files, layer) {
+    files = Array.from(files);
+    var total = files.reduce(function (a, f) { return a + f.size; }, 0);
+    if (total > 30 * 1024 * 1024) throw new Error('File terlalu besar (maks 30 MB).');
+    var isShp = files.some(function (f) { return /\.(zip|shp|dbf)$/i.test(f.name); });
+    var feats, name = files[0].name.replace(/\.[^.]+$/, ''), format, res = { exploded: 0 };
+    if (isShp) {
+      var r = await ShpIO.read(files);
+      if (!r.crsKnown) throw new Error('Koordinat Shapefile bukan derajat WGS84 dan file .prj tidak disertakan/terbaca. Sertakan .prj (mis. dalam ZIP) agar dapat direproyeksi ke EPSG:4326.');
+      feats = r.features; name = r.name || name; format = 'Shapefile';
+    } else {
+      if (files.length > 1) throw new Error('Untuk GeoJSON/CSV pilih satu file saja.');
+      var f0 = files[0], text = await f0.text();
+      if (/\.(geo)?json$/i.test(f0.name) || /^\s*\{/.test(text)) {
+        var j; try { j = JSON.parse(text); } catch (e) { throw new Error('GeoJSON tidak valid: ' + e.message); }
+        feats = j.type === 'FeatureCollection' ? j.features : (j.type === 'Feature' ? [j] : null);
+        if (!Array.isArray(feats)) throw new Error('GeoJSON harus berupa Feature atau FeatureCollection.');
+        if (j.crs && j.crs.properties && !/4326|CRS84/i.test(JSON.stringify(j.crs))) throw new Error('CRS GeoJSON bukan WGS84 (EPSG:4326). Reproyeksikan dahulu (RFC 7946).');
+        format = 'GeoJSON';
+      } else if (/\.csv$/i.test(f0.name)) {
+        var rows = IO.parseCsv(text); if (rows.length < 2) throw new Error('CSV kosong.');
+        var head = rows[0].map(function (h) { return h.trim(); }), low = head.map(function (h) { return h.toLowerCase(); });
+        var iLat = low.findIndex(function (h) { return ['lat', 'latitude', 'lintang', 'y'].indexOf(h) >= 0; }), iLon = low.findIndex(function (h) { return ['lon', 'lng', 'long', 'longitude', 'bujur', 'x'].indexOf(h) >= 0; });
+        var tbl = layer ? layer.geom_type === 'None' : (iLat < 0 || iLon < 0);
+        if (!tbl && (iLat < 0 || iLon < 0)) throw new Error('Kolom lat/lon (latitude/longitude) tidak ditemukan.');
+        if (!tbl && layer && layer.geom_type !== 'Point') throw new Error('Impor CSV koordinat hanya untuk layer titik (atau layer tabel).');
+        feats = rows.slice(1).map(function (rw) {
+          var props = {}; head.forEach(function (h, i) { if (tbl || (i !== iLat && i !== iLon && low[i] !== 'wkt')) props[h] = rw[i]; });
+          return { type: 'Feature', properties: props, geometry: tbl ? null : { type: 'Point', coordinates: [Number(String(rw[iLon]).replace(',', '.')), Number(String(rw[iLat]).replace(',', '.'))] } };
+        });
+        format = 'CSV';
+      } else throw new Error('Format belum didukung. Gunakan Shapefile (.zip / .shp+.dbf+.prj), .dbf, GeoJSON atau CSV.');
+    }
+    // Pecah multi-bagian
+    var flat = [];
+    feats.forEach(function (f) { var parts = ShpIO.explode(f && f.geometry); if (parts.length > 1) res.exploded++; parts.forEach(function (g) { flat.push({ geometry: g, properties: (f && f.properties) || {} }); }); });
+    if (flat.length > 2000) throw new Error('Maksimal 2.000 data per impor (file berisi ' + flat.length + ').');
+    var fields = []; flat.forEach(function (f) { Object.keys(f.properties).forEach(function (k) { if (fields.indexOf(k) < 0) fields.push(k); }); });
+    if (!layer) {   // layer baru: skema & tipe geometri dari file
+      var g0 = flat.find(function (f) { return f.geometry; });
+      res.geomType = g0 ? g0.geometry.type : 'None';
+      if (['Point', 'LineString', 'Polygon', 'None'].indexOf(res.geomType) < 0) throw new Error('Tipe geometri ' + res.geomType + ' tidak didukung.');
+      res.schema = ShpIO.inferSchema(flat, fields);
+      layer = { geom_type: res.geomType, schema: res.schema };
+    }
+    var match = res.schema ? function (col) { var fd = res.schema.find(function (s) { return s._src === col; }); return fd ? { fd: fd } : { meta: true }; } : IO.matcher(layer);
+    var map = {}, mapping = [];
+    fields.forEach(function (c) { var m = match(c); map[c] = m; if (m.fd) mapping.push([c, m.fd.label + ' (' + m.fd.key + ')']); });
+    var seenU = {}, existingU = {};
+    (layer.schema || []).filter(function (fd) { return fd.unique; }).forEach(function (fd) {
+      seenU[fd.key] = {}; existingU[fd.key] = {};
+      if (layer.id) S.features.forEach(function (x) { if (!x.deleted && x.layer_id === layer.id && (x.attrs || {})[fd.key] !== undefined) existingU[fd.key][String(x.attrs[fd.key]).toLowerCase()] = 1; });
+    });
+    var items = flat.map(function (f) {
+      var attrs = {}, dropped = [], errs = [];
+      Object.keys(f.properties).forEach(function (c) {
+        var m = map[c]; if (m.meta) return; if (!m.fd) { dropped.push(c); return; }
+        var v = ShpIO.value(m.fd, f.properties[c]); if (v === '' || v === null) return;
+        if (m.fd.type === 'number' || m.fd.type === 'integer') { var n = Number(String(v).replace(',', '.')); if (isFinite(n)) v = m.fd.type === 'integer' ? Math.round(n) : n; }
+        attrs[m.fd.key] = v;
+      });
+      if (layer.geom_type === 'None') { if (f.geometry) f.geometry = null; }
+      else { var gv = Geo.validate(f.geometry, layer.geom_type); if (!gv.ok) errs = errs.concat(gv.errors); }
+      (layer.schema || []).forEach(function (fd) {
+        var v = attrs[fd.key], empty = v === undefined || v === '';
+        if (fd.required && empty && !(fd.unique && fd.auto_id !== undefined && fd.auto_id !== null) && !(fd.type === 'date' && fd.auto_now)) errs.push(fd.label + ' kosong.');
+        if (fd.unique && !empty) { var k = String(v).toLowerCase(); if (seenU[fd.key][k] || existingU[fd.key][k]) errs.push(fd.label + ' "' + v + '" duplikat (ID unik).'); seenU[fd.key][k] = 1; }
+        if (fd.type === 'relation' && !empty && !relFind(fd, v)) errs.push(fd.label + ': induk "' + v + '" tidak ditemukan.');
+      });
+      return { geometry: f.geometry, attrs: attrs, dropped: dropped, errors: errs };
+    });
+    res.items = items; res.mapping = mapping; res.format = format; res.name = name;
+    return res;
+  },
   props: function (f) { var l = layerById(f.layer_id) || {}, u = f.geometry && f.geometry.type === 'Point' ? Geo.toUTM(f.geometry.coordinates[0], f.geometry.coordinates[1]) : null; return Object.assign({}, f.attrs, u ? { _utm_zona: u.zone + u.hemi, _utm_x: u.easting, _utm_y: u.northing } : {}, { _id: f.id, _layer: l.name, _status: f.status, _version: f.version, _surveyor: userName(f.created_by), _updated_at: f.updated_at, _gps_accuracy_m: f.gps && f.gps.accuracy, _area_ha: f.metrics && f.metrics.area_ha, _length_m: f.metrics && f.metrics.length_m }); },
   geojson: function (list) { return JSON.stringify({ type: 'FeatureCollection', name: 'umg_export', features: list.map(function (f) { return { type: 'Feature', id: f.id, geometry: f.geometry, properties: IO.props(f) }; }) }); },
   wkt: function (g) { if (!g) return ''; var p = function (c) { return c[0] + ' ' + c[1]; }; if (g.type === 'Point') return 'POINT (' + p(g.coordinates) + ')'; if (g.type === 'LineString') return 'LINESTRING (' + g.coordinates.map(p).join(', ') + ')'; return 'POLYGON (' + g.coordinates.map(function (r) { return '(' + r.map(p).join(', ') + ')'; }).join(', ') + ')'; },
@@ -1537,46 +2142,6 @@ var IO = {
     }
     if (cur || row.length) { row.push(cur); rows.push(row); }
     return rows.filter(function (r) { return r.some(function (v) { return v.trim(); }); });
-  },
-  /** Ubah file menjadi daftar kandidat {geometry, attrs, errors} untuk layer tujuan. */
-  parseFile: async function (file, layer) {
-    if (file.size > 30 * 1024 * 1024) throw new Error('File terlalu besar (maks 30 MB).');
-    var text = await file.text(), items = [];
-    var mapAttrs = function (props) {
-      var out = {}, warn = [];
-      Object.keys(props || {}).forEach(function (k) {
-        if (k.charAt(0) === '_') return;
-        var fd = layer.schema.find(function (s) { return s.key === k.toLowerCase() || s.label.toLowerCase() === k.toLowerCase(); });
-        if (fd) out[fd.key] = props[k]; else warn.push(k);
-      });
-      return { attrs: out, dropped: warn };
-    };
-    if (/\.(geo)?json$/i.test(file.name) || /^\s*\{/.test(text)) {
-      var j; try { j = JSON.parse(text); } catch (e) { throw new Error('GeoJSON tidak valid: ' + e.message); }
-      var feats = j.type === 'FeatureCollection' ? j.features : (j.type === 'Feature' ? [j] : null);
-      if (!Array.isArray(feats)) throw new Error('GeoJSON harus berupa Feature atau FeatureCollection.');
-      if (j.crs && j.crs.properties && !/4326|CRS84/i.test(JSON.stringify(j.crs))) throw new Error('CRS GeoJSON bukan WGS84 (EPSG:4326). Reproyeksikan dahulu (RFC 7946).');
-      feats.forEach(function (f) { var m = mapAttrs(f && f.properties); items.push({ geometry: f && f.geometry, attrs: m.attrs, dropped: m.dropped }); });
-    } else if (/\.csv$/i.test(file.name)) {
-      if (layer.geom_type !== 'Point') throw new Error('Impor CSV koordinat hanya untuk layer titik.');
-      var rows = IO.parseCsv(text); if (rows.length < 2) throw new Error('CSV kosong.');
-      var head = rows[0].map(function (h) { return h.trim(); }), low = head.map(function (h) { return h.toLowerCase(); });
-      var iLat = low.findIndex(function (h) { return ['lat', 'latitude', 'lintang', 'y'].indexOf(h) >= 0; }), iLon = low.findIndex(function (h) { return ['lon', 'lng', 'long', 'longitude', 'bujur', 'x'].indexOf(h) >= 0; });
-      if (iLat < 0 || iLon < 0) throw new Error('Kolom lat/lon (latitude/longitude) tidak ditemukan.');
-      rows.slice(1).forEach(function (r) {
-        var props = {}; head.forEach(function (h, i) { if (i !== iLat && i !== iLon) props[h] = r[i]; });
-        var lat = Number(String(r[iLat]).replace(',', '.')), lon = Number(String(r[iLon]).replace(',', '.'));
-        var m = mapAttrs(props); items.push({ geometry: { type: 'Point', coordinates: [lon, lat] }, attrs: m.attrs, dropped: m.dropped });
-      });
-    } else throw new Error('Format belum didukung. Gunakan GeoJSON (.geojson/.json) atau CSV koordinat. (GeoPackage/Shapefile: rencana fase berikutnya)');
-    if (items.length > 2000) throw new Error('Maksimal 2.000 fitur per impor (file berisi ' + items.length + ').');
-    items.forEach(function (it) {
-      var errs = [];
-      var v = Geo.validate(it.geometry, layer.geom_type); if (!v.ok) errs = errs.concat(v.errors);
-      layer.schema.forEach(function (fd) { if (fd.required && (it.attrs[fd.key] === undefined || it.attrs[fd.key] === '')) errs.push(fd.label + ' kosong.'); });
-      it.errors = errs;
-    });
-    return items;
   }
 };
 
@@ -1584,29 +2149,33 @@ var IO = {
 var Tabs = {
   data: function () {
     var el = $('[data-tab=data]');
-    el.innerHTML = '<div class="tab-h"><h2>Data Survei</h2><span class="grow"></span>' + (S.layers.some(function (x) { return x.project_id === S.projectId && x.geom_type === 'None'; }) ? '<button class="btn sm primary" id="dt-tbl">+ Data tabel</button>' : '') + '<button class="btn sm" id="dt-imp">Impor</button><button class="btn sm" data-ex="geojson">GeoJSON</button><button class="btn sm" data-ex="csv">CSV</button><button class="btn sm" data-ex="kml">KML</button></div>' +
-      '<div class="row wrap" style="margin-bottom:12px"><input class="input grow" id="dt-q" placeholder="Cari atribut…" style="min-width:180px;flex:2"><select class="input" id="dt-layer" style="flex:1;min-width:140px"><option value="">Semua layer</option>' + S.layers.filter(function (l) { return l.project_id === S.projectId; }).map(function (l) { return '<option value="' + esc(l.id) + '">' + esc(l.name) + '</option>'; }).join('') + '</select><select class="input" id="dt-st" style="flex:1;min-width:120px"><option value="">Semua status</option>' + Object.keys(STATUS_LBL).map(function (k) { return '<option value="' + k + '">' + STATUS_LBL[k] + '</option>'; }).join('') + '<option value="_pending">Belum tersinkron</option></select><label class="row small"><input type="checkbox" id="dt-mine"> Milik saya</label></div><div class="list" id="dt-list"></div>';
+    el.innerHTML = '<div class="tab-h"><h2>Data Survei</h2><span class="grow"></span>' + (S.layers.some(function (x) { return x.project_id === S.projectId && x.geom_type === 'None'; }) ? '<button class="btn sm primary" id="dt-tbl">+ Data tabel</button>' : '') + '<button class="btn sm" id="dt-imp">Impor</button><button class="btn sm" data-ex="geojson">GeoJSON</button><button class="btn sm" data-ex="csv">CSV</button><button class="btn sm" data-ex="kml">KML</button><button class="btn sm" data-ex="shp">SHP</button></div>' +
+      '<div class="row wrap" style="margin-bottom:12px"><input class="input grow" id="dt-q" placeholder="Cari atribut…" style="min-width:180px;flex:2"><select class="input" id="dt-layer" style="flex:1;min-width:140px"><option value="">Semua layer</option>' + S.layers.filter(function (l) { return l.project_id === S.projectId; }).map(function (l) { return '<option value="' + esc(l.id) + '">' + esc(l.name) + '</option>'; }).join('') + '</select><select class="input" id="dt-st" style="flex:1;min-width:120px"><option value="">Semua status</option>' + Object.keys(STATUS_LBL).map(function (k) { return '<option value="' + k + '">' + STATUS_LBL[k] + '</option>'; }).join('') + '<option value="_pending">Belum tersinkron</option></select><select class="input" id="dt-sort" style="flex:1;min-width:150px" aria-label="Urutkan"><option value="new">Urut: terbaru diubah</option><option value="old">Urut: terlama</option><option value="az">Urut: nama / ID A→Z</option><option value="za">Urut: nama / ID Z→A</option></select><label class="row small"><input type="checkbox" id="dt-mine"> Milik saya</label></div><div class="list" id="dt-list"></div>';
+    $('#dt-sort', el).value = LS.get('umg_data_sort') || 'new';
     var draw = function () {
       var q = $('#dt-q').value.toLowerCase(), ly = $('#dt-layer').value, st = $('#dt-st').value, mine = $('#dt-mine').checked;
       var list = []; S.features.forEach(function (f) { if (f.deleted || f.project_id !== S.projectId) return; if (ly && f.layer_id !== ly) return; if (st === '_pending' ? !f._pending : (st && f.status !== st)) return; if (mine && f.created_by !== S.user.id) return; if (q && JSON.stringify(f.attrs || {}).toLowerCase().indexOf(q) < 0) return; list.push(f); });
-      list.sort(function (a, b) { return String(b.updated_at).localeCompare(String(a.updated_at)); });
+      var so = $('#dt-sort').value; LS.set('umg_data_sort', so);
+      list.sort(function (a, b) { return so === 'az' ? cmpVal(featLabel(a), featLabel(b)) : so === 'za' ? cmpVal(featLabel(b), featLabel(a)) : so === 'old' ? String(a.updated_at).localeCompare(String(b.updated_at)) : String(b.updated_at).localeCompare(String(a.updated_at)); });
       Tabs._dataFiltered = list;
       var show = list.slice(0, Tabs._dataLimit || 300);
       $('#dt-list').innerHTML = show.length ? show.map(function (f) {
-        var l = layerById(f.layer_id) || { name: '?', style: {}, schema: [] }, a = f.attrs || {}, k = ((l.schema || []).find(function (x) { return x.type !== 'relation'; }) || {}).key, mt = f.metrics || {};
-        return '<div class="item" data-id="' + esc(f.id) + '"><div class="gicon" style="background:' + esc(l.style.color || '#64748b') + '">' + (f.geometry ? ({ Point: '●', LineString: '╱', Polygon: '▰' }[f.geometry.type] || '?') : '▤') + '</div><div class="meta"><b>' + esc(a[k] || l.name) + '</b><span class="small muted">' + esc(l.name) + ' · ' + esc(userName(f.created_by)) + ' · ' + fmtDate(f.updated_at) + (mt.area_ha ? ' · ' + fmtNum(mt.area_ha, 3) + ' ha' : '') + (mt.length_m ? ' · ' + fmtNum(mt.length_m, 0) + ' m' : '') + '</span></div>' + badge(f.status) + (f._pending ? '<span class="badge b-pending">antre</span>' : '') + '</div>';
+        var l = layerById(f.layer_id) || { name: '?', style: {}, schema: [] }, mt = f.metrics || {};
+        return '<div class="item" data-id="' + esc(f.id) + '"><div class="gicon" style="background:' + esc(l.style.color || '#64748b') + '">' + (f.geometry ? ({ Point: '●', LineString: '╱', Polygon: '▰' }[f.geometry.type] || '?') : '▤') + '</div><div class="meta"><b translate="no">' + esc(featLabel(f).replace(/ · [0-9a-f-]{6}$/, '')) + '</b><span class="small muted">' + esc(l.name) + ' · ' + esc(userName(f.created_by)) + ' · ' + fmtDate(f.updated_at) + (mt.area_ha ? ' · ' + fmtNum(mt.area_ha, 3) + ' ha' : '') + (mt.length_m ? ' · ' + fmtNum(mt.length_m, 0) + ' m' : '') + '</span></div>' + badge(f.status) + (f._pending ? '<span class="badge b-pending">antre</span>' : '') + '</div>';
       }).join('') + (list.length > show.length ? '<button class="btn" id="dt-more">Tampilkan lebih banyak (' + (list.length - show.length) + ')</button>' : '') : '<div class="empty">Tidak ada data yang cocok. Rekam data baru dari tab Peta.</div>';
       $$('#dt-list .item').forEach(function (it) { it.onclick = function () { Detail.open(it.getAttribute('data-id')); }; });
       var mo = $('#dt-more'); if (mo) mo.onclick = function () { Tabs._dataLimit = (Tabs._dataLimit || 300) + 300; draw(); };
     };
-    ['#dt-q', '#dt-layer', '#dt-st', '#dt-mine'].forEach(function (s) { $(s).addEventListener(s === '#dt-q' ? 'input' : 'change', debounce(draw, 120)); });
+    ['#dt-q', '#dt-layer', '#dt-st', '#dt-mine', '#dt-sort'].forEach(function (s) { $(s).addEventListener(s === '#dt-q' ? 'input' : 'change', debounce(draw, 120)); });
     draw();
-    $$('[data-ex]', el).forEach(function (b) { b.onclick = function () {
+    $$('[data-ex]', el).forEach(function (b) { if (Demo.on()) b.innerHTML = '🔒 ' + b.textContent; b.onclick = function () {
+      if (Demo.on()) return Demo.locked('Ekspor ' + b.getAttribute('data-ex').toUpperCase());
       var list = IO.list(); if (!list.length) return toast('Tidak ada data untuk diekspor.', 'err');
       var t = b.getAttribute('data-ex'), stamp = new Date().toISOString().slice(0, 10);
       if (t === 'geojson') IO.download('umg_' + stamp + '.geojson', 'application/geo+json', IO.geojson(list));
       if (t === 'csv') IO.download('umg_' + stamp + '.csv', 'text/csv;charset=utf-8', IO.csv(list));
       if (t === 'kml') IO.download('umg_' + stamp + '.kml', 'application/vnd.google-earth.kml+xml', IO.kml(list));
+      if (t === 'shp') return ShpIO.exportZip(list).then(function (r) { toast('Shapefile (ZIP): ' + r.notes.join(' · ') + (r.truncated ? ' — ' + r.truncated + ' teks >254 byte dipotong (batas DBF)' : ''), 'ok', 6000); }).catch(function (e) { toast(e.message, 'err'); });
     }; });
     $('#dt-imp').onclick = Tabs.importDialog;
     var dtb = $('#dt-tbl'); if (dtb) dtb.onclick = function () {
@@ -1617,27 +2186,44 @@ var Tabs = {
   },
   importDialog: function () {
     if (!can('feature.write.own') && !can('feature.write.any')) return toast('Role Anda tidak dapat mengimpor data.', 'err');
-    var lyrs = S.layers.filter(function (l) { return l.project_id === S.projectId && l.geom_type !== 'None'; });
-    if (!lyrs.length) return toast('Buat layer terlebih dahulu.', 'err');
-    var items = null;
-    var md = modal({ title: 'Impor data GIS', wide: true, body: '<label class="f">Layer tujuan<select class="input" id="im-ly">' + lyrs.map(function (l) { return '<option value="' + esc(l.id) + '">' + esc(l.name) + ' (' + l.geom_type + ')</option>'; }).join('') + '</select></label><label class="f">File GeoJSON (EPSG:4326) atau CSV koordinat<input type="file" class="input" id="im-file" accept=".geojson,.json,.csv"></label><div id="im-prev" class="small muted">Pratinjau validasi akan tampil di sini. Kolom yang tidak ada di skema layer akan diabaikan.</div>',
+    var lyrs = S.layers.filter(function (l) { return l.project_id === S.projectId; });
+    var canNew = can('layer.write') && !S.license.read_only;
+    if (!lyrs.length && !canNew) return toast('Buat layer terlebih dahulu.', 'err');
+    var items = null, src = null;
+    var md = modal({ title: 'Impor data GIS', wide: true, body: '<label class="f">Layer tujuan<select class="input" id="im-ly">' + lyrs.map(function (l) { return '<option value="' + esc(l.id) + '">' + esc(l.name) + ' (' + (l.geom_type === 'None' ? 'tabel' : l.geom_type) + ')</option>'; }).join('') + (canNew ? '<option value="_new">+ Layer baru dari file (skema otomatis)</option>' : '') + '</select></label>' +
+      '<label class="f" id="im-nn-w" style="display:none">Nama layer baru<input class="input" id="im-nn" maxlength="120"></label>' +
+      '<label class="f">File: Shapefile (.zip, atau .shp + .dbf + .prj + .cpg sekaligus), .dbf (tabel), GeoJSON (EPSG:4326) atau CSV<input type="file" class="input" id="im-file" multiple accept=".zip,.shp,.dbf,.prj,.cpg,.shx,.geojson,.json,.csv"></label><div id="im-prev" class="small muted">Pratinjau validasi akan tampil di sini. Kolom dicocokkan dengan kunci/label atribut (nama kolom DBF 10 karakter dari ekspor UMG cocok otomatis); kolom lain diabaikan.</div>',
       buttons: [{ label: 'Batal' }, { label: 'Impor data valid', cls: 'primary', onClick: async function (mb) {
         if (!items) throw new Error('Pilih file terlebih dahulu.');
-        var good = items.filter(function (i) { return !i.errors.length; }); if (!good.length) throw new Error('Tidak ada fitur valid.');
+        var good = items.filter(function (i) { return !i.errors.length; }); if (!good.length) throw new Error('Tidak ada data valid.');
+        if (CONFIG.MODE === 'demo' && good.length > Demo.LIMIT.importRows) throw new Error('Versi demo: impor maks. ' + Demo.LIMIT.importRows + ' baris per file.');
         var l = layerById($('#im-ly', mb).value);
-        for (var i = 0; i < good.length; i++) await Sync.enqueue({ type: 'upsert', data: { id: uuid(), layer_id: l.id, project_id: l.project_id, geometry: Geo.round(good[i].geometry), attrs: good[i].attrs, photos: [], gps: null, status: 'draft' } });
-        toast(good.length + ' fitur masuk antrean sinkronisasi.', 'ok');
+        if (!l) {   // layer baru dari file
+          var sch = src.schema.map(function (f) { var o = Object.assign({}, f); delete o._src; return o; });
+          var nl = await Api.call('layers.save', { project_id: S.projectId, name: $('#im-nn', mb).value || src.name || 'Impor', geom_type: src.geomType, style: { color: '#0ea5e9' }, schema: sch });
+          await App.refreshBoot(); l = layerById(nl.id);
+        }
+        for (var i = 0; i < good.length; i++) await Sync.enqueue({ type: 'upsert', data: { id: uuid(), layer_id: l.id, project_id: l.project_id, geometry: good[i].geometry ? Geo.round(good[i].geometry) : null, attrs: good[i].attrs, photos: [], gps: null, status: 'draft' } });
+        toast(good.length + ' data masuk antrean sinkronisasi ke "' + l.name + '".', 'ok');
       } }] });
     var prev = function () {
-      var f = $('#im-file', md.body).files[0]; if (!f) return;
-      IO.parseFile(f, layerById($('#im-ly', md.body).value)).then(function (it) {
-        items = it; var bad = it.filter(function (i) { return i.errors.length; }), dropped = {};
-        it.forEach(function (i) { i.dropped.forEach(function (d) { dropped[d] = 1; }); });
-        $('#im-prev', md.body).innerHTML = '<b>' + it.length + '</b> fitur dibaca · <b style="color:var(--ok)">' + (it.length - bad.length) + ' valid</b> · <b style="color:var(--danger)">' + bad.length + ' tidak valid</b>' + (Object.keys(dropped).length ? '<br>Kolom diabaikan (tidak ada di skema): ' + esc(Object.keys(dropped).join(', ')) : '') +
+      var files = $('#im-file', md.body).files, lid = $('#im-ly', md.body).value;
+      $('#im-nn-w', md.body).style.display = lid === '_new' ? '' : 'none';
+      if (!files || !files.length) return;
+      $('#im-prev', md.body).innerHTML = '<div class="skeleton" style="height:40px"></div>';
+      IO.parseFiles(files, lid === '_new' ? null : layerById(lid)).then(function (r) {
+        items = r.items; src = r; var it = r.items, bad = it.filter(function (i) { return i.errors.length; }), dropped = {};
+        it.forEach(function (i) { (i.dropped || []).forEach(function (d) { dropped[d] = 1; }); });
+        if (lid === '_new' && !$('#im-nn', md.body).value) $('#im-nn', md.body).value = r.name || '';
+        $('#im-prev', md.body).innerHTML = '<b>' + it.length + '</b> data dibaca' + (r.format ? ' dari ' + esc(r.format) : '') + ' · <b style="color:var(--ok)">' + (it.length - bad.length) + ' valid</b> · <b style="color:var(--danger)">' + bad.length + ' tidak valid</b>' + (r.exploded ? '<br>' + r.exploded + ' geometri multi-bagian dipecah menjadi fitur tunggal.' : '') +
+          (r.mapping && r.mapping.length ? '<div class="tscroll" style="max-height:160px;margin-top:8px"><table class="t"><tr><th>Kolom file</th><th>→ Atribut</th></tr>' + r.mapping.map(function (m) { return '<tr><td class="mono">' + esc(m[0]) + '</td><td>' + esc(m[1]) + '</td></tr>'; }).join('') + '</table></div>' : '') +
+          (lid === '_new' && r.schema ? '<br>Skema otomatis: ' + esc(r.schema.map(function (f) { return f.label + ' (' + f.type + ')'; }).join(', ')) + ' · geometri ' + esc(r.geomType === 'None' ? 'tabel' : r.geomType) : '') +
+          (Object.keys(dropped).length ? '<br>Kolom diabaikan (tidak ada di skema): ' + esc(Object.keys(dropped).join(', ')) : '') +
           (bad.length ? '<div class="tscroll" style="max-height:220px;margin-top:8px"><table class="t"><tr><th>#</th><th>Kesalahan</th></tr>' + bad.slice(0, 100).map(function (b) { return '<tr><td>' + (it.indexOf(b) + 1) + '</td><td>' + esc(b.errors.join(' ')) + '</td></tr>'; }).join('') + '</table></div>' : '');
       }).catch(function (e) { items = null; $('#im-prev', md.body).innerHTML = '<span style="color:var(--danger)">' + esc(e.message) + '</span>'; });
     };
     $('#im-file', md.body).onchange = prev; $('#im-ly', md.body).onchange = prev;
+    if (!lyrs.length) { $('#im-ly', md.body).value = '_new'; prev(); }
   },
   sync: async function () {
     var el = $('[data-tab=sync]'), ops = await Sync.pendingOps();
@@ -1679,7 +2265,7 @@ var Tabs = {
         return '<div class="card" style="margin-bottom:12px"><div class="row wrap"><h3 class="grow" style="margin:0">' + esc(p.name) + (p.status === 'archived' ? ' <span class="badge">Diarsipkan</span>' : '') + (p.id === S.projectId ? ' <span class="badge b-approved">Aktif</span>' : '') + '</h3>' +
           (p.id !== S.projectId ? '<button class="btn sm" data-use="' + esc(p.id) + '">Jadikan aktif</button>' : '') + (canP ? '<button class="btn sm" data-ep="' + esc(p.id) + '">Edit</button>' : '') + (canL ? '<button class="btn sm primary" data-nl="' + esc(p.id) + '">+ Layer</button>' : '') + '</div>' +
           (p.description ? '<p class="small muted" style="margin:6px 0">' + esc(p.description) + '</p>' : '') +
-          (ls.length ? '<div class="tscroll" style="margin-top:8px"><table class="t"><tr><th>Layer</th><th>Geometri</th><th>CRS</th><th>Atribut</th><th>Fitur</th><th></th></tr>' + ls.map(function (l) { return '<tr><td><span class="swatch" style="display:inline-block;vertical-align:middle;background:' + esc(l.style.color) + '"></span> ' + esc(l.name) + '</td><td>' + (l.geom_type === 'None' ? 'Tabel (tanpa geometri)' : esc(l.geom_type)) + '</td><td>' + (l.geom_type === 'None' ? '-' : 'EPSG:' + esc(l.srid)) + '</td><td class="small">' + esc(l.schema.map(function (s) { var t = s.type === 'relation' ? layerById(s.target) : null; return s.label + (s.required ? '*' : '') + (t ? ' → ' + t.name : '') + (s.type === 'date' && s.locked ? ' 🔒' : ''); }).join(', ') || '-') + '</td><td>' + countLayer(l.id) + '</td><td>' + (canL ? '<button class="btn sm" data-el="' + esc(l.id) + '">Edit</button>' : '') + '</td></tr>'; }).join('') + '</table></div>' : '<div class="small muted" style="margin-top:8px">Belum ada layer.</div>') + '</div>';
+          (ls.length ? '<div class="tscroll" style="margin-top:8px"><table class="t"><tr><th>Layer</th><th>Geometri</th><th>CRS</th><th>Atribut</th><th>Fitur</th><th></th></tr>' + ls.map(function (l) { return '<tr><td><span class="swatch" style="display:inline-block;vertical-align:middle;background:' + esc(l.style.color) + '"></span> ' + esc(l.name) + '</td><td>' + (l.geom_type === 'None' ? 'Tabel (tanpa geometri)' : esc(l.geom_type)) + '</td><td>' + (l.geom_type === 'None' ? '-' : 'EPSG:' + esc(l.srid)) + '</td><td class="small">' + esc(l.schema.map(function (s) { var t = s.type === 'relation' ? layerById(s.target) : null; return (s.unique ? '🔑' : '') + s.label + (s.required ? '*' : '') + (t ? ' → ' + t.name + (s.target_key ? '.' + s.target_key : '') : '') + (s.type === 'date' && s.locked ? ' 🔒' : ''); }).join(', ') || '-') + '</td><td>' + countLayer(l.id) + '</td><td>' + (canL ? '<button class="btn sm" data-el="' + esc(l.id) + '">Edit</button>' : '') + '</td></tr>'; }).join('') + '</table></div>' : '<div class="small muted" style="margin-top:8px">Belum ada layer.</div>') + '</div>';
       }).join('') : '<div class="empty">Belum ada proyek.' + (canP ? ' Klik "+ Proyek" untuk memulai.' : ' Hubungi admin/supervisor.') + '</div>');
     var np = $('#pj-new'); if (np) np.onclick = function () { Tabs.projectForm({}); };
     $$('[data-use]', el).forEach(function (b) { b.onclick = function () { S.projectId = b.getAttribute('data-use'); MapView.refreshData(); App.rerender(); toast('Proyek aktif diganti.'); }; });
@@ -1708,9 +2294,17 @@ var Tabs = {
       $('#lf-fields', body).innerHTML = fields.map(function (f, i) {
         return '<div class="row wrap" style="padding:8px;border:1px solid var(--line);border-radius:9px"><input class="input" data-k="key" data-i="' + i + '" placeholder="kunci (mis. kode_blok)" value="' + esc(f.key) + '" style="flex:1;min-width:120px"><input class="input" data-k="label" data-i="' + i + '" placeholder="Label" value="' + esc(f.label) + '" style="flex:1;min-width:120px"><select class="input" data-k="type" data-i="' + i + '" style="width:120px">' + [['text', 'Teks'], ['number', 'Angka'], ['integer', 'Bulat'], ['select', 'Pilihan'], ['date', 'Tanggal'], ['bool', 'Ya/Tidak'], ['relation', 'Relasi']].map(function (t) { return '<option value="' + t[0] + '"' + (f.type === t[0] ? ' selected' : '') + '>' + t[1] + '</option>'; }).join('') + '</select><label class="row small"><input type="checkbox" data-k="required" data-i="' + i + '"' + (f.required ? ' checked' : '') + '> Wajib</label><button class="btn sm danger" data-del="' + i + '" type="button">✕</button>' + (f.type === 'select' ? '<input class="input" data-k="options" data-i="' + i + '" placeholder="Opsi dipisah koma" value="' + esc((f.options || []).join(',')) + '" style="flex-basis:100%">' : '') +
           (f.type === 'date' ? '<div class="row wrap small" style="flex-basis:100%"><select class="input" data-k="format" data-i="' + i + '" style="width:auto;min-height:32px"><option value="date"' + (f.format !== 'datetime' ? ' selected' : '') + '>Tanggal (YYYY-MM-DD)</option><option value="datetime"' + (f.format === 'datetime' ? ' selected' : '') + '>Tanggal & jam</option></select><label class="row"><input type="checkbox" data-k="auto_now" data-i="' + i + '"' + (f.auto_now ? ' checked' : '') + '> Isi otomatis tanggal sekarang</label><label class="row"><input type="checkbox" data-k="locked" data-i="' + i + '"' + (f.locked ? ' checked' : '') + '> 🔒 Kunci (tidak bisa diedit setelah tersimpan)</label></div>' : '') +
-          (f.type === 'relation' ? '<label class="row small" style="flex-basis:100%">Relasi ke layer: <select class="input" data-k="target" data-i="' + i + '" style="width:auto;min-height:32px"><option value="">— pilih layer —</option>' + S.layers.filter(function (x) { return x.project_id === l.project_id && x.id !== l.id; }).map(function (x) { return '<option value="' + esc(x.id) + '"' + (f.target === x.id ? ' selected' : '') + '>' + esc(x.name) + (x.geom_type === 'None' ? ' (tabel)' : '') + '</option>'; }).join('') + '</select></label>' : '') + '</div>';
+          (['text', 'integer', 'number'].indexOf(f.type) >= 0 ? '<div class="row wrap small" style="flex-basis:100%"><label class="row"><input type="checkbox" data-k="unique" data-i="' + i + '"' + (f.unique ? ' checked' : '') + '> 🔑 ID unik (primary key) — tidak boleh kembar, bisa jadi kunci induk relasi</label>' +
+            (f.unique && f.type === 'text' ? '<label class="row"><input type="checkbox" data-k="auto_on" data-i="' + i + '"' + (f.auto_id !== undefined && f.auto_id !== null ? ' checked' : '') + '> Nomor otomatis, prefix</label><input class="input mono" data-k="auto_id" data-i="' + i + '" placeholder="mis. TS-" maxlength="12" value="' + esc(f.auto_id || '') + '" style="width:110px;min-height:32px"' + (f.auto_id === undefined || f.auto_id === null ? ' disabled' : '') + '><span class="muted">→ ' + esc((f.auto_id || '') + '0001') + ', ' + esc((f.auto_id || '') + '0002') + ' …</span>' : '') + '</div>' : '') +
+          (f.type === 'relation' ? (function () {
+            var tl = layerById(f.target), keys = tl ? (tl.schema || []).filter(function (x) { return x.unique; }) : [];
+            return '<div class="col small rel-cfg" style="flex-basis:100%;gap:6px"><label class="row wrap">Layer induk (1): <select class="input" data-k="target" data-i="' + i + '" style="width:auto;min-height:32px"><option value="">— pilih layer —</option>' + S.layers.filter(function (x) { return x.project_id === l.project_id && x.id !== l.id; }).map(function (x) { return '<option value="' + esc(x.id) + '"' + (f.target === x.id ? ' selected' : '') + '>' + esc(x.name) + (x.geom_type === 'None' ? ' (tabel)' : '') + '</option>'; }).join('') + '</select></label>' +
+              (tl ? '<label class="row wrap">Cocokkan dengan: <select class="input" data-k="target_key" data-i="' + i + '" style="width:auto;min-height:32px"><option value="">ID internal sistem</option>' + keys.map(function (x) { return '<option value="' + esc(x.key) + '"' + (f.target_key === x.key ? ' selected' : '') + '>🔑 ' + esc(x.label) + ' (' + esc(x.key) + ')</option>'; }).join('') + '</select></label>' +
+                (keys.length ? '' : '<span class="muted">Layer induk belum punya atribut 🔑 ID unik. Tambahkan dulu di layer "' + esc(tl.name) + '" bila ingin relasi berbasis ID (mis. TS-0001).</span>') +
+                '<span class="muted">Relasi 1:N — satu data di "' + esc(tl.name) + '" dapat memiliki banyak data di layer ini (anak).</span>' : '') + '</div>';
+          })() : '') + '</div>';
       }).join('') || '<div class="small muted">Belum ada atribut.</div>';
-      $$('[data-k]', body).forEach(function (inp) { inp.onchange = function () { var f = fields[+inp.getAttribute('data-i')], k = inp.getAttribute('data-k'); f[k] = (k === 'required' || k === 'auto_now' || k === 'locked') ? inp.checked : (k === 'options' ? inp.value.split(',').map(function (s) { return s.trim(); }).filter(String) : inp.value.trim()); if (k === 'type') draw(); }; });
+      $$('[data-k]', body).forEach(function (inp) { inp.onchange = function () { var f = fields[+inp.getAttribute('data-i')], k = inp.getAttribute('data-k'); if (k === 'auto_on') { if (inp.checked) f.auto_id = f.auto_id || ''; else delete f.auto_id; draw(); return; } f[k] = (k === 'required' || k === 'auto_now' || k === 'locked' || k === 'unique') ? inp.checked : (k === 'options' ? inp.value.split(',').map(function (s) { return s.trim(); }).filter(String) : inp.value.trim()); if (k === 'unique' && !f.unique) delete f.auto_id; if (k === 'target') delete f.target_key; if (k === 'type' || k === 'unique' || k === 'target' || k === 'auto_id') draw(); }; });
       $$('[data-del]', body).forEach(function (b) { b.onclick = function () { fields.splice(+b.getAttribute('data-del'), 1); draw(); }; });
     }
     draw();
@@ -1743,10 +2337,11 @@ var Tabs = {
   about: function () {
     var el = $('[data-tab=about]');
     el.innerHTML = '<div class="tab-h"><h2>Tentang &amp; Legal</h2></div><div class="grid2"><div class="card"><h3>Informasi aplikasi</h3><table class="t"><tr><th>Aplikasi</th><td>Universal Mobile Mapping GIS — Edisi Apps Script</td></tr><tr><th>Versi klien</th><td>' + APP_VERSION + ' (build ' + APP_BUILD + ')</td></tr><tr><th>Versi server</th><td id="ab-sv">' + esc(S.serverApp && S.serverApp.version ? S.serverApp.version + ' (' + S.serverApp.build + ')' : '-') + '</td></tr><tr><th>Mode</th><td>' + ({ gas: 'Apps Script (HtmlService)', remote: 'PWA (GitHub Pages)', demo: 'DEMO (data di browser)' }[CONFIG.MODE]) + '</td></tr><tr><th>Lisensi</th><td>' + esc(S.license.label || '-') + (S.license.exp ? ' · s/d ' + esc(S.license.exp) : '') + '</td></tr><tr><th>CRS data</th><td>EPSG:4326 (WGS84)</td></tr></table><div class="row wrap" style="margin-top:10px"><button class="btn sm" id="ab-health">Cek kesehatan server</button>' + (CONFIG.MODE === 'demo' ? '<button class="btn sm danger" id="ab-reset">Reset data demo</button>' : '') + '</div><div id="ab-h" class="small mono" style="margin-top:8px"></div></div>' +
+      (CONFIG.MODE === 'demo' ? '<div class="card" style="border-color:var(--warn)"><h3>Batasan versi demo</h3><ul class="small"><li>Data hanya di tab ini — <b>hilang saat tab/aplikasi ditutup</b> dan direset otomatis setiap ' + Demo.LIMIT.sessionMin + ' menit (sisa: ' + Math.ceil(Demo.left() / 60000) + ' menit).</li><li>1 proyek; maks. ' + (S.license.max_layers || 6) + ' layer, ' + (S.license.max_features || 60) + ' data, 2 foto per data.</li><li>Ekspor GeoJSON/CSV/KML/SHP dinonaktifkan; impor maks. ' + Demo.LIMIT.importRows + ' baris.</li><li>Cetak PDF resolusi draft (' + Demo.LIMIT.printDpi + ' dpi) dengan watermark DEMO.</li><li>Tidak dapat menambah pengguna, mengganti password, mengaktifkan lisensi, atau mengubah judul/logo.</li><li>Tanpa server & sinkronisasi multi-perangkat (semua emulasi di browser).</li></ul></div>' : '') +
       '<div class="card"><h3>Komponen pihak ketiga</h3><ul class="small"><li>MapLibre GL JS 4.7.1 — BSD-3-Clause</li><li>PMTiles (protomaps) 3.2.1 — BSD-3-Clause</li><li>shpjs 6.2.0, geotiff.js 2.1.3, proj4js 2.15.0, pdf-lib 1.17.1, jsPDF 2.5.2, fflate 0.8.2 — MIT</li><li>@tmcw/togeojson 7.1.3 — BSD-2-Clause</li><li>PDF.js 3.11.174 — Apache-2.0</li><li>Data peta © OpenStreetMap contributors — ODbL; tile OSM tunduk pada Tile Usage Policy OSMF</li><li>Google Apps Script, Sheets, Drive — Ketentuan Layanan Google</li></ul><p class="small muted">Ikon & logo bawaan dibuat khusus untuk aplikasi ini.</p></div></div>' +
       '<div class="card legal" style="margin-top:12px">' + LEGAL.terms + '</div><div class="card legal" style="margin-top:12px">' + LEGAL.privacy + '</div>';
     $('#ab-health').onclick = async function () { try { var h = await Api.call('health'); $('#ab-h').textContent = JSON.stringify(h); $('#ab-sv').textContent = h.version + ' (' + h.build + ')'; } catch (e) { $('#ab-h').textContent = 'Gagal: ' + e.message; } };
-    var rs = $('#ab-reset'); if (rs) rs.onclick = async function () { if (!(await confirmBox('Reset demo', 'Semua data demo di browser ini dihapus dan dibuat ulang.', 'Reset', true))) return; Demo.reset(); await IDB.clear('ops').catch(function () { }); await IDB.clear('kv').catch(function () { }); LS.set('umg_token', null); location.reload(); };
+    var rs = $('#ab-reset'); if (rs) rs.onclick = async function () { if (!(await confirmBox('Reset demo', 'Semua data demo di tab ini dihapus dan dibuat ulang.', 'Reset', true))) return; await IDB.clear('ops').catch(function () { }); await IDB.clear('kv').catch(function () { }); Demo.reset(); location.reload(); };
   }
 };
 
@@ -1827,8 +2422,12 @@ var LEGAL = {
     '<h4>8. Perubahan</h4><p>Pemberitahuan ini dapat diperbarui; versi terbaru selalu tersedia di menu Tentang &amp; Legal.</p>'
 };
 
+var LEGAL_ID = LEGAL;
+LEGAL = { get terms() { return (I18N.lang === 'en' ? LEGAL_EN : LEGAL_ID).terms; }, get privacy() { return (I18N.lang === 'en' ? LEGAL_EN : LEGAL_ID).privacy; } };
+
 // ======================================================= Event & inisialisasi
 function bindGlobal() {
+  $$('[data-lang]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-lang') === I18N.lang); b.onclick = function () { I18N.set(b.getAttribute('data-lang')); }; });
   $('#lg-form').addEventListener('submit', async function (e) {
     e.preventDefault();
     var btn = $('#lg-btn'), u = $('#lg-user').value.trim(), p = $('#lg-pass').value;
@@ -1852,10 +2451,10 @@ function bindGlobal() {
   if (CONFIG.MODE === 'demo') $('#lg-demo').classList.remove('hidden');
   document.addEventListener('click', function (e) {
     var n = e.target.closest('[data-nav]'); if (n) { App.show(n.getAttribute('data-nav')); return; }
-    if (e.target.closest('[data-more]')) { popMenu(e.target.closest('[data-more]'), NAV.filter(function (x) { return ['projects', 'admin', 'profile', 'about'].indexOf(x.id) >= 0 && (!x.perm || can(x.perm)); }).map(function (x) { return { label: x.label, icon: x.icon, onClick: function () { App.show(x.id); } }; }).concat([{ label: 'Tema gelap/terang', icon: 'theme', onClick: Theme.toggle }, { label: 'Keluar', icon: 'logout', onClick: Auth.logout }])); }
+    if (e.target.closest('[data-more]')) { popMenu(e.target.closest('[data-more]'), NAV.filter(function (x) { return ['projects', 'admin', 'profile', 'about'].indexOf(x.id) >= 0 && (!x.perm || can(x.perm)); }).map(function (x) { return { label: x.label, icon: x.icon, onClick: function () { App.show(x.id); } }; }).concat([{ label: 'Tema gelap/terang', icon: 'theme', onClick: Theme.toggle }, { label: I18N.lang === 'en' ? 'Bahasa Indonesia' : 'English', icon: 'about', onClick: function () { I18N.set(I18N.lang === 'en' ? 'id' : 'en'); } }, { label: 'Keluar', icon: 'logout', onClick: Auth.logout }])); }
   });
   $('#btn-menu').onclick = function () { if ($('#sidenav').classList.contains('open')) Side.close(); else Side.open(); };
-  $('#hd-avatar').onclick = function () { popMenu(this, [{ label: S.user.name + ' (' + ROLE_LBL[S.user.role] + ')', icon: 'profile', onClick: function () { App.show('profile'); } }].concat(S.user.photo ? [{ label: 'Lihat foto profil', icon: 'profile', onClick: function () { Zoom.open(S.user.photo, S.user.name); } }] : []).concat([{ label: 'Tema gelap/terang', icon: 'theme', onClick: Theme.toggle }, { label: 'Tentang & legal', icon: 'about', onClick: function () { App.show('about'); } }, { label: 'Keluar', icon: 'logout', onClick: Auth.logout }])); };
+  $('#hd-avatar').onclick = function () { popMenu(this, [{ label: S.user.name + ' (' + ROLE_LBL[S.user.role] + ')', icon: 'profile', onClick: function () { App.show('profile'); } }].concat(S.user.photo ? [{ label: 'Lihat foto profil', icon: 'profile', onClick: function () { Zoom.open(S.user.photo, S.user.name); } }] : []).concat([{ label: 'Tema gelap/terang', icon: 'theme', onClick: Theme.toggle }, { label: I18N.lang === 'en' ? 'Bahasa Indonesia' : 'English', icon: 'about', onClick: function () { I18N.set(I18N.lang === 'en' ? 'id' : 'en'); } }, { label: 'Tentang & legal', icon: 'about', onClick: function () { App.show('about'); } }, { label: 'Keluar', icon: 'logout', onClick: Auth.logout }])); };
   $('#pill-sync').onclick = function () { App.show('sync'); };
   $('#pill-net').onclick = function () { App.show('sync'); };
   $$('[data-tool]').forEach(function (b) { b.onclick = function () { var t = b.getAttribute('data-tool'); if (Draw.mode === t) Draw.cancel(); else Draw.start(t); }; });
@@ -1873,6 +2472,7 @@ function bindGlobal() {
 
 async function boot() {
   Theme.init();
+  I18N.init();
   bindGlobal();
   $('#lg-ver').textContent = 'v' + APP_VERSION;
   await IDB.open();
@@ -2095,6 +2695,7 @@ var Overlays = {
     if (!files.length) throw new Error('Pilih file terlebih dahulu.');
     var total = files.reduce(function (a, f) { return a + f.size; }, 0);
     if (total > 150 * 1024 * 1024) throw new Error('Ukuran file terlalu besar (maks 150 MB). Potong area terlebih dahulu.');
+    if (Demo.on() && total > Demo.LIMIT.overlayMB * 1048576) throw new Error('Versi demo: layer referensi maks. ' + Demo.LIMIT.overlayMB + ' MB per file.');
     var ext = function (f) { return (f.name.split('.').pop() || '').toLowerCase(); };
     var by = {}; files.forEach(function (f) { by[ext(f)] = f; });
     var base = files[0].name.replace(/\.[^.]+$/, '');
@@ -2318,7 +2919,7 @@ var Print = {
       '<div class="row wrap small"><label class="row"><input type="checkbox" id="pr-grid" checked> Grid koordinat</label><label class="row"><input type="checkbox" id="pr-inset" checked> Peta indeks</label><label class="row"><input type="checkbox" id="pr-legend" checked> Legenda</label></div>' +
       '<div class="progress hidden" id="pr-prog"><div style="width:30%"></div></div><div class="small muted" id="pr-msg">Layout mengikuti pola ArcGIS: bingkai peta dengan grid, panel judul, arah utara, skala batang & numerik, legenda, peta indeks, dan blok informasi.</div><div id="pr-out"></div>';
     modal({ title: 'Cetak peta (PDF)', body: body, wide: true, sticky: true, buttons: [{ label: 'Tutup' }, { label: 'Buat PDF', cls: 'primary', onClick: async function (mb, btn) {
-      var opt = { paper: $('#pr-paper', mb).value, ori: $('#pr-ori', mb).value, scale: Number($('#pr-scale', mb).value), dpi: Number($('#pr-dpi', mb).value), title: $('#pr-title', mb).value, sub: $('#pr-sub', mb).value, by: $('#pr-by', mb).value, no: $('#pr-no', mb).value, note: $('#pr-note', mb).value, grid: $('#pr-grid', mb).checked, inset: $('#pr-inset', mb).checked, legend: $('#pr-legend', mb).checked };
+      var opt = { paper: $('#pr-paper', mb).value, ori: $('#pr-ori', mb).value, scale: Number($('#pr-scale', mb).value), dpi: Demo.on() ? Math.min(Demo.LIMIT.printDpi, Number($('#pr-dpi', mb).value)) : Number($('#pr-dpi', mb).value), title: $('#pr-title', mb).value, sub: $('#pr-sub', mb).value, by: $('#pr-by', mb).value, no: $('#pr-no', mb).value, note: $('#pr-note', mb).value, grid: $('#pr-grid', mb).checked, inset: $('#pr-inset', mb).checked, legend: $('#pr-legend', mb).checked };
       var prog = $('#pr-prog', mb), msg = $('#pr-msg', mb); prog.classList.remove('hidden'); btn.textContent = 'Memproses…';
       try {
         var r = await Print.make(opt, function (t, p) { msg.textContent = t; $('div', prog).style.width = p + '%'; });
@@ -2423,7 +3024,7 @@ var Print = {
     // Atribusi pada bingkai peta
     pdf.setFontSize(5 * f); pdf.setTextColor(60);
     var bmk = LS.get('umg_basemap') || 'osm';
-    var attr = 'Basemap: ' + ({ osm: '(c) OpenStreetMap contributors', maptiler: '(c) MapTiler (c) OpenStreetMap contributors', xyz: 'XYZ kustom', none: 'tanpa basemap' }[bmk] || bmk) + (PMT.active ? ' | Foto udara: ' + T(PMT.active.label) : '') + Overlays.list.filter(function (x) { return x.visible && x.kind === 'tiles' && x.attribution; }).map(function (x) { return ' | ' + T(x.attribution); }).join('');
+    var attr = 'Basemap: ' + ({ osm: '(c) OpenStreetMap contributors', maptiler: '(c) MapTiler (c) OpenStreetMap contributors', xyz: (I18N.lang === 'en' ? 'custom XYZ' : 'XYZ kustom'), none: (I18N.lang === 'en' ? 'no basemap' : 'tanpa basemap') }[bmk] || bmk) + (PMT.active ? (I18N.lang === 'en' ? ' | Aerial imagery: ' : ' | Foto udara: ') + T(PMT.active.label) : '') + Overlays.list.filter(function (x) { return x.visible && x.kind === 'tiles' && x.attribution; }).map(function (x) { return ' | ' + T(x.attribution); }).join('');
     if (attr.length > 160) attr = attr.slice(0, 157) + '...';
     pdf.setFillColor(255, 255, 255); pdf.rect(map.x + map.w - pdf.getTextWidth(attr) - 3, map.y + map.h - 3.4 * f, pdf.getTextWidth(attr) + 3, 3.4 * f, 'F');
     pdf.text(attr, map.x + map.w - 1.5, map.y + map.h - 1 * f, { align: 'right' });
@@ -2448,7 +3049,7 @@ var Print = {
       pdf.setFillColor(20); pdf.setDrawColor(20); pdf.setLineWidth(0.2);
       pdf.triangle(cx, cy - s, cx - s * 0.42, cy + s * 0.55, cx, cy + s * 0.25, 'F');
       pdf.setFillColor(255); pdf.triangle(cx, cy - s, cx + s * 0.42, cy + s * 0.55, cx, cy + s * 0.25, 'FD');
-      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9 * f); pdf.text('U', cx, cy - s - 1.2, { align: 'center' }); pdf.setFont('helvetica', 'normal');
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9 * f); pdf.text((I18N.lang === 'en' ? 'N' : 'U'), cx, cy - s - 1.2, { align: 'center' }); pdf.setFont('helvetica', 'normal');
     };
     var scaleBar = function (x, y, w) {
       var gpm = 1000 / scaleN; // mm kertas per meter tanah
@@ -2459,14 +3060,14 @@ var Print = {
       for (var i = 0; i < segs; i++) { if (i % 2 === 0) pdf.setFillColor(20); else pdf.setFillColor(255); pdf.rect(x + i * bw / segs, y, bw / segs, 1.8 * f, 'FD'); }
       pdf.setFontSize(5.8 * f); var u = L >= 1000 ? 'km' : 'm', cv = function (v) { return L >= 1000 ? fmtNum(v / 1000, 2) : fmtNum(v, 0); };
       pdf.text('0', x, y + 4.6 * f, { align: 'center' }); pdf.text(cv(L / 2), x + bw / 2, y + 4.6 * f, { align: 'center' }); pdf.text(cv(L) + ' ' + u, x + bw, y + 4.6 * f, { align: 'center' });
-      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8 * f); pdf.text('Skala 1 : ' + fmtNum(scaleN, 0), x, y + 9.5 * f); pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(5.4 * f); pdf.setTextColor(90); pdf.text('Kertas ' + o.paper + ' ' + (landscape ? 'lanskap' : 'potret') + ', cetak 100%', x, y + 12.5 * f); pdf.setTextColor(20);
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8 * f); pdf.text((I18N.lang === 'en' ? 'Scale 1 : ' : 'Skala 1 : ') + fmtNum(scaleN, 0), x, y + 9.5 * f); pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(5.4 * f); pdf.setTextColor(90); pdf.text(I18N.lang === 'en' ? 'Paper ' + o.paper + ' ' + (landscape ? 'landscape' : 'portrait') + ', print at 100%' : 'Kertas ' + o.paper + ' ' + (landscape ? 'lanskap' : 'potret') + ', cetak 100%', x, y + 12.5 * f); pdf.setTextColor(20);
     };
     var legend = function (x, y, w, h) {
       var vis = S.layers.filter(function (l) { return l.project_id === S.projectId && l.geom_type !== 'None' && !S.hiddenLayers.has(l.id); });
       var nItems = vis.length + Overlays.list.filter(function (x2) { return x2.visible; }).length + (PMT.active ? 1 : 0);
       var avail = h - 4.6 * f - 4, rowH = Math.max(3.1, Math.min(4.6 * f, avail / Math.max(1, nItems)));
-      var yy = sec(x, y, w, 'LEGENDA') + Math.min(3.5 * f, rowH * 0.8), maxY = y + h - 1;
+      var yy = sec(x, y, w, (I18N.lang === 'en' ? 'LEGEND' : 'LEGENDA')) + Math.min(3.5 * f, rowH * 0.8), maxY = y + h - 1;
       pdf.setFontSize(Math.max(5, Math.min(6.6 * f, rowH * 1.45)));
       var item = function (kind, color, label) {
         if (yy > maxY) return;
@@ -2484,18 +3085,18 @@ var Print = {
       pdf.setLineWidth(0.25); pdf.setDrawColor(20); pdf.rect(x, y, w, h);
     };
     var infoBlock = function (x, y, w, h) {
-      var yy = sec(x, y, w, 'KETERANGAN') + 3.4 * f;
+      var yy = sec(x, y, w, (I18N.lang === 'en' ? 'INFORMATION' : 'KETERANGAN')) + 3.4 * f;
       var proj = S.projects.find(function (p) { return p.id === S.projectId; }) || {};
-      var bmName = { osm: 'OSM', maptiler: 'MapTiler/OSM', xyz: 'XYZ kustom', none: '-' }[LS.get('umg_basemap') || 'osm'] || '-';
-      var rows = [['Proyek', proj.name || '-'], ['Organisasi', S.org ? S.org.name : '-'], ['Disusun oleh', o.by], ['Tanggal cetak', new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })], ['Sistem koordinat', 'Geografis WGS 84 (EPSG:4326); tampilan Web Mercator'], ['Sumber data', 'Survei lapangan ' + (S.org ? S.org.name : '') + '; basemap ' + bmName], ['Lembar', o.no]];
+      var bmName = { osm: 'OSM', maptiler: 'MapTiler/OSM', xyz: (I18N.lang === 'en' ? 'custom XYZ' : 'XYZ kustom'), none: '-' }[LS.get('umg_basemap') || 'osm'] || '-';
+      var rows = [['Proyek', proj.name || '-'], ['Organisasi', S.org ? S.org.name : '-'], ['Disusun oleh', o.by], ['Tanggal cetak', new Date().toLocaleDateString(I18N.locale(), { day: '2-digit', month: 'long', year: 'numeric' })], ['Sistem koordinat', I18N.t('Geografis WGS 84 (EPSG:4326); tampilan Web Mercator')], ['Sumber data', (I18N.lang === 'en' ? 'Field survey ' : 'Survei lapangan ') + (S.org ? S.org.name : '') + '; basemap ' + bmName], ['Lembar', o.no]];
       pdf.setFontSize(6 * f);
-      rows.forEach(function (r) { if (yy > y + h - 2) return; pdf.setFont('helvetica', 'bold'); pdf.text(r[0], x + 1.8, yy); pdf.setFont('helvetica', 'normal'); var t = pdf.splitTextToSize(T(r[1]), w - 26 * f).slice(0, 2); pdf.text(t, x + 24 * f, yy); yy += 3.1 * f * t.length + 0.4; });
-      if (o.note && yy < y + h - 4) { pdf.setFontSize(5.4 * f); pdf.setTextColor(90); pdf.text(pdf.splitTextToSize(T('Catatan: ' + o.note), w - 3.6).slice(0, 3), x + 1.8, yy + 0.8); pdf.setTextColor(20); }
+      rows.forEach(function (r) { if (yy > y + h - 2) return; pdf.setFont('helvetica', 'bold'); pdf.text(T(I18N.t(r[0])), x + 1.8, yy); pdf.setFont('helvetica', 'normal'); var t = pdf.splitTextToSize(T(r[1]), w - 26 * f).slice(0, 2); pdf.text(t, x + 24 * f, yy); yy += 3.1 * f * t.length + 0.4; });
+      if (o.note && yy < y + h - 4) { pdf.setFontSize(5.4 * f); pdf.setTextColor(90); pdf.text(pdf.splitTextToSize(T(I18N.t('Catatan') + ': ' + o.note), w - 3.6).slice(0, 3), x + 1.8, yy + 0.8); pdf.setTextColor(20); }
       pdf.rect(x, y, w, h);
     };
     var insetBlock = function (x, y, w, h) {
-      var yy = sec(x, y, w, 'PETA INDEKS'); var s = Math.min(w - 4, h - (yy - y) - 3);
-      if (inset) pdf.addImage(inset.url, 'JPEG', x + (w - s) / 2, yy + 1.5, s, s, undefined, 'FAST'); else { pdf.setFontSize(6); pdf.text('(tidak tersedia)', x + w / 2, yy + s / 2, { align: 'center' }); }
+      var yy = sec(x, y, w, (I18N.lang === 'en' ? 'INDEX MAP' : 'PETA INDEKS')); var s = Math.min(w - 4, h - (yy - y) - 3);
+      if (inset) pdf.addImage(inset.url, 'JPEG', x + (w - s) / 2, yy + 1.5, s, s, undefined, 'FAST'); else { pdf.setFontSize(6); pdf.text((I18N.lang === 'en' ? '(not available)' : '(tidak tersedia)'), x + w / 2, yy + s / 2, { align: 'center' }); }
       pdf.setDrawColor(20); pdf.rect(x + (w - s) / 2, yy + 1.5, s, s); pdf.rect(x, y, w, h);
     };
     var px0 = panel.x + 2.5, pw = panel.w - 5;
@@ -2515,6 +3116,15 @@ var Print = {
       if (o.legend) legend(px0 + c1 + 3, by0, c2, bh); else pdf.rect(px0 + c1 + 3, by0, c2, bh);
       var x3 = px0 + c1 + c2 + 6, nH = A3 ? 28 : 21; pdf.rect(x3, by0, c3, nH); north(x3 + (A3 ? 9 : 7), by0 + nH / 2 + 1.5, A3 ? 6 : 4.6); scaleBar(x3 + (A3 ? 19 : 14), by0 + (A3 ? 6 : 4.5), c3 - (A3 ? 21 : 16));
       if (o.inset) insetBlock(x3, by0 + nH + 2.5, c3, bh - nH - 2.5);
+    }
+    if (Demo.on()) {   // watermark versi demo (diagonal, tiap halaman)
+      var pw2 = pdf.internal.pageSize.getWidth(), ph2 = pdf.internal.pageSize.getHeight();
+      try { pdf.setGState(new pdf.GState({ opacity: 0.22 })); } catch (e) { /* jsPDF lama */ }
+      pdf.setTextColor(200, 30, 30); pdf.setFontSize(A3 ? 120 : 84); pdf.setFont('helvetica', 'bold');
+      pdf.text('DEMO', pw2 / 2, ph2 / 2, { align: 'center', angle: 30, baseline: 'middle' });
+      pdf.setFontSize(A3 ? 16 : 12); pdf.text((I18N.lang === 'en' ? 'Demo version - not for production use' : 'Versi demo - bukan untuk penggunaan produksi'), pw2 / 2, ph2 / 2 + (A3 ? 40 : 28), { align: 'center', angle: 30 });
+      try { pdf.setGState(new pdf.GState({ opacity: 1 })); } catch (e) { /* jsPDF lama */ }
+      pdf.setTextColor(20); pdf.setFont('helvetica', 'normal');
     }
     progress('Menyimpan PDF…', 95);
     var proj = S.projects.find(function (p) { return p.id === S.projectId; }) || {};
@@ -2705,6 +3315,199 @@ var ArcGIS = {
           (info.layers.length ? '<label class="f" style="margin-top:6px">Sublayer untuk diunduh<select class="input" id="ag-layer">' + info.layers.map(function (l) { return '<option value="' + l.id + '">' + l.id + ' — ' + esc(l.name) + (l.geom ? ' (' + esc(l.geom.replace('esriGeometry', '')) + ')' : '') + '</option>'; }).join('') + '</select></label>' : '') + '</div>';
       } catch (e) { info = null; box.innerHTML = '<span style="color:var(--danger)">' + esc(e.message) + '</span>'; }
     };
+  }
+};
+
+// ======================================================= Shapefile (ESRI) — ekspor & impor layer survei
+/**
+ * Penulis Shapefile mandiri (tanpa dependensi): .shp/.shx (Point, PolyLine, Polygon), .dbf (dBase III, UTF-8 + .cpg), .prj WGS84.
+ * Satu layer = satu set file. Layer tabel (tanpa geometri) diekspor sebagai .dbf saja (tabel atribut standar GIS).
+ * Nama kolom DBF maks. 10 karakter → dipetakan otomatis & dicatat di <layer>_kolom.csv agar impor ulang cocok 100%.
+ */
+var ShpIO = {
+  PRJ: 'GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]]',
+  META: [['_status', 'STATUS'], ['_version', 'VERSI'], ['_surveyor', 'SURVEYOR'], ['_updated_at', 'DIUBAH'], ['_gps_accuracy_m', 'GPS_AKUR'], ['_area_ha', 'LUAS_HA'], ['_length_m', 'PANJANG_M'], ['_utm_zona', 'UTM_ZONA'], ['_utm_x', 'UTM_X'], ['_utm_y', 'UTM_Y'], ['_id', 'UMG_ID']],
+  /** Peta kunci atribut → nama kolom DBF (≤10, unik, huruf/angka/_). Deterministik: dipakai saat ekspor & impor. */
+  names: function (keys) {
+    var used = {}, out = {};
+    keys.forEach(function (k) {
+      var base = String(k).replace(/[^A-Za-z0-9_]/g, '_').replace(/^[^A-Za-z]+/, '') || 'F';
+      var n = base.slice(0, 10), i = 1;
+      while (used[n.toUpperCase()]) { var suf = String(i++); n = base.slice(0, 10 - suf.length) + suf; }
+      used[n.toUpperCase()] = 1; out[k] = n;
+    });
+    return out;
+  },
+  utf8: function (s) { return new TextEncoder().encode(s); },
+  /** Potong teks UTF-8 tanpa merusak karakter multibyte. */
+  clip: function (bytes, max) { if (bytes.length <= max) return bytes; var n = max; while (n > 0 && (bytes[n] & 0xC0) === 0x80) n--; return bytes.slice(0, n); },
+  ringArea: function (r) { var a = 0; for (var i = 0, j = r.length - 1; i < r.length; j = i++) a += (r[i][0] - r[j][0]) * (r[i][1] + r[j][1]); return a / 2; }, // >0 = searah jarum jam (sumbu y ke utara)
+  /** Bagian geometri untuk record SHP. Poligon: ring luar searah jarum jam, lubang berlawanan (aturan ESRI). */
+  parts: function (g) {
+    if (g.type === 'Point') return null;
+    if (g.type === 'LineString') return [g.coordinates];
+    if (g.type === 'MultiLineString') return g.coordinates;
+    var polys = g.type === 'Polygon' ? [g.coordinates] : g.coordinates, out = [];
+    polys.forEach(function (rings) { rings.forEach(function (r, i) { var cw = ShpIO.ringArea(r) > 0; out.push((i === 0) === cw ? r : r.slice().reverse()); }); });
+    return out;
+  },
+  /** Bangun file .shp + .shx dari daftar geometri GeoJSON (satu tipe). */
+  shp: function (geoms, type) {
+    var code = { Point: 1, LineString: 3, Polygon: 5 }[type];
+    var recs = geoms.map(function (g) {
+      if (type === 'Point') { var b = new DataView(new ArrayBuffer(20)); b.setInt32(0, 1, true); b.setFloat64(4, g.coordinates[0], true); b.setFloat64(12, g.coordinates[1], true); return { buf: b.buffer, box: [g.coordinates[0], g.coordinates[1], g.coordinates[0], g.coordinates[1]] }; }
+      var ps = ShpIO.parts(g), np = ps.reduce(function (a, p) { return a + p.length; }, 0);
+      var len = 44 + 4 * ps.length + 16 * np, v = new DataView(new ArrayBuffer(len)), box = gjBBox({ features: [{ geometry: g }] });
+      v.setInt32(0, code, true); [0, 1, 2, 3].forEach(function (i) { v.setFloat64(4 + 8 * i, box[i], true); });
+      v.setInt32(36, ps.length, true); v.setInt32(40, np, true);
+      var o = 44, idx = 0;
+      ps.forEach(function (p) { v.setInt32(o, idx, true); o += 4; idx += p.length; });
+      ps.forEach(function (p) { p.forEach(function (c) { v.setFloat64(o, c[0], true); v.setFloat64(o + 8, c[1], true); o += 16; }); });
+      return { buf: v.buffer, box: box };
+    });
+    var all = recs.reduce(function (a, r) { return [Math.min(a[0], r.box[0]), Math.min(a[1], r.box[1]), Math.max(a[2], r.box[2]), Math.max(a[3], r.box[3])]; }, [Infinity, Infinity, -Infinity, -Infinity]);
+    var head = function (lenBytes) { var h = new DataView(new ArrayBuffer(100)); h.setInt32(0, 9994, false); h.setInt32(24, lenBytes / 2, false); h.setInt32(28, 1000, true); h.setInt32(32, code, true); [0, 1, 2, 3].forEach(function (i) { h.setFloat64(36 + 8 * i, recs.length ? all[i] : 0, true); }); return new Uint8Array(h.buffer); };
+    var shpLen = 100 + recs.reduce(function (a, r) { return a + 8 + r.buf.byteLength; }, 0);
+    var shp = new Uint8Array(shpLen), shx = new Uint8Array(100 + 8 * recs.length);
+    shp.set(head(shpLen), 0); shx.set(head(shx.length), 0);
+    var off = 100, sv = new DataView(shp.buffer), xv = new DataView(shx.buffer);
+    recs.forEach(function (r, i) {
+      sv.setInt32(off, i + 1, false); sv.setInt32(off + 4, r.buf.byteLength / 2, false);
+      xv.setInt32(100 + 8 * i, off / 2, false); xv.setInt32(104 + 8 * i, r.buf.byteLength / 2, false);
+      shp.set(new Uint8Array(r.buf), off + 8); off += 8 + r.buf.byteLength;
+    });
+    return { shp: shp, shx: shx };
+  },
+  /** Bangun .dbf. cols: [{name, type:'C'|'N'|'L'|'D', dec}] ; rows: array nilai per kolom. */
+  dbf: function (cols, rows) {
+    var warn = 0;
+    var enc = rows.map(function (r) {
+      return cols.map(function (c, i) {
+        var v = r[i];
+        if (v === undefined || v === null || v === '') return new Uint8Array(0);
+        if (c.type === 'L') return ShpIO.utf8(v === true || v === 'true' ? 'T' : 'F');
+        if (c.type === 'D') return ShpIO.utf8(String(v).slice(0, 10).replace(/-/g, ''));
+        if (c.type === 'N') { var n = Number(v); return isFinite(n) ? ShpIO.utf8(c.dec ? n.toFixed(c.dec).replace(/\.?0+$/, '') : String(Math.round(n))) : new Uint8Array(0); }
+        var b = ShpIO.utf8(String(v)); if (b.length > 254) { warn++; b = ShpIO.clip(b, 254); }
+        return b;
+      });
+    });
+    cols.forEach(function (c, i) {
+      c.len = c.type === 'L' ? 1 : c.type === 'D' ? 8 : c.type === 'N' ? 19 : Math.max(1, Math.min(254, enc.reduce(function (a, r) { return Math.max(a, r[i].length); }, 1)));
+    });
+    var recLen = 1 + cols.reduce(function (a, c) { return a + c.len; }, 0), hLen = 32 + 32 * cols.length + 1;
+    var out = new Uint8Array(hLen + recLen * rows.length + 1), v = new DataView(out.buffer), d = new Date();
+    out[0] = 0x03; out[1] = d.getFullYear() - 1900; out[2] = d.getMonth() + 1; out[3] = d.getDate();
+    v.setUint32(4, rows.length, true); v.setUint16(8, hLen, true); v.setUint16(10, recLen, true);
+    cols.forEach(function (c, i) {
+      var o = 32 + 32 * i; out.set(ShpIO.utf8(c.name.toUpperCase()).slice(0, 10), o);
+      out[o + 11] = c.type.charCodeAt(0); out[o + 16] = c.len; out[o + 17] = c.type === 'N' ? (c.dec || 0) : 0;
+    });
+    out[hLen - 1] = 0x0D;
+    var o2 = hLen;
+    enc.forEach(function (r) {
+      out[o2++] = 0x20;
+      cols.forEach(function (c, i) {
+        var b = r[i], pad = c.len - b.length;
+        if (c.type === 'N') { out.fill(0x20, o2, o2 + pad); out.set(b, o2 + pad); } else { out.set(b, o2); out.fill(0x20, o2 + b.length, o2 + c.len); }
+        o2 += c.len;
+      });
+    });
+    out[o2] = 0x1A;
+    return { bytes: out, truncated: warn };
+  },
+  /** Kolom & baris DBF untuk sebuah layer survei (atribut skema + metadata). */
+  table: function (layer, feats) {
+    var schema = layer.schema || [], keys = schema.map(function (f) { return f.key; }).concat(ShpIO.META.map(function (m) { return m[0]; }));
+    var nm = ShpIO.names(schema.map(function (f) { return f.key; }).concat(ShpIO.META.map(function (m) { return m[1]; })));
+    var cols = schema.map(function (f) {
+      var t = f.type === 'number' ? 'N' : f.type === 'integer' ? 'N' : f.type === 'bool' ? 'L' : (f.type === 'date' && f.format !== 'datetime') ? 'D' : 'C';
+      return { key: f.key, name: nm[f.key], type: t, dec: f.type === 'number' ? 8 : 0, label: f.label };
+    }).concat(ShpIO.META.map(function (m) { return { key: m[0], name: nm[m[1]], type: /^_(version|gps|area|length|utm_x|utm_y)/.test(m[0]) ? 'N' : 'C', dec: /^_(gps|area|length|utm)/.test(m[0]) ? 3 : 0, label: m[1] }; }));
+    if (layer.geom_type === 'None' || layer.geom_type === 'LineString' || layer.geom_type === 'Polygon') cols = cols.filter(function (c) { return !/^_utm/.test(c.key); });
+    if (layer.geom_type !== 'Polygon') cols = cols.filter(function (c) { return c.key !== '_area_ha'; });
+    if (layer.geom_type !== 'LineString') cols = cols.filter(function (c) { return c.key !== '_length_m'; });
+    if (layer.geom_type === 'None') cols = cols.filter(function (c) { return c.key !== '_gps_accuracy_m'; });
+    var rows = feats.map(function (f) { var p = IO.props(f); return cols.map(function (c) { return p[c.key]; }); });
+    void keys;
+    return { cols: cols, rows: rows };
+  },
+  fileBase: function (name) { return String(name).normalize('NFKD').replace(/[^\w.-]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 60) || 'layer'; },
+  /** Ekspor daftar fitur (lintas layer) ke satu ZIP berisi set Shapefile per layer. */
+  exportZip: async function (list) {
+    var fl = await Lib.load('fflate'), files = {}, byLayer = {}, notes = [], trunc = 0;
+    list.forEach(function (f) { (byLayer[f.layer_id] = byLayer[f.layer_id] || []).push(f); });
+    Object.keys(byLayer).forEach(function (lid) {
+      var l = layerById(lid); if (!l) return;
+      var feats = byLayer[lid], base = ShpIO.fileBase(l.name), t = ShpIO.table(l, feats), d = ShpIO.dbf(t.cols, t.rows);
+      trunc += d.truncated;
+      while (files[base + '.dbf']) base += '_';
+      files[base + '.dbf'] = d.bytes; files[base + '.cpg'] = ShpIO.utf8('UTF-8');
+      if (l.geom_type !== 'None') {
+        var s = ShpIO.shp(feats.map(function (f) { return f.geometry; }), l.geom_type);
+        files[base + '.shp'] = s.shp; files[base + '.shx'] = s.shx; files[base + '.prj'] = ShpIO.utf8(ShpIO.PRJ);
+      }
+      files[base + '_kolom.csv'] = ShpIO.utf8('﻿kolom_dbf,kunci_atribut,label,tipe\n' + t.cols.map(function (c) { return [c.name, c.key, '"' + String(c.label).replace(/"/g, '""') + '"', c.type].join(','); }).join('\n'));
+      notes.push(l.name + ': ' + feats.length + (l.geom_type === 'None' ? ' baris (.dbf)' : ' fitur'));
+    });
+    var zip = fl.zipSync(files, { level: 6 });
+    IO.downloadBlob('umg_shp_' + new Date().toISOString().slice(0, 10) + '.zip', new Blob([zip], { type: 'application/zip' }));
+    return { notes: notes, truncated: trunc };
+  },
+  /** Baca Shapefile (ZIP / .shp+.dbf+.prj+.cpg / .dbf saja) → { features:[{geometry, properties}], fields:[nama kolom], crsKnown }. */
+  read: async function (files) {
+    files = Array.from(files || []);
+    var shp = await Lib.load('shp'), by = {}, base = '';
+    files.forEach(function (f) { var m = /\.([a-z0-9]+)$/i.exec(f.name); if (m) { by[m[1].toLowerCase()] = f; base = base || f.name.replace(/\.[^.]+$/, ''); } });
+    var gj, crsKnown = true;
+    if (by.zip) {
+      try { gj = await shp(await by.zip.arrayBuffer()); } catch (e) { throw new Error('Shapefile ZIP tidak terbaca: ' + e.message); }
+      if (Array.isArray(gj)) { if (gj.length > 1) toast('ZIP berisi ' + gj.length + ' shapefile — hanya "' + (gj[0].fileName || 'pertama') + '" yang diimpor.', '', 6000); gj = gj[0]; }
+    } else if (by.shp) {
+      var o = { shp: await by.shp.arrayBuffer() };
+      if (by.dbf) o.dbf = await by.dbf.arrayBuffer();
+      if (by.prj) o.prj = await by.prj.text(); else crsKnown = false;
+      if (by.cpg) o.cpg = await by.cpg.text();
+      try { gj = await shp(o); } catch (e) { throw new Error('Shapefile tidak terbaca: ' + e.message); }
+    } else if (by.dbf) {
+      var pd = shp.parseDbf || (shp.default && shp.default.parseDbf); if (!pd) throw new Error('Pembaca DBF tidak tersedia.');
+      var rows = pd(await by.dbf.arrayBuffer(), by.cpg ? await by.cpg.text() : 'UTF-8');
+      gj = { type: 'FeatureCollection', features: rows.map(function (p) { return { type: 'Feature', geometry: null, properties: p }; }) };
+    } else throw new Error('Pilih file .zip (berisi .shp/.dbf/.prj) atau .shp + .dbf (+ .prj, .cpg).');
+    var feats = (gj.features || []).filter(Boolean);
+    var fields = []; feats.forEach(function (f) { Object.keys(f.properties || {}).forEach(function (k) { if (fields.indexOf(k) < 0) fields.push(k); }); });
+    if (crsKnown && feats.some(function (f) { return f.geometry; })) {
+      var bb = gjBBox(gj); if (bb && !inLonLat(bb)) crsKnown = false;
+    }
+    return { features: feats, fields: fields, crsKnown: crsKnown, name: base };
+  },
+  /** Pecah Multi* menjadi geometri tunggal sesuai tipe layer. */
+  explode: function (g) {
+    if (!g) return [null];
+    if (g.type === 'MultiPoint') return g.coordinates.map(function (c) { return { type: 'Point', coordinates: c }; });
+    if (g.type === 'MultiLineString') return g.coordinates.map(function (c) { return { type: 'LineString', coordinates: c }; });
+    if (g.type === 'MultiPolygon') return g.coordinates.map(function (c) { return { type: 'Polygon', coordinates: c }; });
+    return [g];
+  },
+  /** Nilai DBF → nilai atribut sesuai tipe skema. */
+  value: function (fd, v) {
+    if (v === undefined || v === null) return '';
+    if (v instanceof Date) { if (isNaN(v)) return ''; var p = function (n) { return (n < 10 ? '0' : '') + n; }; return v.getFullYear() + '-' + p(v.getMonth() + 1) + '-' + p(v.getDate()); }
+    if (typeof v === 'number' && isNaN(v)) return '';
+    if (typeof v === 'string') v = v.trim();
+    if (fd && fd.type === 'date' && /^\d{8}$/.test(String(v))) return String(v).replace(/^(\d{4})(\d{2})(\d{2})$/, '$1-$2-$3');
+    if (fd && fd.type === 'bool') return v === true || /^(t|y|true|1|ya)$/i.test(String(v));
+    return v;
+  },
+  /** Skema baru dari kolom file (untuk "Layer baru dari SHP"). */
+  inferSchema: function (feats, fields) {
+    var nm = {};
+    return fields.filter(function (k) { return !/^(UMG_ID|STATUS|VERSI|SURVEYOR|DIUBAH|GPS_AKUR|LUAS_HA|PANJANG_M|UTM_ZONA|UTM_X|UTM_Y)$/i.test(k); }).slice(0, 60).map(function (k) {
+      var key = String(k).toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^[^a-z]+/, '') || 'f'; var n = key, i = 2; while (nm[n]) n = key + '_' + i++; nm[n] = 1;
+      var vals = feats.map(function (f) { return (f.properties || {})[k]; }).filter(function (v) { return v !== null && v !== undefined && v !== ''; });
+      var type = vals.length && vals.every(function (v) { return v instanceof Date; }) ? 'date' : vals.length && vals.every(function (v) { return typeof v === 'boolean'; }) ? 'bool' : vals.length && vals.every(function (v) { return typeof v === 'number' || /^-?\d+(\.\d+)?$/.test(String(v).trim()); }) ? (vals.every(function (v) { return /^-?\d+$/.test(String(v).trim()); }) ? 'integer' : 'number') : 'text';
+      return { key: n.slice(0, 40), label: String(k), type: type, required: false, options: [], _src: k };
+    });
   }
 };
 
