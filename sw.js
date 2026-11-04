@@ -1,5 +1,5 @@
 /* sw.js — Service Worker PWA Universal Mobile Mapping GIS */
-const VERSION = 'umg-1.5.1';
+const VERSION = 'umg-1.6.0';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 const CDN = ["https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css","https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js","https://unpkg.com/pmtiles@3.2.1/dist/pmtiles.js","https://unpkg.com/shpjs@6.2.0/dist/shp.min.js","https://unpkg.com/@tmcw/togeojson@7.1.3/dist/togeojson.umd.js","https://unpkg.com/geotiff@2.1.3/dist-browser/geotiff.js","https://unpkg.com/proj4@2.15.0/dist/proj4.js","https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js","https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js","https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js","https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js","https://unpkg.com/fflate@0.8.2/umd/index.js"];
 const TILE_CACHE = 'umg-tiles', TILE_MAX = 4000;
