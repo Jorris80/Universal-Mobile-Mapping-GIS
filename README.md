@@ -2,23 +2,28 @@
 
 Aplikasi pemetaan lapangan offline-first (titik, garis, poligon, GPS, foto, foto udara PMTiles). Folder ini adalah frontend PWA untuk **GitHub Pages**; backend berjalan di Google Apps Script milik organisasi Anda.
 
-## Isi (5 berkas)
+## Isi (9 berkas — unggah SEMUA ke folder yang sama)
 | Berkas | Fungsi |
 |---|---|
 | `index.html` | Aplikasi lengkap (UI, peta, sinkronisasi offline) |
 | `sw.js` | Service worker: cache aplikasi, pustaka peta, tile yang pernah dilihat |
 | `manifest.json` | Metadata instalasi PWA (Add to Home Screen) |
-| `icon-512.png` | Ikon aplikasi |
+| `icon-192.png`, `icon-512.png` | Ikon aplikasi (ukuran asli, wajib untuk instalasi Android) |
+| `icon-maskable-512.png` | Ikon adaptif Android (bentuk bulat/kotak membulat) |
+| `apple-touch-icon.png` | Ikon iPhone/iPad |
+| `.nojekyll` | Agar GitHub Pages menyajikan file apa adanya (file tersembunyi — unggah lewat `git` atau buat file kosong bernama `.nojekyll` di GitHub) |
 | `README.md` | Dokumen ini |
 
 ## Publikasi
 1. Buat repository (boleh privat dengan GitHub Pro, atau publik — **tidak ada data/secret di berkas ini**).
-2. Unggah ke-5 berkas ke root branch `main`.
+2. Unggah semua berkas di atas ke root branch `main` (atau ke subfolder yang sama — semua alamat relatif).
 3. **Settings › Pages** → Source: *Deploy from a branch* → `main` / `(root)` → Save.
 4. Buka `https://<akun>.github.io/<repo>/`.
 5. Di layar login buka **Pengaturan server**, tempel URL Web App Apps Script (`https://script.google.com/macros/s/…/exec`) → *Simpan & uji koneksi*.
    *Alternatif:* edit baris `var CONFIG = { MODE: 'remote', API_URL: '' …` di `index.html` dan isi `API_URL` agar semua pengguna otomatis terhubung.
-6. Di ponsel: menu browser → *Tambahkan ke layar utama*.
+6. Di ponsel Android buka alamat GitHub Pages di **Chrome** (bukan dari dalam WhatsApp/Instagram) → tombol **📲 Pasang aplikasi** di layar login, atau menu ⋮ → **Instal aplikasi**. iPhone: Safari → Bagikan → **Tambahkan ke Layar Utama**.
+   Jika opsi instal tidak muncul: buka **Tentang & Legal › Periksa kesiapan instalasi** — semua butir harus ✅. Alamat `script.google.com` (versi Apps Script) memang tidak dapat dipasang.
+   Setelah memperbarui berkas, buka aplikasi sekali saat online lalu tarik ke bawah (reload) agar service worker versi baru aktif.
 
 Opsional: unggah juga `demo.html` (folder 04_DEMO) ke repo yang sama untuk halaman demo.
 

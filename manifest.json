@@ -1,10 +1,16 @@
 {
+  "id": "./",
   "name": "Universal Mobile Mapping GIS",
   "short_name": "UMG GIS",
   "description": "Pemetaan lapangan enterprise offline-first: titik, garis, poligon, GPS, foto, PMTiles.",
-  "start_url": "./index.html",
+  "start_url": "./index.html?source=pwa",
   "scope": "./",
   "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "prefer_related_applications": false,
   "orientation": "any",
   "background_color": "#0f172a",
   "theme_color": "#0f766e",
@@ -16,7 +22,7 @@
   ],
   "icons": [
     {
-      "src": "./icon-512.png",
+      "src": "./icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
@@ -25,7 +31,39 @@
       "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Peta",
+      "short_name": "Peta",
+      "url": "./index.html?tab=map",
+      "icons": [
+        {
+          "src": "./icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Data Survei",
+      "short_name": "Data",
+      "url": "./index.html?tab=data",
+      "icons": [
+        {
+          "src": "./icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }
