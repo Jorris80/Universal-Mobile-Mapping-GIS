@@ -179,6 +179,16 @@ table.t td.num,table.t th.num{width:1%;text-align:right;color:var(--muted)}
 .cls-row{display:flex;gap:6px;align-items:center}.cls-row .input{min-height:34px;padding:4px 8px}.cls-row input[data-c=v]{flex:1;min-width:90px}.cls-row input[data-c=label]{flex:1.2;min-width:100px}.cls-row input[type=color]{width:42px;flex:none;padding:2px}.cls-row .sym-pick{flex:none;padding:2px 6px}
 .sym-prev{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 @media(max-width:600px){.cls-row{flex-wrap:wrap}.cls-row input[data-c=label]{flex-basis:100%}}
+/* v1.7 — editor, query, label */
+.tab.map.editing [data-tool]:not([data-tool=measure]){display:none}
+.tab.map.editing #btn-edit{background:var(--accent);color:#fff;border-color:var(--accent)}
+.edit-panel{max-height:46vh;overflow:auto}
+.ed-tools{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.ed-tools .btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.ed-hint{margin-top:6px}.ed-act{margin-top:8px;gap:6px}
+.qy-row{display:flex;gap:6px;align-items:center}.qy-row .input{min-height:36px;padding:4px 8px}.qy-row select[data-q=f]{flex:1.3;min-width:110px}.qy-row select[data-q=op]{flex:1;min-width:90px}.qy-row input{flex:1.3;min-width:100px}
+@media(max-width:600px){.qy-row{flex-wrap:wrap}.qy-row input{flex-basis:100%}}
+.lyr-lb,.lyr-f{padding:2px 6px;min-height:24px;font-weight:700}.lyr-lb.on{color:var(--accent);border-color:var(--accent)}.lyr-f{color:var(--warn)}
+.lbl-ed .f{min-width:120px}
 
 </style>
 </head>
@@ -237,11 +247,14 @@ table.t td.num,table.t th.num{width:1%;text-align:right;color:var(--muted)}
         <button class="btn" id="btn-gps" title="GPS nyala/mati"><svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/></svg></button>
         <button class="btn" id="btn-follow" title="Ikuti posisi GPS: MATI" aria-pressed="false"><svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l7 19-7-4-7 4z"/></svg></button>
         <button class="btn" data-hide-draw id="btn-layers" title="Layer, basemap &amp; foto udara PMTiles"><svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg></button>
+        <button class="btn" data-hide-draw id="btn-query" title="Query atribut (seleksi & filter)"><svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h18l-7 8v6l-4 2v-8z"/></svg></button>
+        <button class="btn" data-hide-draw id="btn-edit" title="Editor geometri (vertex, reshape, clip, merge, trim, erase)"><svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/><circle cx="4" cy="20" r="1.5" fill="currentColor"/></svg></button>
         <button class="btn" data-hide-draw id="btn-print" title="Cetak peta A4/A3 (PDF)"><svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg></button>
         <button class="btn" data-hide-draw id="btn-fit" title="Zoom ke data"><svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
       </div>
       <span class="pill gps-chip" id="gps-chip"><span class="dot off"></span><span class="lbl">GPS mati</span></span>
       <div class="draw-panel hidden" id="draw-panel"></div>
+      <div class="draw-panel edit-panel hidden" id="edit-panel"></div>
       <div class="layer-panel hidden" id="layer-panel"></div>
     </section>
     <section class="tab hidden" data-tab="data"></section>
@@ -705,11 +718,60 @@ var I18N_EN = {
   'Memproses…': 'Processing…', 'Merender peta indeks…': 'Rendering index map…', 'Menyusun layout…': 'Composing layout…', 'Memuat pustaka PDF…': 'Loading PDF library…', 'Menyimpan PDF…': 'Saving PDF…', 'Buka di tab baru': 'Open in new tab',
   'PETA INDEKS': 'INDEX MAP', 'LEGENDA': 'LEGEND', 'INFORMASI': 'INFORMATION', 'SKALA': 'SCALE', 'Organisasi': 'Organization', 'Tanggal cetak': 'Print date',
   'Sistem koordinat': 'Coordinate system', 'Geografis WGS 84 (EPSG:4326); tampilan Web Mercator': 'Geographic WGS 84 (EPSG:4326); Web Mercator display', 'Sumber data': 'Data source', 'Lembar': 'Sheet',
-  '(tidak tersedia)': '(not available)', 'Utara': 'North'
+  '(tidak tersedia)': '(not available)', 'Utara': 'North',
+  // ---- v1.7: Query atribut, label fitur, editor geometri, pratinjau cetak
+  'Query atribut': 'Attribute query', 'Query atribut (seleksi & filter)': 'Attribute query (selection & filter)', 'Cocok jika': 'Match if', 'semua kondisi (DAN)': 'all conditions (AND)',
+  'salah satu (ATAU)': 'any condition (OR)', '— atribut —': '— attribute —', 'memuat': 'contains', 'diawali': 'starts with', 'salah satu dari (a, b, c)': 'one of (a, b, c)',
+  'kosong': 'is empty', 'tidak kosong': 'is not empty', 'Hapus kondisi': 'Remove condition', '+ Kondisi': '+ Condition', 'Pilih (seleksi)': 'Select', 'Filter tampilan peta': 'Filter map display',
+  'Hapus seleksi': 'Clear selection', 'Hapus filter layer ini': 'Remove this layer filter', 'Tidak ada data yang cocok.': 'No matching records.', 'Zoom ke hasil': 'Zoom to results',
+  'nilai (opsional)': 'value (optional)', 'Isi minimal satu kondisi.': 'Fill in at least one condition.', 'Filter layer dihapus.': 'Layer filter removed.', 'Proyek ini belum punya layer.': 'This project has no layers yet.',
+  'Label on/off': 'Label on/off', '⏷ filter ✕': '⏷ filter ✕',
+  'Label fitur': 'Feature labels', '— teks dari atribut, tampil di peta & cetak PDF': '— text from attributes, shown on the map & in the PDF print', 'Tampilkan label': 'Show labels',
+  'Atribut label': 'Label attribute', 'Atribut tambahan': 'Additional attribute', 'Warna teks': 'Text color', 'Halo': 'Halo', 'Label hanya jika': 'Label only if', 'Pilih atribut untuk label.': 'Choose an attribute for the label.',
+  'Editor': 'Editor', 'Pilih fitur': 'Select', 'Editor geometri (vertex, reshape, clip, merge, trim, erase)': 'Geometry editor (vertex, reshape, clip, merge, trim, erase)', 'Edit vertex': 'Edit vertices', 'Reshape': 'Reshape',
+  'Trim / Split': 'Trim / Split', 'Clip': 'Clip', 'Merge': 'Merge', 'Erase inside': 'Erase inside', 'Erase outside': 'Erase outside', '↶ Undo': '↶ Undo', 'Hapus fitur': 'Delete feature',
+  'Kosongkan pilihan': 'Clear selection', 'Akhiri': 'End', 'Simpan perubahan': 'Save edits', 'Selesai sketsa': 'Finish sketch', 'Hapus vertex': 'Delete vertex', 'Terapkan potongan': 'Apply pieces', 'Batal potong': 'Cancel cut',
+  'Ketuk fitur untuk memilih / membatalkan pilihan.': 'Tap features to select / unselect them.',
+  'Seret vertex; ketuk titik tengah (+) untuk menambah; ketuk vertex lalu "Hapus vertex".': 'Drag a vertex; tap a midpoint (+) to add one; tap a vertex then "Delete vertex".',
+  'Gambar sketsa yang memotong batas fitur terpilih, lalu "Selesai sketsa".': 'Draw a sketch that crosses the selected feature\'s boundary, then "Finish sketch".',
+  'Gambar garis pemotong melintasi garis terpilih; lalu ketuk potongan yang akan dibuang (trim) atau biarkan semua (split).': 'Draw a cutting line across the selected lines; then tap pieces to discard (trim) or keep them all (split).',
+  'Ketuk poligon pemotong (data atau layer referensi); fitur terpilih lain dipotong olehnya.': 'Tap the clipping polygon (data or reference layer); the other selected features are cut by it.',
+  'Gabungkan fitur terpilih (satu layer) menjadi satu fitur.': 'Merge the selected features (one layer) into a single feature.',
+  'Gambar poligon; bagian fitur terpilih DI DALAM poligon dihapus.': 'Draw a polygon; parts of the selected features INSIDE it are erased.',
+  'Gambar poligon; bagian fitur terpilih DI LUAR poligon dihapus.': 'Draw a polygon; parts of the selected features OUTSIDE it are erased.',
+  'Sesi edit dimulai. Pilih fitur lalu alat.': 'Edit session started. Select features, then a tool.',
+  'Selesaikan rekaman yang sedang berjalan dulu.': 'Finish the recording in progress first.', 'Edit vertex: pilih tepat satu fitur.': 'Edit vertices: select exactly one feature.',
+  'Reshape: pilih tepat satu garis atau poligon.': 'Reshape: select exactly one line or polygon.', 'Trim / Split berlaku untuk garis. Pilih fitur garis saja.': 'Trim / Split applies to lines. Select line features only.',
+  'Merge tidak berlaku untuk titik.': 'Merge does not apply to points.', 'Merge: pilih minimal 2 fitur.': 'Merge: select at least 2 features.', 'Merge: semua fitur harus dari layer yang sama.': 'Merge: all features must be in the same layer.',
+  'Poligon tidak bersinggungan/bertumpang tindih sehingga hasilnya multi-bagian. Merge dibatalkan.': 'The polygons do not touch/overlap, so the result would be multipart. Merge cancelled.',
+  'Ujung-ujung garis tidak tersambung (toleransi ±1 m). Merge dibatalkan.': 'The line ends do not connect (±1 m tolerance). Merge cancelled.',
+  'Atribut fitur hasil gabungan diambil dari:': 'Attributes of the merged feature are taken from:', 'Fitur lain dihapus saat perubahan disimpan.': 'The other features are deleted when the edits are saved.',
+  'Pilih dulu fitur yang akan dipotong, lalu alat Clip.': 'First select the features to cut, then the Clip tool.', 'Ketuk poligon pemotong (bukan fitur yang sedang dipilih).': 'Tap the clipping polygon (not a selected feature).',
+  'Buang': 'Discard', 'Pertahankan': 'Keep', 'bagian yang bertumpang tindih (area di dalam pemotong dihapus)': 'the overlapping part (area inside the clipper is removed)',
+  'bagian yang bertumpang tindih (area di luar pemotong dihapus)': 'the overlapping part (area outside the clipper is removed)',
+  'Garis minimal 2 vertex.': 'A line needs at least 2 vertices.', 'Poligon minimal 3 vertex.': 'A polygon needs at least 3 vertices.', 'Sketsa minimal 2 titik.': 'A sketch needs at least 2 points.',
+  'Poligon penghapus minimal 3 titik.': 'The erase polygon needs at least 3 points.', 'Sketsa harus memotong batas poligon minimal 2 kali (masuk & keluar).': 'The sketch must cross the polygon boundary at least twice (in & out).',
+  'Sketsa harus memotong garis yang diedit.': 'The sketch must cross the edited line.', 'Reshape diterapkan.': 'Reshape applied.', 'Garis pemotong tidak memotong garis terpilih.': 'The cutting line does not cross the selected lines.',
+  'Ketuk potongan yang akan dibuang (merah), lalu "Terapkan potongan".': 'Tap the pieces to discard (red), then "Apply pieces".', 'Garis dipecah (split).': 'Line split.',
+  'Tidak ada fitur yang terkena poligon penghapus.': 'No features are touched by the erase polygon.', 'Tidak ada fitur terpilih.': 'No features selected.', 'Tidak ada yang bisa di-undo.': 'Nothing to undo.',
+  'Pilih fitur terlebih dahulu (alat Pilih atau Query).': 'Select features first (Select tool or Query).', 'Sebagian fitur terpilih tidak dapat Anda edit.': 'Some selected features cannot be edited by you.',
+  'Sebagian fitur terpilih tidak dapat Anda edit (status/kepemilikan). Batalkan pilihannya dulu.': 'Some selected features cannot be edited by you (status/ownership). Unselect them first.',
+  'Sebagian fitur terpilih tidak dapat Anda hapus.': 'Some selected features cannot be deleted by you.', 'Belum ada perubahan.': 'No edits yet.',
+  'Akhiri sesi edit': 'End edit session', 'Ada perubahan yang belum disimpan. Buang perubahan?': 'There are unsaved edits. Discard them?',
+  'Pratinjau': 'Preview', 'Pratinjau halaman (klik untuk memperbesar)': 'Page preview (click to enlarge)', 'Pratinjau halaman cetak': 'Print page preview', 'Pratinjau cetak': 'Print preview'
 };
 
 /** Pola untuk teks dinamis (angka, nama). Urutan penting: yang lebih spesifik di atas. */
 var I18N_EN_PATTERNS = [
+  [/^(\d+) data cocok$/, '$1 matching records'], [/^(\d+) data terseleksi\.$/, '$1 records selected.'], [/^(\d+) terpilih$/, '$1 selected'], [/^(\d+) perubahan$/, '$1 edits'],
+  [/^Filter aktif: (.+)$/, 'Active filter: $1'], [/^Filter tampilan diterapkan: (\d+) data tampil di peta & cetak\.$/, 'Display filter applied: $1 records shown on the map & in print.'],
+  [/^Filter aktif: (.+) — ketuk untuk menghapus$/, 'Active filter: $1 — tap to remove'], [/^Merge (\d+) fitur$/, 'Merge $1 features'], [/^Merge: (\d+) fitur digabung\.$/, 'Merge: $1 features merged.'],
+  [/^(\d+) fitur terpilih akan dipotong oleh poligon pemotong\.$/, '$1 selected features will be cut by the clipping polygon.'],
+  [/^Clip: (\d+) fitur dipotong(?:, (\d+) terhapus)?\.$/, function (_, a, b) { return 'Clip: ' + a + ' features cut' + (b ? ', ' + b + ' deleted' : '') + '.'; }],
+  [/^Erase (inside|outside): (\d+) diubah, (\d+) terhapus(?:, (\d+) bagian baru)?\.$/, function (_, a, b, c, d) { return 'Erase ' + a + ': ' + b + ' changed, ' + c + ' deleted' + (d ? ', ' + d + ' new parts' : '') + '.'; }],
+  [/^(\d+) potongan dibuang \(trim\)\.$/, '$1 pieces discarded (trim).'], [/^(\d+) perubahan disimpan ke antrean sinkronisasi\.$/, '$1 edits saved to the sync queue.'],
+  [/^Geometri tidak valid: (.+)$/, 'Invalid geometry: $1'], [/^Hasil reshape tidak valid: (.+)$/, 'Invalid reshape result: $1'],
+  [/^Pratinjau (\S+) · skala 1:(.+) — periksa layout, legenda & label, lalu tekan "Buat PDF"\.$/, 'Preview $1 · scale 1:$2 — check the layout, legend & labels, then press "Create PDF".'],
   [/^Data terkait: (.+)$/, 'Related records: $1'],
   [/^Data baru — (.+)$/, 'New record — $1'], [/^Edit data — (.+)$/, 'Edit record — $1'],
   [/^Rekam (titik|garis|poligon) → (.+)$/, function (_, a, b) { return 'Record ' + ({ titik: 'point', garis: 'line', poligon: 'polygon' }[a]) + ' → ' + b; }],
@@ -791,7 +853,7 @@ var LEGAL_EN = {
  * Mode: 'gas' (HtmlService/google.script.run), 'remote' (PWA GitHub Pages -> fetch Web App), 'demo' (backend emulasi di browser).
  */
 'use strict';
-var APP_VERSION = '1.6.0', APP_BUILD = '2026-11-04';
+var APP_VERSION = '1.7.0', APP_BUILD = '2026-11-06';
 var S = { token: '', user: null, org: null, perms: [], settings: {}, license: {}, projects: [], layers: [], users: [],
   features: new Map(), serverVer: {}, projectId: '', layerId: '', hiddenLayers: new Set(), online: navigator.onLine, tab: 'map', rendered: {} };
 
@@ -1351,6 +1413,9 @@ var MapView = {
     add({ id: 'f-line-p', type: 'line', source: 'feat', filter: ['all', ['in', ['geometry-type'], ['literal', ['LineString', 'Polygon']]], ['get', 'pending']], paint: { 'line-color': ['get', 'color'], 'line-width': ['case', ['get', 'sel'], 4, 2.6], 'line-dasharray': [2, 1.5] } });
     add({ id: 'f-pt', type: 'circle', source: 'feat', filter: ['all', ['==', ['geometry-type'], 'Point'], ['!', ['has', 'icon']]], paint: { 'circle-radius': ['case', ['get', 'sel'], 9, 6.5], 'circle-color': ['get', 'color'], 'circle-stroke-width': 2.2, 'circle-stroke-color': ['case', ['get', 'pending'], '#f97316', '#ffffff'] } });
     add({ id: 'f-sym', type: 'symbol', source: 'feat', filter: ['all', ['==', ['geometry-type'], 'Point'], ['has', 'icon']], layout: { 'icon-image': ['get', 'icon'], 'icon-size': ['case', ['get', 'sel'], 1.3, 1], 'icon-allow-overlap': true, 'icon-ignore-placement': true, 'symbol-sort-key': ['case', ['get', 'sel'], 1, 0] } });
+    if (!m.getSource('lbl')) m.addSource('lbl', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    add({ id: 'lbl', type: 'symbol', source: 'lbl', layout: { 'icon-image': ['get', 'img'], 'icon-anchor': ['case', ['==', ['get', 'pt'], 1], 'left', 'center'], 'icon-offset': ['case', ['==', ['get', 'pt'], 1], ['literal', [13, 0]], ['literal', [0, 0]]], 'icon-allow-overlap': false, 'icon-padding': 1 } });
+    Editor.addLayers(add, m);
     add({ id: 'gps-acc', type: 'fill', source: 'gps', filter: ['==', ['geometry-type'], 'Polygon'], paint: { 'fill-color': '#2563eb', 'fill-opacity': 0.12 } });
     add({ id: 'gps-pt', type: 'circle', source: 'gps', filter: ['==', ['geometry-type'], 'Point'], paint: { 'circle-radius': 7, 'circle-color': '#2563eb', 'circle-stroke-width': 3, 'circle-stroke-color': '#fff' } });
     add({ id: 'd-fill', type: 'fill', source: 'draft', filter: ['==', ['geometry-type'], 'Polygon'], paint: { 'fill-color': '#f59e0b', 'fill-opacity': 0.2 } });
@@ -1364,18 +1429,21 @@ var MapView = {
   },
   visibleFeatures: function () {
     var out = [];
-    S.features.forEach(function (f) { if (!f.deleted && f.project_id === S.projectId && !S.hiddenLayers.has(f.layer_id) && f.geometry) out.push(f); });
+    S.features.forEach(function (f) { if (!f.deleted && f.project_id === S.projectId && !S.hiddenLayers.has(f.layer_id) && f.geometry && Query.visible(f)) out.push(f); });
     return out;
   },
   refreshData: function () {
     MapView.fillSelectors();
     if (!MapView.ready) return;
-    var fc = { type: 'FeatureCollection', features: MapView.visibleFeatures().map(function (f) {
-      var l = layerById(f.layer_id), st = Sym.styleFor(l, f.attrs), pr = { id: f.id, color: st.color, pending: !!f._pending, sel: MapView.popupFeature === f.id };
-      if (f.geometry.type === 'Point' && !Sym.plain(l)) pr.icon = Sym.imageId(st.symbol, st.color, st.mode, st.size, !!f._pending);
-      return { type: 'Feature', geometry: f.geometry, properties: pr };
+    var list = Editor.overlay(MapView.visibleFeatures());
+    var fc = { type: 'FeatureCollection', features: list.map(function (f) {
+      var l = layerById(f.layer_id), g = Editor.geomOf(f), st = Sym.styleFor(l, f.attrs), pr = { id: f.id, color: st.color, pending: !!f._pending || !!(Editor.on && (Editor.work[f.id] || f._added)), sel: MapView.popupFeature === f.id, hl: Select.ids.has(f.id) };
+      if (g.type === 'Point' && !Sym.plain(l)) pr.icon = Sym.imageId(st.symbol, st.color, st.mode, st.size, pr.pending);
+      return { type: 'Feature', geometry: g, properties: pr };
     }) };
     var src = MapView.map.getSource('feat'); if (src) src.setData(fc);
+    var ls = MapView.map.getSource('lbl'); if (ls) ls.setData(Labels.build(list));
+    if (Editor.on) Editor.renderSketch();
   },
   fillSelectors: function () {
     var sp = $('#sel-project'), sl = $('#sel-layer'); if (!sp) return;
@@ -1387,6 +1455,7 @@ var MapView = {
   },
   onClick: function (e) {
     if (Draw.mode) { Draw.add([e.lngLat.lng, e.lngLat.lat]); return; }
+    if (Editor.click(e)) return;
     var hits = MapView.map.queryRenderedFeatures([[e.point.x - 6, e.point.y - 6], [e.point.x + 6, e.point.y + 6]], { layers: ['f-sym', 'f-pt', 'f-line', 'f-line-p', 'f-fill'] });
     if (hits.length) { Detail.open(hits[0].properties.id); return; }
     var ovl = Overlays.vectorLayerIds().filter(function (id) { return MapView.map.getLayer(id); });
@@ -1414,7 +1483,7 @@ var MapView = {
       '<h4>Basemap</h4><div class="seg">' + [['osm', 'OSM'], ['maptiler', 'MapTiler'], ['xyz', 'XYZ'], ['none', 'Kosong']].map(function (o) { return '<button data-bm="' + o[0] + '" class="' + (bm === o[0] ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>' +
       '<div class="' + (bm === 'maptiler' ? '' : 'hidden') + '" id="mt-box" style="margin-top:8px"></div>' +
       '<div class="' + (bm === 'xyz' ? '' : 'hidden') + '" style="margin-top:8px"><input class="input small mono" id="xyz-url" placeholder="https://server/{z}/{x}/{y}.png" value="' + esc(LS.get('umg_xyz') || '') + '"><button class="btn sm" id="xyz-save" style="margin-top:6px">Terapkan</button></div>' +
-      '<h4>Layer data</h4>' + (lyrs.length ? lyrs.map(function (l) { return '<label class="lyr"><input type="checkbox" data-ly="' + esc(l.id) + '"' + (S.hiddenLayers.has(l.id) ? '' : ' checked') + '>' + Sym.layerIcon(l, 16) + '<span class="grow">' + esc(l.name) + '</span><span class="small muted">' + countLayer(l.id) + '</span></label>'; }).join('') : '<div class="small muted">Belum ada layer.</div>') +
+      '<h4>Layer data</h4>' + (lyrs.length ? lyrs.map(function (l) { return '<label class="lyr"><input type="checkbox" data-ly="' + esc(l.id) + '"' + (S.hiddenLayers.has(l.id) ? '' : ' checked') + '>' + Sym.layerIcon(l, 16) + '<span class="grow">' + esc(l.name) + '</span>' + (Query.defs()[l.id] ? '<button type="button" class="btn sm ghost lyr-f" data-unfilter="' + esc(l.id) + '" title="Filter aktif: ' + esc(Query.text(Query.defs()[l.id])) + ' — ketuk untuk menghapus">⏷ filter ✕</button>' : '') + (l.style && l.style.label && l.style.label.field ? '<button type="button" class="btn sm ghost lyr-lb' + (Labels.active(l) ? ' on' : '') + '" data-lbl="' + esc(l.id) + '" title="Label on/off">Aa</button>' : '') + '<span class="small muted">' + countLayer(l.id) + '</span></label>'; }).join('') : '<div class="small muted">Belum ada layer.</div>') +
       '<h4>Layer referensi</h4><div id="ov-box"></div>' +
       '<h4>Foto udara (PMTiles)</h4><div id="pmt-box"></div>';
     p.classList.remove('hidden');
@@ -1425,6 +1494,8 @@ var MapView = {
     $('[data-close]', p).onclick = function () { MapView.closePanel(); };
     $$('[data-bm]', p).forEach(function (b) { b.onclick = function () { LS.set('umg_basemap', b.getAttribute('data-bm')); MapView.restyle(); p.classList.add('hidden'); MapView.layerPanel(); }; });
     var xs = $('#xyz-save', p); if (xs) xs.onclick = function () { var u = $('#xyz-url').value.trim(); if (!/^https:\/\/.+\{z\}.+\{x\}.+\{y\}/.test(u)) return toast('URL XYZ harus HTTPS dan memuat {z}/{x}/{y}.', 'err'); LS.set('umg_xyz', u); MapView.restyle(); };
+    $$('[data-lbl]', p).forEach(function (b) { b.onclick = function (e) { e.preventDefault(); var id = b.getAttribute('data-lbl'), l = layerById(id); if (!l.style.label.on) return toast('Label belum diaktifkan di pengaturan layer (Proyek & Layer › Edit › Label).', 'err', 5000); Labels.setOff(id, Labels.active(l)); b.classList.toggle('on', Labels.active(l)); }; });
+    $$('[data-unfilter]', p).forEach(function (b) { b.onclick = function (e) { e.preventDefault(); Query.setDef(b.getAttribute('data-unfilter'), null); p.classList.add('hidden'); MapView.layerPanel(); }; });
     $$('[data-ly]', p).forEach(function (c) { c.onchange = function () { var id = c.getAttribute('data-ly'); if (c.checked) S.hiddenLayers.delete(id); else S.hiddenLayers.add(id); MapView.refreshData(); }; });
   }
 };
@@ -2420,6 +2491,7 @@ var Tabs = {
     var body = document.createElement('div'); body.className = 'col';
     body.innerHTML = '<div class="row wrap"><label class="f grow">Nama layer <span class="req">*</span><input class="input" id="lf-name" maxlength="120" value="' + esc(l.name) + '"></label><label class="f">Geometri<select class="input" id="lf-geom"' + (l.id && countLayer(l.id) ? ' disabled' : '') + '>' + [['Point', 'Titik'], ['LineString', 'Garis'], ['Polygon', 'Poligon'], ['None', 'Tanpa geometri (tabel)']].map(function (g) { return '<option value="' + g[0] + '"' + (l.geom_type === g[0] ? ' selected' : '') + '>' + g[1] + '</option>'; }).join('') + '</select></label><label class="f">Warna<input type="color" class="input" id="lf-color" value="' + esc(l.style.color || '#e11d48') + '" style="width:64px;padding:4px"></label></div>' +
       '<details class="sym-ed" open><summary><b>Simbologi</b> <span class="small muted">— simbol titik, warna & variasi menurut atribut</span></summary><div id="lf-sym"></div></details>' +
+      '<details class="sym-ed"' + (l.style && l.style.label && l.style.label.on ? ' open' : '') + '><summary><b>Label</b> <span class="small muted">— teks dari atribut, tampil di peta & cetak PDF</span></summary><div id="lf-lbl"></div></details>' +
       '<div class="small muted">CRS penyimpanan: EPSG:4326 (WGS84, GeoJSON RFC 7946). Luas/panjang dihitung geodesik. <b>Tanpa geometri</b> = tabel atribut (mis. inspeksi, pemilik) yang dapat direlasikan ke layer lain lewat atribut tipe <b>Relasi</b>.</div><b class="small">Skema atribut</b><div id="lf-fields" class="col"></div><button class="btn sm" id="lf-add" type="button">+ Atribut</button>';
     function draw() {
       $('#lf-fields', body).innerHTML = fields.map(function (f, i) {
@@ -2501,11 +2573,12 @@ var Tabs = {
     });
     $('#lf-color', body).addEventListener('input', function (e) { st.color = e.target.value; drawSym(); });
     $('#lf-geom', body).addEventListener('change', drawSym);
-    $('#lf-fields', body).addEventListener('change', function () { setTimeout(drawSym, 0); });
+    $('#lf-fields', body).addEventListener('change', function () { setTimeout(function () { drawSym(); var cur = Labels.collect($('#lf-lbl', body)); $('#lf-lbl', body).innerHTML = Labels.formHtml(cur, fields); }, 0); });
+    $('#lf-lbl', body).innerHTML = Labels.formHtml(l.style && l.style.label, fields);
     drawSym();
     modal({ title: l.id ? 'Edit layer' : 'Layer baru', body: body, wide: true, buttons: [{ label: 'Batal' }].concat(l.id ? [{ label: 'Hapus', cls: 'danger', onClick: async function () { if (!(await confirmBox('Hapus layer', 'Layer hanya dapat dihapus jika kosong.', 'Hapus', true))) return false; await Api.call('layers.delete', { id: l.id }); await App.refreshBoot(); } }] : []).concat([{ label: 'Simpan', cls: 'primary', onClick: async function () {
       fields.forEach(function (f) { if (!f.key && f.label) f.key = f.label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').replace(/^(\d)/, 'f_$1'); });
-      await Api.call('layers.save', { id: l.id, project_id: l.project_id, name: $('#lf-name', body).value, geom_type: $('#lf-geom', body).value, style: { color: $('#lf-color', body).value, symbol: st.symbol, mode: st.mode, size: st.size, by: st.by || '', classes: st.by ? st.classes.filter(function (c) { return String(c.v).trim() !== ''; }) : [] }, schema: fields });
+      await Api.call('layers.save', { id: l.id, project_id: l.project_id, name: $('#lf-name', body).value, geom_type: $('#lf-geom', body).value, style: { color: $('#lf-color', body).value, symbol: st.symbol, mode: st.mode, size: st.size, by: st.by || '', classes: st.by ? st.classes.filter(function (c) { return String(c.v).trim() !== ''; }) : [], label: Labels.collect($('#lf-lbl', body)) }, schema: fields });
       await App.refreshBoot(); toast('Layer tersimpan.', 'ok');
     } }]) });
   },
@@ -2533,7 +2606,7 @@ var Tabs = {
     el.innerHTML = '<div class="tab-h"><h2>Tentang &amp; Legal</h2></div><div class="grid2"><div class="card"><h3>Informasi aplikasi</h3><table class="t"><tr><th>Aplikasi</th><td>Universal Mobile Mapping GIS — Edisi Apps Script</td></tr><tr><th>Versi klien</th><td>' + APP_VERSION + ' (build ' + APP_BUILD + ')</td></tr><tr><th>Versi server</th><td id="ab-sv">' + esc(S.serverApp && S.serverApp.version ? S.serverApp.version + ' (' + S.serverApp.build + ')' : '-') + '</td></tr><tr><th>Mode</th><td>' + ({ gas: 'Apps Script (HtmlService)', remote: 'PWA (GitHub Pages)', demo: 'DEMO (data di browser)' }[CONFIG.MODE]) + '</td></tr><tr><th>Lisensi</th><td>' + esc(S.license.label || '-') + (S.license.exp ? ' · s/d ' + esc(S.license.exp) : '') + '</td></tr><tr><th>CRS data</th><td>EPSG:4326 (WGS84)</td></tr></table><div class="row wrap" style="margin-top:10px"><button class="btn sm" id="ab-health">Cek kesehatan server</button>' + (CONFIG.MODE === 'demo' ? '<button class="btn sm danger" id="ab-reset">Reset data demo</button>' : '') + '</div><div id="ab-h" class="small mono" style="margin-top:8px"></div></div>' +
       (CONFIG.MODE === 'demo' ? '<div class="card" style="border-color:var(--warn)"><h3>Batasan versi demo</h3><ul class="small"><li>Data hanya di tab ini — <b>hilang saat tab/aplikasi ditutup</b> dan direset otomatis setiap ' + Demo.LIMIT.sessionMin + ' menit (sisa: ' + Math.ceil(Demo.left() / 60000) + ' menit).</li><li>1 proyek; maks. ' + (S.license.max_layers || 6) + ' layer, ' + (S.license.max_features || 60) + ' data, 2 foto per data.</li><li>Ekspor GeoJSON/CSV/KML/SHP dinonaktifkan; impor maks. ' + Demo.LIMIT.importRows + ' baris.</li><li>Cetak PDF resolusi draft (' + Demo.LIMIT.printDpi + ' dpi) dengan watermark DEMO.</li><li>Tidak dapat menambah pengguna, mengganti password, mengaktifkan lisensi, atau mengubah judul/logo.</li><li>Tanpa server & sinkronisasi multi-perangkat (semua emulasi di browser).</li></ul></div>' : '') +
       (CONFIG.MODE !== 'demo' ? '<div class="card"><h3>Pasang di HP / PC</h3><p class="small muted">Versi PWA dapat dipasang seperti aplikasi: ikon di layar utama, layar penuh, offline.</p><div class="row wrap"><button class="btn sm" data-install>📲 Pasang aplikasi</button><button class="btn sm" id="ab-inst-chk">Periksa kesiapan instalasi</button></div>' + (Install.standalone() ? '<p class="small" style="color:var(--ok)">✅ Aplikasi sedang berjalan sebagai aplikasi terpasang.</p>' : '') + '</div>' : '') +
-      '<div class="card"><h3>Komponen pihak ketiga</h3><ul class="small"><li>MapLibre GL JS 4.7.1 — BSD-3-Clause</li><li>PMTiles (protomaps) 3.2.1 — BSD-3-Clause</li><li>shpjs 6.2.0, geotiff.js 2.1.3, proj4js 2.15.0, pdf-lib 1.17.1, jsPDF 2.5.2, fflate 0.8.2 — MIT</li><li>@tmcw/togeojson 7.1.3 — BSD-2-Clause</li><li>PDF.js 3.11.174 — Apache-2.0</li><li>Simbol titik: Material Design Icons (Google) — Apache-2.0</li><li>Data peta © OpenStreetMap contributors — ODbL; tile OSM tunduk pada Tile Usage Policy OSMF</li><li>Google Apps Script, Sheets, Drive — Ketentuan Layanan Google</li></ul><p class="small muted">Ikon & logo bawaan dibuat khusus untuk aplikasi ini.</p></div></div>' +
+      '<div class="card"><h3>Komponen pihak ketiga</h3><ul class="small"><li>MapLibre GL JS 4.7.1 — BSD-3-Clause</li><li>PMTiles (protomaps) 3.2.1 — BSD-3-Clause</li><li>shpjs 6.2.0, geotiff.js 2.1.3, proj4js 2.15.0, pdf-lib 1.17.1, Turf.js 7.4.0 (MIT), jsPDF 2.5.2, fflate 0.8.2 — MIT</li><li>@tmcw/togeojson 7.1.3 — BSD-2-Clause</li><li>PDF.js 3.11.174 — Apache-2.0</li><li>Simbol titik: Material Design Icons (Google) — Apache-2.0</li><li>Data peta © OpenStreetMap contributors — ODbL; tile OSM tunduk pada Tile Usage Policy OSMF</li><li>Google Apps Script, Sheets, Drive — Ketentuan Layanan Google</li></ul><p class="small muted">Ikon & logo bawaan dibuat khusus untuk aplikasi ini.</p></div></div>' +
       '<div class="card legal" style="margin-top:12px">' + LEGAL.terms + '</div><div class="card legal" style="margin-top:12px">' + LEGAL.privacy + '</div>';
     var ic = $('#ab-inst-chk'); if (ic) ic.onclick = Install.help; Install.refresh();
     $('#ab-health').onclick = async function () { try { var h = await Api.call('health'); $('#ab-h').textContent = JSON.stringify(h); $('#ab-sv').textContent = h.version + ' (' + h.build + ')'; } catch (e) { $('#ab-h').textContent = 'Gagal: ' + e.message; } };
@@ -2660,6 +2733,8 @@ function bindGlobal() {
   $('#btn-layers').onclick = MapView.layerPanel;
   $('#btn-fit').onclick = function () { MapView.fit(); };
   $('#btn-print').onclick = function () { Print.open(); };
+  $('#btn-query').onclick = function () { Query.open(); };
+  $('#btn-edit').onclick = function () { if (Editor.on) Editor.stop(); else Editor.start(); };
   $('#sel-project').onchange = function (e) { S.projectId = e.target.value; MapView.refreshData(); S.rendered = {}; };
   $('#sel-layer').onchange = function (e) { S.layerId = e.target.value; };
   function net() { S.online = navigator.onLine; var p = $('#pill-net'); $('.dot', p).className = 'dot' + (S.online ? '' : ' off'); $('.lbl', p).textContent = CONFIG.MODE === 'demo' ? 'Demo' : (S.online ? 'Online' : 'Offline'); if (S.online) { Sync.backoff = 2000; Sync.schedule(500); } }
@@ -2749,9 +2824,10 @@ var Lib = {
     pdfworker: 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js',
     pdflib: 'https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js',
     jspdf: 'https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js',
-    fflate: 'https://unpkg.com/fflate@0.8.2/umd/index.js'
+    fflate: 'https://unpkg.com/fflate@0.8.2/umd/index.js',
+    turf: 'https://unpkg.com/@turf/turf@7.4.0/turf.min.js'
   },
-  GLOBAL: { shp: 'shp', togeojson: 'toGeoJSON', geotiff: 'GeoTIFF', proj4: 'proj4', pdfjs: 'pdfjsLib', pdflib: 'PDFLib', jspdf: 'jspdf', fflate: 'fflate' },
+  GLOBAL: { shp: 'shp', togeojson: 'toGeoJSON', geotiff: 'GeoTIFF', proj4: 'proj4', pdfjs: 'pdfjsLib', pdflib: 'PDFLib', jspdf: 'jspdf', fflate: 'fflate', turf: 'turf' },
   _p: {},
   load: function (name) {
     if (window[Lib.GLOBAL[name]]) return Promise.resolve(window[Lib.GLOBAL[name]]);
@@ -3114,23 +3190,46 @@ var Print = {
       '<label class="f">Subjudul<input class="input" id="pr-sub" maxlength="120" value="' + esc(S.org ? S.org.name : '') + '"></label>' +
       '<div class="grid2"><label class="f">Disusun oleh<input class="input" id="pr-by" maxlength="60" value="' + esc(S.user ? S.user.name : '') + '"></label><label class="f">Nomor lembar<input class="input" id="pr-no" maxlength="30" value="1 / 1"></label></div>' +
       '<label class="f">Catatan<textarea class="input" id="pr-note" rows="2" maxlength="300">Posisi berasal dari GPS perangkat; bukan hasil pengukuran kadastral.</textarea></label>' +
-      '<div class="row wrap small"><label class="row"><input type="checkbox" id="pr-grid" checked> Grid koordinat</label><label class="row"><input type="checkbox" id="pr-inset" checked> Peta indeks</label><label class="row"><input type="checkbox" id="pr-legend" checked> Legenda</label></div>' +
+      '<div class="row wrap small"><label class="row"><input type="checkbox" id="pr-grid" checked> Grid koordinat</label><label class="row"><input type="checkbox" id="pr-inset" checked> Peta indeks</label><label class="row"><input type="checkbox" id="pr-legend" checked> Legenda</label><label class="row"><input type="checkbox" id="pr-labels" checked> Label fitur</label></div>' +
       '<details class="lg-ed" id="pr-lg" open><summary><b>Legenda</b> <span class="small muted">— ubah judul, label, simbol, warna & urutan sebelum dicetak</span></summary><div class="row wrap" style="margin:8px 0"><label class="f grow">Judul legenda<input class="input" id="pr-lg-title" maxlength="40"></label><label class="row small" style="align-self:flex-end"><input type="checkbox" id="pr-lg-count"> Tampilkan jumlah data</label></div><div id="pr-lg-rows" class="col" style="gap:6px"></div><div class="row wrap" style="margin-top:8px"><button type="button" class="btn sm" id="pr-lg-add">+ Item legenda</button><button type="button" class="btn sm ghost" id="pr-lg-reset">Kembalikan otomatis</button></div></details>' +
       '<div class="progress hidden" id="pr-prog"><div style="width:30%"></div></div><div class="small muted" id="pr-msg">Layout mengikuti pola ArcGIS: bingkai peta dengan grid, panel judul, arah utara, skala batang & numerik, legenda, peta indeks, dan blok informasi.</div><div id="pr-out"></div>';
-    modal({ title: 'Cetak peta (PDF)', body: body, wide: true, sticky: true, buttons: [{ label: 'Tutup' }, { label: 'Buat PDF', cls: 'primary', onClick: async function (mb, btn) {
+    var getOpt = function (mb) {
       Legend.save();
-      var opt = { legendItems: Legend.items.filter(function (it) { return it.show && String(it.label).trim(); }), legendTitle: Legend.title, paper: $('#pr-paper', mb).value, ori: $('#pr-ori', mb).value, scale: Number($('#pr-scale', mb).value), dpi: Demo.on() ? Math.min(Demo.LIMIT.printDpi, Number($('#pr-dpi', mb).value)) : Number($('#pr-dpi', mb).value), title: $('#pr-title', mb).value, sub: $('#pr-sub', mb).value, by: $('#pr-by', mb).value, no: $('#pr-no', mb).value, note: $('#pr-note', mb).value, grid: $('#pr-grid', mb).checked, inset: $('#pr-inset', mb).checked, legend: $('#pr-legend', mb).checked };
+      return { legendItems: Legend.items.filter(function (it) { return it.show && String(it.label).trim(); }), legendTitle: Legend.title, paper: $('#pr-paper', mb).value, ori: $('#pr-ori', mb).value, scale: Number($('#pr-scale', mb).value), dpi: Demo.on() ? Math.min(Demo.LIMIT.printDpi, Number($('#pr-dpi', mb).value)) : Number($('#pr-dpi', mb).value), title: $('#pr-title', mb).value, sub: $('#pr-sub', mb).value, by: $('#pr-by', mb).value, no: $('#pr-no', mb).value, note: $('#pr-note', mb).value, grid: $('#pr-grid', mb).checked, inset: $('#pr-inset', mb).checked, legend: $('#pr-legend', mb).checked, labels: $('#pr-labels', mb).checked };
+    };
+    modal({ title: 'Cetak peta (PDF)', body: body, wide: true, sticky: true, buttons: [{ label: 'Tutup' }, { label: 'Pratinjau', onClick: async function (mb, btn) {
+      var opt = getOpt(mb); opt.dpi = 72; opt.preview = true;
+      var prog = $('#pr-prog', mb), msg = $('#pr-msg', mb); prog.classList.remove('hidden'); btn.textContent = 'Memproses…';
+      try {
+        var r = await Print.make(opt, function (t, p) { msg.textContent = t; $('div', prog).style.width = p + '%'; });
+        await Print.showPreview(r.blob, $('#pr-out', mb));
+        msg.textContent = 'Pratinjau ' + opt.paper + ' · skala 1:' + fmtNum(r.scale, 0) + ' — periksa layout, legenda & label, lalu tekan "Buat PDF".';
+      } finally { prog.classList.add('hidden'); btn.textContent = 'Pratinjau'; }
+      return false;
+    } }, { label: 'Buat PDF', cls: 'primary', onClick: async function (mb, btn) {
+      var opt = getOpt(mb);
       var prog = $('#pr-prog', mb), msg = $('#pr-msg', mb); prog.classList.remove('hidden'); btn.textContent = 'Memproses…';
       try {
         var r = await Print.make(opt, function (t, p) { msg.textContent = t; $('div', prog).style.width = p + '%'; });
         Print.last = r;
         var url = URL.createObjectURL(r.blob);
-        $('#pr-out', mb).innerHTML = '<div class="row wrap" style="margin-top:8px"><a class="btn primary" id="pr-dl" href="' + url + '" download="' + esc(r.name) + '">Unduh PDF (' + fmtNum(r.blob.size / 1048576, 1) + ' MB)</a><a class="btn" href="' + url + '" target="_blank" rel="noopener">Buka di tab baru</a></div>' + (window.innerWidth > 860 ? '<iframe title="Pratinjau" src="' + url + '#toolbar=0" style="width:100%;height:420px;border:1px solid var(--line);border-radius:10px;margin-top:8px"></iframe>' : '');
+        $('#pr-out', mb).innerHTML = '<div class="row wrap" style="margin-top:8px"><a class="btn primary" id="pr-dl" href="' + url + '" download="' + esc(r.name) + '">Unduh PDF (' + fmtNum(r.blob.size / 1048576, 1) + ' MB)</a><a class="btn" href="' + url + '" target="_blank" rel="noopener">Buka di tab baru</a></div><div id="pr-pv"></div>';
+        Print.showPreview(r.blob, $('#pr-pv', mb)).catch(function () { });
         msg.textContent = 'Selesai: ' + r.name + ' · skala 1:' + fmtNum(r.scale, 0);
       } finally { prog.classList.add('hidden'); btn.textContent = 'Buat PDF'; }
       return false;
     } }] });
     Legend.bind($('#pr-lg'));
+  },
+  /** Pratinjau halaman PDF sebagai gambar (pdf.js) — berfungsi juga di HP yang tidak bisa menampilkan PDF di dalam halaman. */
+  showPreview: async function (blob, box) {
+    var pdfjs = await Lib.pdfjs(), doc = await pdfjs.getDocument({ data: new Uint8Array(await blob.arrayBuffer()), isEvalSupported: false }).promise;
+    var page = await doc.getPage(1), w = Math.min(box.clientWidth || 640, 900), vp0 = page.getViewport({ scale: 1 }), sc = (w * (window.devicePixelRatio || 1)) / vp0.width, vp = page.getViewport({ scale: sc });
+    var cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height; cv.className = 'pr-preview'; cv.setAttribute('aria-label', 'Pratinjau halaman cetak');
+    await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+    box.innerHTML = '<div class="small muted" style="margin-top:8px">Pratinjau halaman (klik untuk memperbesar)</div>'; box.appendChild(cv);
+    cv.onclick = function () { Zoom.open(cv.toDataURL('image/png'), 'Pratinjau cetak'); };
+    doc.destroy();
   },
   latin: function (s) { return String(s == null ? '' : s).replace(/[–—]/g, '-').replace(/[“”]/g, '"').replace(/[‘’]/g, "'").replace(/≤/g, '<=').replace(/≥/g, '>=').replace(/±/g, '+/-').replace(/×/g, 'x').replace(/[^\x20-\x7E\xA0-\xFF]/g, ''); },
   toPng: function (src, size) {
@@ -3142,18 +3241,20 @@ var Print = {
     });
   },
   /** Render peta di luar layar dengan ukuran piksel sesuai bingkai cetak. */
-  renderMap: function (style, wpx, hpx, view, extraLayers) {
+  /** ratio = piksel perangkat per piksel CSS (dpi/96): simbol, label & garis tetap berukuran sama di kertas pada dpi berapa pun. */
+  renderMap: function (style, wpx, hpx, view, extraLayers, ratio) {
+    ratio = ratio || 1;
     return new Promise(function (res, rej) {
       var div = document.createElement('div');
-      div.style.cssText = 'position:fixed;left:-20000px;top:0;width:' + wpx + 'px;height:' + hpx + 'px;';
+      div.style.cssText = 'position:fixed;left:-20000px;top:0;width:' + (wpx / ratio) + 'px;height:' + (hpx / ratio) + 'px;';
       document.body.appendChild(div);
       var m;
-      try { m = new maplibregl.Map({ container: div, style: style, center: view.center, zoom: view.zoom, interactive: false, attributionControl: false, preserveDrawingBuffer: true, fadeDuration: 0, pixelRatio: 1 }); }
+      try { m = new maplibregl.Map({ container: div, style: style, center: view.center, zoom: view.zoom, interactive: false, attributionControl: false, preserveDrawingBuffer: true, fadeDuration: 0, pixelRatio: ratio }); }
       catch (e) { div.remove(); return rej(e); }
       Sym.attach(m);
       var done = false, finish = function () {
         if (done) return; done = true; clearTimeout(to);
-        try { var url = m.getCanvas().toDataURL('image/jpeg', 0.92); var proj = function (ll) { return m.project(ll); }; var b = m.getBounds(); res({ url: url, project: proj, bounds: [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()], zoom: m.getZoom() }); }
+        try { var url = m.getCanvas().toDataURL('image/jpeg', 0.92); var proj = function (ll) { var q = m.project(ll); return { x: q.x * ratio, y: q.y * ratio }; }; var b = m.getBounds(); res({ url: url, project: proj, bounds: [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()], zoom: m.getZoom() }); }
         catch (e) { rej(new Error('Kanvas peta tidak dapat diekspor (tile tanpa CORS?).')); }
         setTimeout(function () { m.remove(); div.remove(); }, 0);
       };
@@ -3179,14 +3280,15 @@ var Print = {
     var maxPx = 7000; if (wpx > maxPx || hpx > maxPx) { var k = maxPx / Math.max(wpx, hpx); wpx = Math.round(wpx * k); hpx = Math.round(hpx * k); pxmm *= k; }
     var cur = MapView.map, c = cur.getCenter(), lat = c.lat;
     var zoom;
-    if (o.scale) { var mpp = o.scale * 0.0254 / (pxmm * 25.4); zoom = Math.log2(40075016.686 * Math.cos(lat * Math.PI / 180) / (512 * mpp)); }
-    else zoom = cur.getZoom() + Math.log2(wpx / cur.getCanvas().clientWidth);
+    var ratio = pxmm / (96 / 25.4), cssMm = 96 / 25.4;   // peta dirender pada ukuran CSS 96 dpi × pixelRatio
+    if (o.scale) { var mpp = o.scale / (cssMm * 1000); zoom = Math.log2(40075016.686 * Math.cos(lat * Math.PI / 180) / (512 * mpp)); }
+    else zoom = cur.getZoom() + Math.log2((wpx / ratio) / cur.getCanvas().clientWidth);
     progress('Merender peta ' + wpx + '×' + hpx + ' px…', 20);
     var style = cur.getStyle();
-    style.layers = style.layers.filter(function (l) { return ['gps-acc', 'gps-pt', 'd-fill', 'd-line', 'd-pt'].indexOf(l.id) < 0; });
-    var main = await Print.renderMap(style, wpx, hpx, { center: [c.lng, c.lat], zoom: zoom });
+    style.layers = style.layers.filter(function (l) { return ['gps-acc', 'gps-pt', 'd-fill', 'd-line', 'd-pt', 'f-hl', 'f-hl-pt'].indexOf(l.id) < 0 && l.source !== 'edit' && (o.labels !== false || l.id !== 'lbl'); });
+    var main = await Print.renderMap(style, wpx, hpx, { center: [c.lng, c.lat], zoom: zoom }, null, ratio);
     var mppReal = 40075016.686 * Math.cos(lat * Math.PI / 180) / (512 * Math.pow(2, main.zoom));
-    var scaleN = Math.round(mppReal * pxmm * 1000);
+    var scaleN = Math.round(mppReal * cssMm * 1000);
     var inset = null;
     if (o.inset) {
       progress('Merender peta indeks…', 55);
@@ -3885,7 +3987,9 @@ var Sym = {
   /** Handler styleimagemissing untuk peta mana pun (peta utama & peta cetak di luar layar). */
   attach: function (m) {
     m.on('styleimagemissing', function (e) {
-      var a = String(e.id).split('|'); if (a[0] !== 'umg' || m.hasImage(e.id)) return;
+      var a = String(e.id).split('|'); if (m.hasImage(e.id)) return;
+      if (a[0] === 'umglbl') { var lb = Labels.draw(e.id); m.addImage(e.id, lb.data, { pixelRatio: 2 }); return; }
+      if (a[0] !== 'umg') return;
       var px = (Sym.PX[a[4]] || 28) * 2, cv = Sym.canvas(a[1], a[2], a[3], px, a[5] === '1');
       m.addImage(e.id, cv.getContext('2d').getImageData(0, 0, px, px), { pixelRatio: 2 });
     });
@@ -3919,6 +4023,609 @@ var Sym = {
   },
   paletteHtml: function (cur) { return '<div class="pal">' + Sym.PALETTE.map(function (c) { return '<button type="button" class="pal-c' + (c === cur ? ' on' : '') + '" data-col="' + c + '" style="background:' + c + '" aria-label="' + c + '"></button>'; }).join('') + '</div>'; }
 };
+
+// ======================================================= Query, Label, Editor geometri (pola ArcGIS Desktop)
+/* global turf */
+
+// ------------------------------------------------------- Query atribut (Select by Attributes)
+/**
+ * Query = { layer, join: 'and'|'or', conds: [{ f, op, v }] }.
+ * Hasil dapat dipakai sebagai SELEKSI (disorot, dipakai Editor) atau FILTER TAMPILAN (definition query) per layer
+ * yang berlaku di peta, legenda jumlah & cetak PDF. Filter disimpan per proyek di perangkat.
+ */
+var Query = {
+  OPS: [['eq', '='], ['ne', '≠'], ['gt', '>'], ['ge', '≥'], ['lt', '<'], ['le', '≤'], ['contains', 'memuat'], ['starts', 'diawali'], ['in', 'salah satu dari (a, b, c)'], ['empty', 'kosong'], ['notempty', 'tidak kosong']],
+  last: null,
+  key: function () { return 'umg_defq_' + (S.projectId || '-'); },
+  defs: function () { if (!Query._defs || Query._defsKey !== Query.key()) { try { Query._defs = JSON.parse(LS.get(Query.key()) || '{}') || {}; } catch (e) { Query._defs = {}; } Query._defsKey = Query.key(); } return Query._defs; },
+  setDef: function (layerId, q) { var d = Query.defs(); if (q) d[layerId] = q; else delete d[layerId]; LS.set(Query.key(), JSON.stringify(d)); MapView.refreshData(); },
+  /** Apakah fitur lolos filter tampilan layernya. */
+  visible: function (f) { var q = Query.defs()[f.layer_id]; return !q || Query.match(q, f); },
+  fieldOf: function (l, k) {
+    if (k === '_status') return { key: '_status', label: 'Status', type: 'text' };
+    return (l.schema || []).find(function (x) { return x.key === k; }) || { key: k, label: k, type: 'text' };
+  },
+  value: function (f, k) { return k === '_status' ? f.status : (f.attrs || {})[k]; },
+  test: function (fd, op, a, b) {
+    var empty = a === undefined || a === null || a === '';
+    if (op === 'empty') return empty;
+    if (op === 'notempty') return !empty;
+    if (empty) return op === 'ne';
+    var num = fd.type === 'number' || fd.type === 'integer';
+    if (op === 'in') return String(b).split(',').map(function (x) { return x.trim().toLowerCase(); }).indexOf(String(a).toLowerCase()) >= 0;
+    if (op === 'contains') return String(a).toLowerCase().indexOf(String(b).toLowerCase()) >= 0;
+    if (op === 'starts') return String(a).toLowerCase().indexOf(String(b).toLowerCase()) === 0;
+    var x = a, y = b;
+    if (fd.type === 'bool') { x = a === true || a === 'true'; y = /^(true|ya|yes|1)$/i.test(String(b)); }
+    else if (num) { x = Number(a); y = Number(String(b).replace(',', '.')); if (!isFinite(y)) return false; }
+    else { x = String(a).toLowerCase(); y = String(b).toLowerCase(); }
+    switch (op) {
+      case 'eq': return x === y; case 'ne': return x !== y;
+      case 'gt': return x > y; case 'ge': return x >= y; case 'lt': return x < y; case 'le': return x <= y;
+    }
+    return false;
+  },
+  match: function (q, f) {
+    var l = layerById(f.layer_id); if (!l || f.layer_id !== q.layer) return false;
+    var conds = (q.conds || []).filter(function (c) { return c.f; });
+    if (!conds.length) return true;
+    var r = conds.map(function (c) { return Query.test(Query.fieldOf(l, c.f), c.op, Query.value(f, c.f), c.v); });
+    return q.join === 'or' ? r.some(Boolean) : r.every(Boolean);
+  },
+  run: function (q) { var out = []; S.features.forEach(function (f) { if (!f.deleted && f.project_id === S.projectId && Query.match(q, f)) out.push(f); }); return out; },
+  text: function (q) {
+    var l = layerById(q.layer); if (!l) return '';
+    return (q.conds || []).filter(function (c) { return c.f; }).map(function (c) {
+      var op = (Query.OPS.find(function (o) { return o[0] === c.op; }) || [])[1] || c.op;
+      return Query.fieldOf(l, c.f).label + ' ' + op + (/empty/.test(c.op) ? '' : ' "' + c.v + '"');
+    }).join(q.join === 'or' ? ' ATAU ' : ' DAN ');
+  },
+  /** Dialog Query. */
+  open: function () {
+    var lyrs = S.layers.filter(function (l) { return l.project_id === S.projectId; });
+    if (!lyrs.length) return toast('Proyek ini belum punya layer.', 'err');
+    var q = Query.last && layerById(Query.last.layer) ? JSON.parse(JSON.stringify(Query.last)) : { layer: (layerById(S.layerId) || lyrs[0]).id, join: 'and', conds: [{ f: '', op: 'eq', v: '' }] };
+    var body = document.createElement('div'), res = [];
+    var uniq = function (l, k) { var v = {}; S.features.forEach(function (f) { if (f.layer_id === l.id && !f.deleted) { var x = Query.value(f, k); if (x !== undefined && x !== null && x !== '') v[String(x)] = 1; } }); (Query.fieldOf(l, k).options || []).forEach(function (o) { v[o] = 1; }); return Object.keys(v).sort(cmpVal).slice(0, 200); };
+    var draw = function () {
+      var l = layerById(q.layer), flds = [{ key: '_status', label: 'Status' }].concat((l.schema || []).filter(function (f) { return f.type !== 'relation'; }).concat((l.schema || []).filter(function (f) { return f.type === 'relation'; })));
+      var def = Query.defs()[l.id];
+      body.innerHTML = '<label class="f">Layer<select class="input" id="qy-layer">' + lyrs.map(function (x) { return '<option value="' + esc(x.id) + '"' + (x.id === q.layer ? ' selected' : '') + '>' + esc(x.name) + '</option>'; }).join('') + '</select></label>' +
+        '<div class="row small" style="margin:8px 0;gap:10px"><span>Cocok jika</span><label class="row"><input type="radio" name="qy-j" value="and"' + (q.join !== 'or' ? ' checked' : '') + '> semua kondisi (DAN)</label><label class="row"><input type="radio" name="qy-j" value="or"' + (q.join === 'or' ? ' checked' : '') + '> salah satu (ATAU)</label></div>' +
+        '<div class="col" style="gap:6px">' + q.conds.map(function (c, i) {
+          var fd = c.f ? Query.fieldOf(l, c.f) : null, vals = c.f ? uniq(l, c.f) : [];
+          return '<div class="qy-row" data-i="' + i + '"><select class="input" data-q="f"><option value="">— atribut —</option>' + flds.map(function (f) { return '<option value="' + esc(f.key) + '"' + (c.f === f.key ? ' selected' : '') + '>' + esc(f.label) + '</option>'; }).join('') + '</select>' +
+            '<select class="input" data-q="op">' + Query.OPS.map(function (o) { return '<option value="' + o[0] + '"' + (c.op === o[0] ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('') + '</select>' +
+            '<input class="input" data-q="v" list="qy-dl-' + i + '" value="' + esc(c.v) + '" placeholder="nilai"' + (/empty/.test(c.op) ? ' disabled' : '') + ' translate="no"><datalist id="qy-dl-' + i + '">' + vals.map(function (v) { return '<option value="' + esc(fd && fd.type === 'relation' ? v : v) + '">'; }).join('') + '</datalist>' +
+            '<button type="button" class="btn sm ghost" data-qrm="' + i + '" aria-label="Hapus kondisi"' + (q.conds.length > 1 ? '' : ' disabled') + '>✕</button></div>';
+        }).join('') + '</div><button type="button" class="btn sm" id="qy-add" style="margin-top:6px">+ Kondisi</button>' +
+        '<div class="row wrap" style="margin-top:12px"><button type="button" class="btn primary" id="qy-sel">Pilih (seleksi)</button><button type="button" class="btn" id="qy-def">Filter tampilan peta</button><button type="button" class="btn ghost" id="qy-clear">Hapus seleksi</button>' + (def ? '<button type="button" class="btn ghost" id="qy-undef">Hapus filter layer ini</button>' : '') + '</div>' +
+        (def ? '<div class="small" style="margin-top:6px;color:var(--warn)">Filter aktif: ' + esc(Query.text(def)) + '</div>' : '') +
+        '<div id="qy-res" style="margin-top:10px"></div>';
+      renderRes();
+    };
+    var renderRes = function () {
+      var box = $('#qy-res', body); if (!box) return;
+      if (!res.length) { box.innerHTML = Query.lastRun ? '<div class="small muted">Tidak ada data yang cocok.</div>' : ''; return; }
+      var l = layerById(q.layer), cols = (l.schema || []).slice(0, 4);
+      box.innerHTML = '<div class="row"><b class="grow">' + res.length + ' data cocok</b><button type="button" class="btn sm" id="qy-zoom">Zoom ke hasil</button></div><div class="tscroll" style="max-height:240px;margin-top:6px"><table class="t"><tr><th class="num">#</th>' + cols.map(function (c) { return '<th translate="no">' + esc(c.label) + '</th>'; }).join('') + '<th>Status</th></tr>' +
+        res.slice(0, 300).map(function (f, i) { return '<tr class="click" data-goto="' + esc(f.id) + '"><td class="num muted">' + (i + 1) + '</td>' + cols.map(function (c) { return '<td translate="no">' + esc(fmtAttr(c, (f.attrs || {})[c.key])) + '</td>'; }).join('') + '<td>' + badge(f.status) + '</td></tr>'; }).join('') + '</table></div>';
+    };
+    var exec = function () { Query.lastRun = true; Query.last = JSON.parse(JSON.stringify(q)); res = Query.run(q); return res; };
+    body.addEventListener('change', function (e) {
+      var t = e.target;
+      if (t.id === 'qy-layer') { q = { layer: t.value, join: q.join, conds: [{ f: '', op: 'eq', v: '' }] }; res = []; Query.lastRun = false; draw(); return; }
+      if (t.name === 'qy-j') { q.join = t.value; return; }
+      var r = t.closest('.qy-row'); if (!r) return; var c = q.conds[+r.getAttribute('data-i')], k = t.getAttribute('data-q');
+      c[k] = t.value; if (k !== 'v') draw();
+    });
+    body.addEventListener('input', function (e) { var r = e.target.closest('.qy-row'); if (r && e.target.getAttribute('data-q') === 'v') q.conds[+r.getAttribute('data-i')].v = e.target.value; });
+    body.addEventListener('click', function (e) {
+      var t = e.target, g = t.closest('[data-goto]');
+      if (g) { var id = g.getAttribute('data-goto'); md.close(); setTimeout(function () { Detail.open(id); }, 0); return; }
+      if (t.closest('[data-qrm]')) { q.conds.splice(+t.closest('[data-qrm]').getAttribute('data-qrm'), 1); draw(); return; }
+      if (t.id === 'qy-add') { q.conds.push({ f: '', op: 'eq', v: '' }); draw(); return; }
+      if (t.id === 'qy-sel') { exec(); Select.set(res.map(function (f) { return f.id; })); renderRes(); toast(res.length + ' data terseleksi.', 'ok'); return; }
+      if (t.id === 'qy-def') {
+        if (!q.conds.some(function (c) { return c.f; })) return toast('Isi minimal satu kondisi.', 'err');
+        exec(); Query.setDef(q.layer, JSON.parse(JSON.stringify(q))); draw(); toast('Filter tampilan diterapkan: ' + res.length + ' data tampil di peta & cetak.', 'ok', 5000); return;
+      }
+      if (t.id === 'qy-undef') { Query.setDef(q.layer, null); draw(); toast('Filter layer dihapus.', 'ok'); return; }
+      if (t.id === 'qy-clear') { Select.set([]); res = []; Query.lastRun = false; renderRes(); return; }
+      if (t.id === 'qy-zoom') { md.close(); App.show('map'); MapView.fit(res.filter(function (f) { return f.geometry; })); }
+    });
+    var md = modal({ title: 'Query atribut', wide: true, body: body, buttons: [{ label: 'Tutup' }] });
+    draw();
+  }
+};
+
+// ------------------------------------------------------- Seleksi
+var Select = {
+  ids: new Set(),
+  set: function (ids) { Select.ids = new Set(ids); MapView.refreshData(); Editor.updatePanel(); },
+  toggle: function (id) { if (Select.ids.has(id)) Select.ids.delete(id); else Select.ids.add(id); MapView.refreshData(); Editor.updatePanel(); },
+  list: function () { var out = []; Select.ids.forEach(function (id) { var f = S.features.get(id); if (f && !f.deleted) out.push(f); }); return out; }
+};
+
+// ------------------------------------------------------- Label fitur
+/**
+ * style.label = { on, field, field2, size, color, halo, where: { f, op, v } }.
+ * Teks dirender ke kanvas (gambar) sehingga label tetap tampil offline tanpa server font, dan ikut tercetak di PDF.
+ * Tombol cepat per layer di panel Layer menyalakan/mematikan label di perangkat ini.
+ */
+var Labels = {
+  offKey: 'umg_lbl_off',
+  off: function () { try { return JSON.parse(LS.get(Labels.offKey) || '[]'); } catch (e) { return []; } },
+  setOff: function (id, isOff) { var a = Labels.off().filter(function (x) { return x !== id; }); if (isOff) a.push(id); LS.set(Labels.offKey, JSON.stringify(a)); MapView.refreshData(); },
+  active: function (l) { var lb = l && l.style && l.style.label; return !!(lb && lb.on && lb.field && Labels.off().indexOf(l.id) < 0); },
+  text: function (l, f) {
+    var lb = l.style.label, a = f.attrs || {};
+    if (lb.where && lb.where.f && !Query.test(Query.fieldOf(l, lb.where.f), lb.where.op || 'eq', Query.value(f, lb.where.f), lb.where.v)) return '';
+    var part = function (k) { if (!k) return ''; var v = k === '_status' ? STATUS_LBL[f.status] : a[k]; if (v === undefined || v === null || v === '') return ''; return fmtAttr(Query.fieldOf(l, k), v); };
+    return [part(lb.field), part(lb.field2)].filter(String).join(' · ').slice(0, 60);
+  },
+  /** Titik penempatan label: titik itu sendiri, tengah panjang garis, atau titik dalam poligon. */
+  anchor: function (g) {
+    if (g.type === 'Point') return g.coordinates;
+    if (g.type === 'LineString') {
+      var c = g.coordinates, tot = 0, seg = []; for (var i = 1; i < c.length; i++) { var d = Math.hypot(c[i][0] - c[i - 1][0], c[i][1] - c[i - 1][1]); seg.push(d); tot += d; }
+      var half = tot / 2; for (var j = 0; j < seg.length; j++) { if (half <= seg[j]) { var t = seg[j] ? half / seg[j] : 0; return [c[j][0] + (c[j + 1][0] - c[j][0]) * t, c[j][1] + (c[j + 1][1] - c[j][1]) * t]; } half -= seg[j]; }
+      return c[0];
+    }
+    if (g.type === 'Polygon') return Geom.interiorPoint(g.coordinates);
+    return null;
+  },
+  imageId: function (txt, lb) { return ['umglbl', encodeURIComponent(txt), lb.size || 12, lb.color || '#111827', lb.halo || '#ffffff'].join('|'); },
+  build: function (list) {
+    var out = [];
+    list.forEach(function (f) {
+      var l = layerById(f.layer_id); if (!Labels.active(l) || !f.geometry) return;
+      var txt = Labels.text(l, f); if (!txt) return;
+      var g = Editor.geomOf(f), p = Labels.anchor(g); if (!p) return;
+      out.push({ type: 'Feature', geometry: { type: 'Point', coordinates: p }, properties: { img: Labels.imageId(txt, l.style.label), pt: g.type === 'Point' ? 1 : 0 } });
+    });
+    return { type: 'FeatureCollection', features: out };
+  },
+  draw: function (id) {
+    var a = id.split('|'), txt = decodeURIComponent(a[1]), size = Number(a[2]) || 12, color = a[3], halo = a[4], k = 2;
+    var cv = document.createElement('canvas'), g = cv.getContext('2d'), font = '600 ' + (size * k) + 'px system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+    g.font = font; var w = Math.ceil(g.measureText(txt).width) + 8 * k, h = Math.ceil(size * k * 1.45) + 4 * k;
+    cv.width = w; cv.height = h; g.font = font; g.textBaseline = 'middle'; g.lineJoin = 'round';
+    g.lineWidth = 3.2 * k; g.strokeStyle = halo; g.strokeText(txt, 4 * k, h / 2); g.fillStyle = color; g.fillText(txt, 4 * k, h / 2);
+    return { w: w, h: h, data: g.getImageData(0, 0, w, h) };
+  },
+  /** Pengaturan label di formulir layer. */
+  formHtml: function (lb, fields) {
+    lb = lb || {};
+    var opts = function (cur) { return '<option value="">—</option><option value="_status"' + (cur === '_status' ? ' selected' : '') + '>Status</option>' + fields.filter(function (f) { return f.key; }).map(function (f) { return '<option value="' + esc(f.key) + '"' + (cur === f.key ? ' selected' : '') + '>' + esc(f.label || f.key) + '</option>'; }).join(''); };
+    var w = lb.where || {};
+    return '<div class="lbl-ed"><label class="row" style="font-weight:600"><input type="checkbox" id="lb-on"' + (lb.on ? ' checked' : '') + '> Tampilkan label</label>' +
+      '<div class="row wrap" style="gap:8px;margin-top:6px"><label class="f">Atribut label<select class="input" id="lb-f">' + opts(lb.field) + '</select></label><label class="f">Atribut tambahan<select class="input" id="lb-f2">' + opts(lb.field2) + '</select></label>' +
+      '<label class="f">Ukuran<select class="input" id="lb-size">' + [10, 11, 12, 14, 16, 18].map(function (n) { return '<option' + ((lb.size || 12) === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select></label>' +
+      '<label class="f">Warna teks<input type="color" class="input" id="lb-color" value="' + esc(lb.color || '#111827') + '" style="width:56px;padding:3px"></label><label class="f">Halo<input type="color" class="input" id="lb-halo" value="' + esc(lb.halo || '#ffffff') + '" style="width:56px;padding:3px"></label></div>' +
+      '<div class="row wrap small" style="gap:6px;margin-top:6px;align-items:center"><span>Label hanya jika</span><select class="input" id="lb-wf" style="width:auto">' + opts(w.f) + '</select><select class="input" id="lb-wop" style="width:auto">' + Query.OPS.map(function (o) { return '<option value="' + o[0] + '"' + ((w.op || 'eq') === o[0] ? ' selected' : '') + '>' + esc(o[1]) + '</option>'; }).join('') + '</select><input class="input" id="lb-wv" value="' + esc(w.v || '') + '" placeholder="nilai (opsional)" style="width:140px"></div></div>';
+  },
+  collect: function (box) {
+    var g = function (id) { var e = $(id, box); return e ? e.value : ''; };
+    var on = $('#lb-on', box); if (!on) return undefined;
+    var lb = { on: on.checked, field: g('#lb-f'), field2: g('#lb-f2'), size: Number(g('#lb-size')) || 12, color: g('#lb-color') || '#111827', halo: g('#lb-halo') || '#ffffff' };
+    if (g('#lb-wf')) lb.where = { f: g('#lb-wf'), op: g('#lb-wop') || 'eq', v: g('#lb-wv') };
+    return lb;
+  }
+};
+
+// ------------------------------------------------------- Geometri (planar, derajat — memadai untuk skala kebun/blok)
+var Geom = {
+  EPS: 1e-12,
+  ringOpen: function (r) { var n = r.length; return n > 1 && r[0][0] === r[n - 1][0] && r[0][1] === r[n - 1][1] ? r.slice(0, n - 1) : r.slice(); },
+  close: function (r) { var o = r.slice(); if (o[0][0] !== o[o.length - 1][0] || o[0][1] !== o[o.length - 1][1]) o.push(o[0].slice()); return o; },
+  area: function (r) { var a = 0; for (var i = 0, j = r.length - 1; i < r.length; j = i++) a += (r[j][0] + r[i][0]) * (r[j][1] - r[i][1]); return a / 2; },
+  inRing: function (p, r) { var c = false; for (var i = 0, j = r.length - 1; i < r.length; j = i++) { if (((r[i][1] > p[1]) !== (r[j][1] > p[1])) && (p[0] < (r[j][0] - r[i][0]) * (p[1] - r[i][1]) / (r[j][1] - r[i][1]) + r[i][0])) c = !c; } return c; },
+  /** Titik di dalam poligon (untuk label): centroid bila di dalam, jika tidak titik tengah potongan horizontal terlebar. */
+  interiorPoint: function (rings) {
+    var r = rings[0], A = 0, cx = 0, cy = 0;
+    for (var i = 0, j = r.length - 1; i < r.length; j = i++) { var cr = r[j][0] * r[i][1] - r[i][0] * r[j][1]; A += cr; cx += (r[j][0] + r[i][0]) * cr; cy += (r[j][1] + r[i][1]) * cr; }
+    var c = A ? [cx / (3 * A), cy / (3 * A)] : r[0];
+    var inside = function (p) { if (!Geom.inRing(p, r)) return false; for (var h = 1; h < rings.length; h++) if (Geom.inRing(p, rings[h])) return false; return true; };
+    if (inside(c)) return c;
+    var xs = []; for (var k = 0, m = r.length - 1; k < r.length; m = k++) { var a = r[m], b = r[k]; if ((a[1] > c[1]) !== (b[1] > c[1])) xs.push(a[0] + (c[1] - a[1]) * (b[0] - a[0]) / (b[1] - a[1])); }
+    xs.sort(function (p, q) { return p - q; }); var best = null, bw = -1;
+    for (var t = 0; t + 1 < xs.length; t += 2) if (xs[t + 1] - xs[t] > bw) { bw = xs[t + 1] - xs[t]; best = [(xs[t] + xs[t + 1]) / 2, c[1]]; }
+    return best || r[0];
+  },
+  /** Perpotongan segmen p1p2 dengan p3p4 → { pt, t (pada segmen 1), u (pada segmen 2) } atau null. */
+  segX: function (p1, p2, p3, p4) {
+    var d = (p2[0] - p1[0]) * (p4[1] - p3[1]) - (p2[1] - p1[1]) * (p4[0] - p3[0]);
+    if (Math.abs(d) < Geom.EPS) return null;
+    var t = ((p3[0] - p1[0]) * (p4[1] - p3[1]) - (p3[1] - p1[1]) * (p4[0] - p3[0])) / d, u = ((p3[0] - p1[0]) * (p2[1] - p1[1]) - (p3[1] - p1[1]) * (p2[0] - p1[0])) / d;
+    if (t < 0 || t > 1 || u < 0 || u > 1) return null;
+    return { pt: [p1[0] + t * (p2[0] - p1[0]), p1[1] + t * (p2[1] - p1[1])], t: t, u: u };
+  },
+  /** Semua perpotongan sketsa (garis terbuka) dengan path (cincin tertutup bila closed). Diurutkan menurut posisi pada sketsa. */
+  crossings: function (sk, path, closed) {
+    var out = [], n = path.length, segs = closed ? n : n - 1;
+    for (var i = 0; i < sk.length - 1; i++) for (var k = 0; k < segs; k++) {
+      var x = Geom.segX(sk[i], sk[i + 1], path[k], path[(k + 1) % n]);
+      if (x) out.push({ s: i + x.t, r: k + x.u, ri: k, rt: x.u, pt: x.pt });
+    }
+    out.sort(function (a, b) { return a.s - b.s; });
+    return out.filter(function (x, i) { return !i || Math.abs(x.s - out[i - 1].s) > 1e-9; });
+  },
+  sketchPart: function (sk, a, b) { var pts = [a.pt]; for (var i = Math.floor(a.s) + 1; i <= Math.floor(b.s) && i < sk.length; i++) pts.push(sk[i]); pts.push(b.pt); return pts; },
+  /** Busur cincin dari posisi a ke b, maju (dir=1) atau mundur (dir=-1). */
+  arc: function (r, a, b, dir) {
+    var n = r.length, pts = [a.pt];
+    if (dir > 0) { if (a.ri === b.ri && b.rt >= a.rt) return pts.concat([b.pt]); for (var i = (a.ri + 1) % n, g = 0; g <= n; i = (i + 1) % n, g++) { pts.push(r[i]); if (i === b.ri) break; } }
+    else { if (a.ri === b.ri && b.rt <= a.rt) return pts.concat([b.pt]); for (var j = a.ri, h = 0; h <= n; j = (j - 1 + n) % n, h++) { pts.push(r[j]); if (j === (b.ri + 1) % n) break; } }
+    pts.push(b.pt); return pts;
+  },
+  /** Reshape poligon: sketsa memotong batas ≥2 kali; bagian batas di antara perpotongan pertama & terakhir diganti sketsa (hasil luas terbesar dipertahankan, seperti ArcGIS). */
+  reshapePolygon: function (coords, sk) {
+    var r = Geom.ringOpen(coords[0]), xs = Geom.crossings(sk, r, true);
+    if (xs.length < 2) throw new Error('Sketsa harus memotong batas poligon minimal 2 kali (masuk & keluar).');
+    var a = xs[0], b = xs[xs.length - 1], part = Geom.sketchPart(sk, a, b);
+    var c1 = part.concat(Geom.arc(r, b, a, 1).slice(1)), c2 = part.concat(Geom.arc(r, b, a, -1).slice(1));
+    var best = Math.abs(Geom.area(c1)) >= Math.abs(Geom.area(c2)) ? c1 : c2;
+    return [Geom.close(Geom.dedupe(best))].concat(coords.slice(1));
+  },
+  /** Reshape garis: bagian di antara perpotongan diganti sketsa; satu perpotongan → ujung garis terdekat ujung sketsa diganti. */
+  reshapeLine: function (c, sk) {
+    var xs = Geom.crossings(sk, c, false);
+    if (!xs.length) throw new Error('Sketsa harus memotong garis yang diedit.');
+    if (xs.length >= 2) {
+      var a = xs[0], b = xs[xs.length - 1], part = Geom.sketchPart(sk, a, b);
+      if (a.r > b.r) { var t = a; a = b; b = t; part = part.reverse(); }
+      return Geom.dedupe(c.slice(0, a.ri + 1).concat(part).concat(c.slice(b.ri + 1)));
+    }
+    var x = xs[0], tail = sk.slice(Math.floor(x.s) + 1), head = sk.slice(0, Math.floor(x.s) + 1).reverse();
+    var endS = sk[sk.length - 1], d0 = Math.hypot(endS[0] - c[0][0], endS[1] - c[0][1]), d1 = Math.hypot(endS[0] - c[c.length - 1][0], endS[1] - c[c.length - 1][1]);
+    var ext = tail.length >= head.length ? tail : head;
+    return Geom.dedupe(d1 <= d0 ? c.slice(0, x.ri + 1).concat([x.pt]).concat(ext) : ext.slice().reverse().concat([x.pt]).concat(c.slice(x.ri + 1)));
+  },
+  dedupe: function (pts) { return pts.filter(function (p, i) { return !i || Math.abs(p[0] - pts[i - 1][0]) > 1e-12 || Math.abs(p[1] - pts[i - 1][1]) > 1e-12; }); },
+  parts: function (g) {   // Multi* → daftar geometri tunggal
+    if (!g) return [];
+    if (g.type === 'MultiPolygon') return g.coordinates.map(function (c) { return { type: 'Polygon', coordinates: c }; });
+    if (g.type === 'MultiLineString') return g.coordinates.map(function (c) { return { type: 'LineString', coordinates: c }; });
+    if (g.type === 'MultiPoint') return g.coordinates.map(function (c) { return { type: 'Point', coordinates: c }; });
+    if (g.type === 'GeometryCollection') return g.geometries.reduce(function (a, x) { return a.concat(Geom.parts(x)); }, []);
+    return [g];
+  }
+};
+
+// ------------------------------------------------------- Editor (sesi edit gaya ArcGIS)
+/**
+ * Alur: Mulai edit → pilih fitur (ketuk / Query) → pilih alat → Simpan perubahan (atau Batal). Semua alat bekerja pada salinan kerja,
+ * dapat di-undo, dan baru dikirim ke antrean sinkron saat Simpan. Hasil multi-bagian dipecah: bagian pertama memperbarui fitur asal,
+ * bagian lain menjadi fitur baru dengan atribut yang sama (ID unik dikosongkan agar diberi nomor baru).
+ */
+var Editor = {
+  on: false, tool: 'select', work: {}, added: [], removed: new Set(), undoStack: [], sketch: null, vtx: null, drag: null, clipper: null, pieces: null,
+  TOOLS: [['select', 'Pilih fitur', 'Ketuk fitur untuk memilih / membatalkan pilihan.'], ['vertex', 'Edit vertex', 'Seret vertex; ketuk titik tengah (+) untuk menambah; ketuk vertex lalu "Hapus vertex".'],
+    ['reshape', 'Reshape', 'Gambar sketsa yang memotong batas fitur terpilih, lalu "Selesai sketsa".'], ['split', 'Trim / Split', 'Gambar garis pemotong melintasi garis terpilih; lalu ketuk potongan yang akan dibuang (trim) atau biarkan semua (split).'],
+    ['clip', 'Clip', 'Ketuk poligon pemotong (data atau layer referensi); fitur terpilih lain dipotong olehnya.'], ['merge', 'Merge', 'Gabungkan fitur terpilih (satu layer) menjadi satu fitur.'],
+    ['erase_in', 'Erase inside', 'Gambar poligon; bagian fitur terpilih DI DALAM poligon dihapus.'], ['erase_out', 'Erase outside', 'Gambar poligon; bagian fitur terpilih DI LUAR poligon dihapus.']],
+  geomOf: function (f) { return (Editor.on && Editor.work[f.id]) || f.geometry; },
+  canEdit: function (f) { return !S.license.read_only && (can('feature.write.any') || (can('feature.write.own') && f.created_by === S.user.id && ['draft', 'revision', 'submitted'].indexOf(f.status) >= 0)); },
+  start: function () {
+    if (!can('feature.write.own') && !can('feature.write.any')) return toast('Role Anda hanya dapat melihat data.', 'err');
+    if (Draw.mode) return toast('Selesaikan rekaman yang sedang berjalan dulu.', 'err');
+    Editor.on = true; Editor.reset(); App.show('map'); $('[data-tab=map]').classList.add('editing');
+    Editor.hist = Hist.push(function () { Editor.hist = null; Editor.stop(true); }, 'editor');
+    Editor.updatePanel(); MapView.refreshData();
+    toast('Sesi edit dimulai. Pilih fitur lalu alat.', '', 3500);
+  },
+  reset: function () { Editor.work = {}; Editor.added = []; Editor.removed = new Set(); Editor.undoStack = []; Editor.tool = 'select'; Editor.sketch = null; Editor.vtx = null; Editor.clipper = null; Editor.pieces = null; },
+  dirty: function () { return Object.keys(Editor.work).length || Editor.added.length || Editor.removed.size; },
+  stop: async function (fromBack) {
+    if (Editor.dirty() && !(await confirmBox('Akhiri sesi edit', 'Ada perubahan yang belum disimpan. Buang perubahan?', 'Buang', true))) { if (fromBack) Editor.hist = Hist.push(function () { Editor.hist = null; Editor.stop(true); }, 'editor'); return; }
+    Editor.on = false; Editor.reset(); $('[data-tab=map]').classList.remove('editing'); $('#edit-panel').classList.add('hidden');
+    if (!fromBack && Editor.hist) { var h = Editor.hist; Editor.hist = null; Hist.release(h); }
+    Editor.renderSketch(); MapView.refreshData();
+  },
+  snapshot: function () { Editor.undoStack.push(JSON.stringify({ w: Editor.work, a: Editor.added, r: Array.from(Editor.removed), sel: Array.from(Select.ids) })); if (Editor.undoStack.length > 50) Editor.undoStack.shift(); },
+  undo: function () {
+    if (Editor.sketch && Editor.sketch.length) { Editor.sketch.pop(); Editor.renderSketch(); return; }
+    var s = Editor.undoStack.pop(); if (!s) return toast('Tidak ada yang bisa di-undo.');
+    s = JSON.parse(s); Editor.work = s.w; Editor.added = s.a; Editor.removed = new Set(s.r); Select.ids = new Set(s.sel); Editor.pieces = null; Editor.vtx = null;
+    Editor.renderSketch(); MapView.refreshData(); Editor.updatePanel();
+  },
+  /** Fitur kerja (asli, hasil edit, atau tambahan) berdasarkan id. */
+  feat: function (id) { var a = Editor.added.find(function (x) { return x.id === id; }); if (a) return a; var f = S.features.get(id); return f && !Editor.removed.has(id) ? f : null; },
+  selected: function () { var out = []; Select.ids.forEach(function (id) { var f = Editor.feat(id); if (f) out.push(f); }); return out; },
+  setGeom: function (f, g) { if (Editor.added.indexOf(f) >= 0) f.geometry = g; else Editor.work[f.id] = g; },
+  /** Simpan geometri hasil (bisa multi-bagian) ke fitur f; bagian tambahan menjadi fitur baru. */
+  apply: function (f, g) {
+    var parts = Geom.parts(g).filter(function (p) { return Geo.validate(p, layerById(f.layer_id).geom_type).ok; });
+    if (!parts.length) { Editor.remove(f); return 0; }
+    parts.sort(function (a, b) { return Editor.size(b) - Editor.size(a); });
+    Editor.setGeom(f, Geo.round(parts[0]));
+    parts.slice(1).forEach(function (p) { Editor.add(f, p); });
+    return parts.length;
+  },
+  size: function (g) { return g.type === 'Polygon' ? Math.abs(Geom.area(g.coordinates[0])) : g.type === 'LineString' ? g.coordinates.length : 0; },
+  add: function (src, g) {
+    var l = layerById(src.layer_id), attrs = JSON.parse(JSON.stringify(src.attrs || {}));
+    (l.schema || []).forEach(function (fd) { if (fd.unique && attrs[fd.key] !== undefined) { if (fd.auto_id !== undefined && fd.auto_id !== null) delete attrs[fd.key]; else attrs[fd.key] = String(attrs[fd.key]) + '-' + (Editor.added.length + 2); } });
+    var nf = { id: uuid(), layer_id: src.layer_id, project_id: src.project_id, geometry: Geo.round(g), attrs: attrs, photos: [], status: 'draft', created_by: S.user.id, _added: true };
+    Editor.added.push(nf); Select.ids.add(nf.id); return nf;
+  },
+  remove: function (f) { var i = Editor.added.indexOf(f); if (i >= 0) Editor.added.splice(i, 1); else { Editor.removed.add(f.id); delete Editor.work[f.id]; } Select.ids.delete(f.id); },
+  /** Daftar fitur yang dirender peta selama sesi edit (asli + hasil edit + tambahan, tanpa yang dihapus). */
+  overlay: function (list) {
+    if (!Editor.on) return list;
+    return list.filter(function (f) { return !Editor.removed.has(f.id); }).concat(Editor.added.filter(function (f) { return !S.hiddenLayers.has(f.layer_id); }));
+  },
+  setTool: function (t) {
+    if (t === 'merge') return Editor.merge();
+    var sel = Editor.selected();
+    if (t !== 'select' && t !== 'clip' && !sel.length) return toast('Pilih fitur terlebih dahulu (alat Pilih atau Query).', 'err');
+    if (sel.some(function (f) { return !Editor.canEdit(f) && !f._added; })) return toast('Sebagian fitur terpilih tidak dapat Anda edit (status/kepemilikan). Batalkan pilihannya dulu.', 'err', 5000);
+    if (t === 'vertex' && (sel.length !== 1)) return toast('Edit vertex: pilih tepat satu fitur.', 'err');
+    if (t === 'reshape' && (sel.length !== 1 || sel[0].geometry.type === 'Point')) return toast('Reshape: pilih tepat satu garis atau poligon.', 'err');
+    if (t === 'split' && sel.some(function (f) { return Editor.geomOf(f).type !== 'LineString'; })) return toast('Trim / Split berlaku untuk garis. Pilih fitur garis saja.', 'err');
+    if (t === 'clip' && !sel.length) return toast('Pilih dulu fitur yang akan dipotong, lalu alat Clip.', 'err');
+    Editor.tool = t; Editor.sketch = ['reshape', 'split', 'erase_in', 'erase_out'].indexOf(t) >= 0 ? [] : null; Editor.vtx = null; Editor.pieces = null; Editor.clipper = null;
+    Editor.renderSketch(); Editor.updatePanel();
+  },
+  /** Klik peta selama sesi edit. Return true bila ditangani. */
+  click: function (e) {
+    if (!Editor.on) return false;
+    var m = MapView.map, box = [[e.point.x - 7, e.point.y - 7], [e.point.x + 7, e.point.y + 7]], ll = [e.lngLat.lng, e.lngLat.lat];
+    if (Editor.pieces) {
+      var ph = m.queryRenderedFeatures(box, { layers: ['e-piece', 'e-piece-x'] });
+      if (ph.length) { var k = ph[0].properties.n; Editor.pieces[k].drop = !Editor.pieces[k].drop; Editor.renderSketch(); }
+      return true;
+    }
+    if (Editor.sketch) { Editor.sketch.push(ll); Editor.renderSketch(); return true; }
+    if (Editor.tool === 'vertex') {
+      var mh = m.queryRenderedFeatures(box, { layers: ['e-mid'] });
+      if (mh.length) { Editor.snapshot(); Editor.insertVertex(JSON.parse(mh[0].properties.i), ll); return true; }
+      var vh = m.queryRenderedFeatures(box, { layers: ['e-vtx'] });
+      Editor.vtx = vh.length ? JSON.parse(vh[0].properties.i) : null; Editor.renderSketch(); Editor.updatePanel(); return true;
+    }
+    if (Editor.tool === 'clip') {
+      var cl = m.queryRenderedFeatures(box, { layers: ['f-fill'] }).filter(function (h) { return !Select.ids.has(h.properties.id); })[0];
+      var g = cl ? (Editor.feat(cl.properties.id) && Editor.geomOf(Editor.feat(cl.properties.id))) : null;
+      if (!g) { var ov = Overlays.vectorLayerIds().filter(function (id) { return m.getLayer(id); }); var oh = ov.length ? m.queryRenderedFeatures(box, { layers: ov }).filter(function (h) { return /Polygon/.test(h.geometry.type); })[0] : null; if (oh) g = oh.geometry; }
+      if (!g || !/Polygon/.test(g.type)) { toast('Ketuk poligon pemotong (bukan fitur yang sedang dipilih).', 'err'); return true; }
+      Editor.clipDialog(g); return true;
+    }
+    var hits = m.queryRenderedFeatures(box, { layers: ['f-sym', 'f-pt', 'f-line', 'f-line-p', 'f-fill'] });
+    if (hits.length) Select.toggle(hits[0].properties.id);
+    return true;
+  },
+  // ----- vertex
+  verts: function (g) {   // daftar vertex yang dapat diedit [{i:[ring,idx], p}]
+    if (g.type === 'Point') return [{ i: [0, 0], p: g.coordinates }];
+    if (g.type === 'LineString') return g.coordinates.map(function (p, k) { return { i: [0, k], p: p }; });
+    var out = []; g.coordinates.forEach(function (r, ri) { Geom.ringOpen(r).forEach(function (p, k) { out.push({ i: [ri, k], p: p }); }); }); return out;
+  },
+  mids: function (g) {
+    var out = [];
+    if (g.type === 'LineString') for (var k = 0; k < g.coordinates.length - 1; k++) out.push({ i: [0, k + 1], p: [(g.coordinates[k][0] + g.coordinates[k + 1][0]) / 2, (g.coordinates[k][1] + g.coordinates[k + 1][1]) / 2] });
+    if (g.type === 'Polygon') g.coordinates.forEach(function (r, ri) { var o = Geom.ringOpen(r); o.forEach(function (p, k) { var q = o[(k + 1) % o.length]; out.push({ i: [ri, k + 1], p: [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2] }); }); });
+    return out;
+  },
+  moveVertex: function (i, ll) {
+    var f = Editor.selected()[0], g = JSON.parse(JSON.stringify(Editor.geomOf(f)));
+    if (g.type === 'Point') g.coordinates = ll;
+    else if (g.type === 'LineString') g.coordinates[i[1]] = ll;
+    else { var r = Geom.ringOpen(g.coordinates[i[0]]); r[i[1]] = ll; g.coordinates[i[0]] = Geom.close(r); }
+    Editor.setGeom(f, g); MapView.refreshData(); Editor.renderSketch();
+  },
+  insertVertex: function (i, ll) {
+    var f = Editor.selected()[0], g = JSON.parse(JSON.stringify(Editor.geomOf(f)));
+    if (g.type === 'LineString') g.coordinates.splice(i[1], 0, ll);
+    else { var r = Geom.ringOpen(g.coordinates[i[0]]); r.splice(i[1], 0, ll); g.coordinates[i[0]] = Geom.close(r); }
+    Editor.setGeom(f, g); Editor.vtx = i; MapView.refreshData(); Editor.renderSketch(); Editor.updatePanel();
+  },
+  deleteVertex: function () {
+    var f = Editor.selected()[0], i = Editor.vtx; if (!f || !i) return;
+    var g = JSON.parse(JSON.stringify(Editor.geomOf(f)));
+    if (g.type === 'LineString') { if (g.coordinates.length <= 2) return toast('Garis minimal 2 vertex.', 'err'); g.coordinates.splice(i[1], 1); }
+    else if (g.type === 'Polygon') { var r = Geom.ringOpen(g.coordinates[i[0]]); if (r.length <= 3) return toast('Poligon minimal 3 vertex.', 'err'); r.splice(i[1], 1); g.coordinates[i[0]] = Geom.close(r); }
+    else return;
+    Editor.snapshot(); Editor.setGeom(f, g); Editor.vtx = null; MapView.refreshData(); Editor.renderSketch(); Editor.updatePanel();
+  },
+  bindDrag: function () {
+    var m = MapView.map; if (Editor._dragBound) return; Editor._dragBound = true;
+    var down = function (e) {
+      if (!Editor.on || Editor.tool !== 'vertex' || !e.features || !e.features.length) return;
+      e.preventDefault(); Editor.snapshot(); Editor.drag = JSON.parse(e.features[0].properties.i); Editor.vtx = Editor.drag; m.dragPan.disable();
+    };
+    var move = function (e) { if (Editor.drag) Editor.moveVertex(Editor.drag, [e.lngLat.lng, e.lngLat.lat]); };
+    var up = function () { if (Editor.drag) { Editor.drag = null; m.dragPan.enable(); Editor.updatePanel(); } };
+    m.on('mousedown', 'e-vtx', down); m.on('touchstart', 'e-vtx', down);
+    m.on('mousemove', move); m.on('touchmove', move); m.on('mouseup', up); m.on('touchend', up);
+  },
+  // ----- tampilan sketsa, vertex & potongan
+  renderSketch: function () {
+    var m = MapView.map; if (!m || !m.getSource('edit')) return;
+    var fs = [];
+    if (Editor.on && Editor.tool === 'vertex') {
+      var f = Editor.selected()[0];
+      if (f) {
+        var g = Editor.geomOf(f);
+        Editor.verts(g).forEach(function (v) { fs.push({ type: 'Feature', geometry: { type: 'Point', coordinates: v.p }, properties: { k: 'vtx', i: JSON.stringify(v.i), on: !!(Editor.vtx && Editor.vtx[0] === v.i[0] && Editor.vtx[1] === v.i[1]) } }); });
+        Editor.mids(g).forEach(function (v) { fs.push({ type: 'Feature', geometry: { type: 'Point', coordinates: v.p }, properties: { k: 'mid', i: JSON.stringify(v.i) } }); });
+      }
+    }
+    if (Editor.sketch && Editor.sketch.length) {
+      var sk = Editor.sketch, poly = /erase/.test(Editor.tool);
+      if (poly && sk.length >= 3) fs.push({ type: 'Feature', geometry: { type: 'Polygon', coordinates: [sk.concat([sk[0]])] }, properties: { k: 'skp' } });
+      if (sk.length >= 2) fs.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: poly && sk.length >= 3 ? sk.concat([sk[0]]) : sk }, properties: { k: 'skl' } });
+      sk.forEach(function (p) { fs.push({ type: 'Feature', geometry: { type: 'Point', coordinates: p }, properties: { k: 'skv' } }); });
+    }
+    if (Editor.pieces) Editor.pieces.forEach(function (p, k) { fs.push({ type: 'Feature', geometry: p.g, properties: { k: 'piece', drop: !!p.drop, n: k } }); });
+    m.getSource('edit').setData({ type: 'FeatureCollection', features: fs });
+  },
+  addLayers: function (add, m) {
+    if (!m.getSource('edit')) m.addSource('edit', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    add({ id: 'f-hl', type: 'line', source: 'feat', filter: ['all', ['get', 'hl'], ['in', ['geometry-type'], ['literal', ['LineString', 'Polygon']]]], paint: { 'line-color': '#06b6d4', 'line-width': 5.5, 'line-opacity': 0.85 } });
+    add({ id: 'f-hl-pt', type: 'circle', source: 'feat', filter: ['all', ['get', 'hl'], ['==', ['geometry-type'], 'Point']], paint: { 'circle-radius': 14, 'circle-color': 'rgba(6,182,212,0.15)', 'circle-stroke-color': '#06b6d4', 'circle-stroke-width': 3 } });
+    add({ id: 'e-piece', type: 'line', source: 'edit', filter: ['all', ['==', ['get', 'k'], 'piece'], ['!', ['get', 'drop']]], paint: { 'line-color': '#16a34a', 'line-width': 7, 'line-opacity': 0.85 } });
+    add({ id: 'e-piece-x', type: 'line', source: 'edit', filter: ['all', ['==', ['get', 'k'], 'piece'], ['get', 'drop']], paint: { 'line-color': '#e11d48', 'line-width': 7, 'line-dasharray': [1, 1] } });
+    add({ id: 'e-skp', type: 'fill', source: 'edit', filter: ['==', ['get', 'k'], 'skp'], paint: { 'fill-color': '#7c3aed', 'fill-opacity': 0.16 } });
+    add({ id: 'e-skl', type: 'line', source: 'edit', filter: ['==', ['get', 'k'], 'skl'], paint: { 'line-color': '#7c3aed', 'line-width': 3, 'line-dasharray': [2, 1] } });
+    add({ id: 'e-skv', type: 'circle', source: 'edit', filter: ['==', ['get', 'k'], 'skv'], paint: { 'circle-radius': 4.5, 'circle-color': '#fff', 'circle-stroke-color': '#7c3aed', 'circle-stroke-width': 2 } });
+    add({ id: 'e-mid', type: 'circle', source: 'edit', filter: ['==', ['get', 'k'], 'mid'], paint: { 'circle-radius': 5, 'circle-color': '#ffffff', 'circle-opacity': 0.85, 'circle-stroke-color': '#0891b2', 'circle-stroke-width': 1.5 } });
+    add({ id: 'e-vtx', type: 'circle', source: 'edit', filter: ['==', ['get', 'k'], 'vtx'], paint: { 'circle-radius': ['case', ['get', 'on'], 9, 7], 'circle-color': ['case', ['get', 'on'], '#e11d48', '#0891b2'], 'circle-stroke-color': '#fff', 'circle-stroke-width': 2.5 } });
+    Editor.bindDrag();
+  },
+  // ----- alat sketsa
+  finishSketch: async function () {
+    var sk = Editor.sketch, t = Editor.tool, poly = /erase/.test(t);
+    if (!sk || sk.length < (poly ? 3 : 2)) return toast(poly ? 'Poligon penghapus minimal 3 titik.' : 'Sketsa minimal 2 titik.', 'err');
+    try {
+      if (t === 'reshape') {
+        var f = Editor.selected()[0], g = Editor.geomOf(f), ng;
+        ng = g.type === 'Polygon' ? { type: 'Polygon', coordinates: Geom.reshapePolygon(g.coordinates, sk) } : { type: 'LineString', coordinates: Geom.reshapeLine(g.coordinates, sk) };
+        var v = Geo.validate(ng, g.type); if (!v.ok) throw new Error('Hasil reshape tidak valid: ' + v.errors.join(' '));
+        Editor.snapshot(); Editor.setGeom(f, Geo.round(ng)); Editor.sketch = []; toast('Reshape diterapkan.', 'ok');
+      } else if (t === 'split') {
+        var T = await Lib.load('turf'), cut = T.lineString(sk), pcs = [];
+        Editor.selected().forEach(function (f2) { var parts = T.lineSplit(T.lineString(Editor.geomOf(f2).coordinates), cut).features; if (parts.length > 1) parts.forEach(function (p) { pcs.push({ fid: f2.id, g: p.geometry, drop: false }); }); });
+        if (!pcs.length) throw new Error('Garis pemotong tidak memotong garis terpilih.');
+        Editor.pieces = pcs; Editor.sketch = null; toast('Ketuk potongan yang akan dibuang (merah), lalu "Terapkan potongan".', '', 5000);
+      } else {
+        await Editor.erase(sk, t === 'erase_in'); Editor.sketch = [];
+      }
+    } catch (e) { toast(e.message, 'err', 6000); }
+    Editor.renderSketch(); MapView.refreshData(); Editor.updatePanel();
+  },
+  applyPieces: function () {
+    var by = {}; Editor.pieces.forEach(function (p) { (by[p.fid] = by[p.fid] || []).push(p); });
+    Editor.snapshot();
+    var dropped = 0;
+    Object.keys(by).forEach(function (fid) {
+      var f = Editor.feat(fid), keep = by[fid].filter(function (p) { return !p.drop; }); dropped += by[fid].length - keep.length;
+      if (!keep.length) { Editor.remove(f); return; }
+      Editor.setGeom(f, Geo.round(keep[0].g)); keep.slice(1).forEach(function (p) { Editor.add(f, p.g); });
+    });
+    Editor.pieces = null; Editor.tool = 'select';
+    toast(dropped ? dropped + ' potongan dibuang (trim).' : 'Garis dipecah (split).', 'ok');
+    Editor.renderSketch(); MapView.refreshData(); Editor.updatePanel();
+  },
+  /** Hapus bagian fitur terpilih di dalam (inside=true) atau di luar poligon. Tanpa pilihan → semua fitur layer aktif yang bersinggungan. */
+  erase: async function (sk, inside) {
+    var T = await Lib.load('turf'), er = T.polygon([sk.concat([sk[0]])]);
+    var targets = Editor.selected();
+    if (!targets.length) { MapView.visibleFeatures().forEach(function (f) { if (f.layer_id === S.layerId && Editor.canEdit(f) && T.booleanIntersects(T.feature(Editor.geomOf(f)), er)) targets.push(f); }); }
+    if (!targets.length) throw new Error('Tidak ada fitur yang terkena poligon penghapus.');
+    Editor.snapshot();
+    var changed = 0, removed = 0, added0 = Editor.added.length;
+    targets.slice().forEach(function (f) {
+      var g = Editor.geomOf(f), res = Editor.cutBy(T, g, er, inside);
+      if (res === undefined) return;
+      if (res === null) { Editor.remove(f); removed++; } else { Editor.apply(f, res); changed++; }
+    });
+    toast((inside ? 'Erase inside' : 'Erase outside') + ': ' + changed + ' diubah, ' + removed + ' terhapus' + (Editor.added.length > added0 ? ', ' + (Editor.added.length - added0) + ' bagian baru' : '') + '.', 'ok', 5000);
+  },
+  /** Potong geometri g dengan poligon c. keepOutside=true → buang bagian di dalam c. Return undefined (tidak berubah), null (habis), atau geometri. */
+  cutBy: function (T, g, c, keepOutside) {
+    var cf = T.feature(c.type === 'Feature' ? c.geometry : c), gf = T.feature(g);
+    if (!T.booleanIntersects(gf, cf)) return keepOutside ? undefined : null;
+    if (g.type === 'Point') { var inside = T.booleanPointInPolygon(gf, cf); return inside === keepOutside ? null : undefined; }
+    if (g.type === 'Polygon') { var r = keepOutside ? T.difference(T.featureCollection([gf, cf])) : T.intersect(T.featureCollection([gf, cf])); return r ? r.geometry : null; }
+    var parts = T.lineSplit(gf, T.polygonToLine(cf)), segs = parts.features.length ? parts.features : [gf];
+    var keep = segs.filter(function (s) { var mid = T.along(s, T.length(s) / 2); return T.booleanPointInPolygon(mid, cf) !== keepOutside; });
+    if (!keep.length) return null;
+    return keep.length === 1 ? keep[0].geometry : { type: 'MultiLineString', coordinates: keep.map(function (s) { return s.geometry.coordinates; }) };
+  },
+  clipDialog: function (cg) {
+    var targets = Editor.selected().filter(function (f) { return Editor.geomOf(f) !== cg; });
+    modal({ title: 'Clip', body: '<p class="small">' + targets.length + ' fitur terpilih akan dipotong oleh poligon pemotong.</p><label class="row"><input type="radio" name="clip-m" value="discard" checked> <b>Buang</b> bagian yang bertumpang tindih (area di dalam pemotong dihapus)</label><label class="row" style="margin-top:6px"><input type="radio" name="clip-m" value="preserve"> <b>Pertahankan</b> bagian yang bertumpang tindih (area di luar pemotong dihapus)</label>',
+      buttons: [{ label: 'Batal' }, { label: 'Clip', cls: 'primary', onClick: async function (mb) {
+        var discard = $('input[name=clip-m]:checked', mb).value === 'discard', T = await Lib.load('turf');
+        Editor.snapshot(); var n = 0, rm = 0;
+        targets.forEach(function (f) { var r = Editor.cutBy(T, Editor.geomOf(f), cg, discard); if (r === undefined) return; if (r === null) { Editor.remove(f); rm++; } else { Editor.apply(f, r); n++; } });
+        Editor.tool = 'select'; MapView.refreshData(); Editor.updatePanel(); toast('Clip: ' + n + ' fitur dipotong' + (rm ? ', ' + rm + ' terhapus' : '') + '.', 'ok'); return true;
+      } }] });
+  },
+  merge: async function () {
+    var sel = Editor.selected();
+    if (sel.length < 2) return toast('Merge: pilih minimal 2 fitur.', 'err');
+    var lid = sel[0].layer_id, gt = Editor.geomOf(sel[0]).type;
+    if (sel.some(function (f) { return f.layer_id !== lid; })) return toast('Merge: semua fitur harus dari layer yang sama.', 'err');
+    if (gt === 'Point') return toast('Merge tidak berlaku untuk titik.', 'err');
+    if (sel.some(function (f) { return !Editor.canEdit(f) && !f._added; })) return toast('Sebagian fitur terpilih tidak dapat Anda edit.', 'err');
+    var T = await Lib.load('turf'), g;
+    if (gt === 'Polygon') { var u = T.union(T.featureCollection(sel.map(function (f) { return T.feature(Editor.geomOf(f)); }))); g = u && u.geometry; if (!g || g.type !== 'Polygon') return toast('Poligon tidak bersinggungan/bertumpang tindih sehingga hasilnya multi-bagian. Merge dibatalkan.', 'err', 6000); }
+    else { g = Editor.joinLines(sel.map(function (f) { return Editor.geomOf(f).coordinates; })); if (!g) return toast('Ujung-ujung garis tidak tersambung (toleransi ±1 m). Merge dibatalkan.', 'err', 6000); }
+    var l = layerById(lid), key = (pkField(l) || (l.schema || [])[0] || {}).key;
+    modal({ title: 'Merge ' + sel.length + ' fitur', body: '<p class="small">Atribut fitur hasil gabungan diambil dari:</p>' + sel.map(function (f, i) { return '<label class="row" style="margin:4px 0"><input type="radio" name="mg-src" value="' + i + '"' + (i ? '' : ' checked') + '> <span translate="no">' + esc(key ? String(fmtAttr(Query.fieldOf(l, key), (f.attrs || {})[key])) : featLabel(f)) + '</span> <span class="small muted">' + esc(featLabel(f)) + '</span></label>'; }).join('') + '<p class="small muted">Fitur lain dihapus saat perubahan disimpan.</p>',
+      buttons: [{ label: 'Batal' }, { label: 'Merge', cls: 'primary', onClick: function (mb) {
+        var keep = sel[+$('input[name=mg-src]:checked', mb).value];
+        Editor.snapshot(); Editor.setGeom(keep, Geo.round(g)); sel.forEach(function (f) { if (f !== keep) Editor.remove(f); });
+        Select.ids = new Set([keep.id]); MapView.refreshData(); Editor.updatePanel(); toast('Merge: ' + sel.length + ' fitur digabung.', 'ok'); return true;
+      } }] });
+  },
+  joinLines: function (lines) {
+    var tol = 1e-5, eq = function (a, b) { return Math.abs(a[0] - b[0]) < tol && Math.abs(a[1] - b[1]) < tol; };
+    var out = lines[0].slice(), rest = lines.slice(1).map(function (c) { return c.slice(); });
+    while (rest.length) {
+      var done = false;
+      for (var i = 0; i < rest.length; i++) {
+        var c = rest[i], h = out[0], t = out[out.length - 1];
+        if (eq(t, c[0])) out = out.concat(c.slice(1)); else if (eq(t, c[c.length - 1])) out = out.concat(c.slice(0, -1).reverse());
+        else if (eq(h, c[c.length - 1])) out = c.slice(0, -1).concat(out); else if (eq(h, c[0])) out = c.slice(1).reverse().concat(out); else continue;
+        rest.splice(i, 1); done = true; break;
+      }
+      if (!done) return null;
+    }
+    return { type: 'LineString', coordinates: out };
+  },
+  deleteSelected: async function () {
+    var sel = Editor.selected(); if (!sel.length) return toast('Tidak ada fitur terpilih.', 'err');
+    if (sel.some(function (f) { return !Editor.canEdit(f) && !f._added; })) return toast('Sebagian fitur terpilih tidak dapat Anda hapus.', 'err');
+    if (!(await confirmBox('Hapus fitur', 'Hapus ' + sel.length + ' fitur terpilih? Dihapus saat perubahan disimpan.', 'Hapus', true))) return;
+    Editor.snapshot(); sel.forEach(Editor.remove); MapView.refreshData(); Editor.updatePanel();
+  },
+  save: async function () {
+    if (!Editor.dirty()) return toast('Belum ada perubahan.');
+    var n = 0, bad = [];
+    Object.keys(Editor.work).forEach(function (id) { var f = S.features.get(id), l = f && layerById(f.layer_id); if (f && l && !Geo.validate(Editor.work[id], l.geom_type).ok) bad.push(featLabel(f)); });
+    if (bad.length) return toast('Geometri tidak valid: ' + bad.join(', '), 'err', 6000);
+    for (var id of Object.keys(Editor.work)) {
+      var f = S.features.get(id); if (!f) continue;
+      await Sync.enqueue({ type: 'upsert', data: { id: f.id, layer_id: f.layer_id, project_id: f.project_id, geometry: Geo.round(Editor.work[id]), attrs: f.attrs || {}, photos: f.photos || [], gps: f.gps || null, status: f.status } }); n++;
+    }
+    for (var a of Editor.added) { await Sync.enqueue({ type: 'upsert', data: { id: a.id, layer_id: a.layer_id, project_id: a.project_id, geometry: a.geometry, attrs: a.attrs, photos: [], gps: null, status: 'draft' } }); n++; }
+    for (var rid of Array.from(Editor.removed)) { await Sync.enqueue({ type: 'delete', data: { id: rid } }); n++; }
+    Editor.reset(); Editor.renderSketch(); MapView.refreshData(); Editor.updatePanel();
+    toast(n + ' perubahan disimpan ke antrean sinkronisasi.', 'ok');
+  },
+  updatePanel: function () {
+    var p = $('#edit-panel'); if (!p) return;
+    if (!Editor.on) { p.classList.add('hidden'); return; }
+    var sel = Editor.selected(), t = Editor.TOOLS.find(function (x) { return x[0] === Editor.tool; }) || Editor.TOOLS[0], nChg = Object.keys(Editor.work).length + Editor.added.length + Editor.removed.size;
+    p.classList.remove('hidden');
+    p.innerHTML = '<div class="row"><b class="grow">Editor</b><span class="badge" id="ed-count">' + sel.length + ' terpilih</span>' + (nChg ? '<span class="badge b-pending">' + nChg + ' perubahan</span>' : '') + '</div>' +
+      '<div class="ed-tools">' + Editor.TOOLS.map(function (x) { return '<button type="button" class="btn sm' + (Editor.tool === x[0] ? ' on' : '') + '" data-et="' + x[0] + '" title="' + esc(x[2]) + '">' + esc(x[1]) + '</button>'; }).join('') + '</div>' +
+      '<div class="small muted ed-hint">' + esc(t[2]) + '</div>' +
+      '<div class="row wrap ed-act">' +
+      (Editor.sketch ? '<button type="button" class="btn sm primary" id="ed-sk-done">Selesai sketsa</button>' : '') +
+      (Editor.pieces ? '<button type="button" class="btn sm primary" id="ed-pc-ok">Terapkan potongan</button><button type="button" class="btn sm" id="ed-pc-x">Batal potong</button>' : '') +
+      (Editor.tool === 'vertex' && Editor.vtx ? '<button type="button" class="btn sm danger" id="ed-vdel">Hapus vertex</button>' : '') +
+      '<button type="button" class="btn sm" id="ed-undo">↶ Undo</button><button type="button" class="btn sm ghost" id="ed-del"' + (sel.length ? '' : ' disabled') + '>Hapus fitur</button><button type="button" class="btn sm ghost" id="ed-unsel"' + (sel.length ? '' : ' disabled') + '>Kosongkan pilihan</button>' +
+      '<span class="grow"></span><button type="button" class="btn sm" id="ed-stop">Akhiri</button><button type="button" class="btn sm primary" id="ed-save"' + (nChg ? '' : ' disabled') + '>Simpan perubahan</button></div>';
+    p.onclick = function (e) {
+      var b = e.target.closest('button'); if (!b || b.disabled) return;
+      var et = b.getAttribute('data-et'); if (et) return Editor.setTool(et);
+      ({ 'ed-sk-done': Editor.finishSketch, 'ed-pc-ok': Editor.applyPieces, 'ed-pc-x': function () { Editor.pieces = null; Editor.tool = 'select'; Editor.renderSketch(); Editor.updatePanel(); }, 'ed-vdel': Editor.deleteVertex, 'ed-undo': Editor.undo, 'ed-del': Editor.deleteSelected, 'ed-unsel': function () { Select.set([]); }, 'ed-stop': function () { Editor.stop(); }, 'ed-save': Editor.save }[b.id] || function () { })();
+    };
+  }
+};
+
+// Pintasan keyboard di PC: Delete = hapus vertex terpilih, Ctrl+Z = undo, Enter = selesai sketsa, Esc = batal sketsa.
+document.addEventListener('keydown', function (e) {
+  if (!Editor.on || /INPUT|TEXTAREA|SELECT/.test((e.target || {}).tagName || '')) return;
+  if (e.key === 'Delete' && Editor.vtx) { Editor.deleteVertex(); e.preventDefault(); }
+  else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { Editor.undo(); e.preventDefault(); }
+  else if (e.key === 'Enter' && Editor.sketch) { Editor.finishSketch(); e.preventDefault(); }
+  else if (e.key === 'Escape' && Editor.sketch && Editor.sketch.length) { Editor.sketch = []; Editor.renderSketch(); e.preventDefault(); }
+});
 
 /* Pustaka simbol titik — dibuat oleh scripts/gen_symbols.js dari Material Design Icons (Apache License 2.0, Google). Jangan edit manual. */
 var SYMBOL_DATA = {"geo":[{"k":"circle","id":"Lingkaran","en":"Circle","g":"Bentuk dasar"},{"k":"square","id":"Kotak","en":"Square","g":"Bentuk dasar"},{"k":"triangle","id":"Segitiga (BM / titik ikat)","en":"Triangle (benchmark)","g":"Bentuk dasar"},{"k":"diamond","id":"Belah ketupat","en":"Diamond","g":"Bentuk dasar"},{"k":"cross","id":"Silang","en":"Cross","g":"Bentuk dasar"},{"k":"pentagon","id":"Segi lima","en":"Pentagon","g":"Bentuk dasar"}],"icons":[{"k":"factory","id":"Pabrik","en":"Factory","g":"Bangunan","vb":"0 0 24 24","d":"M22 10v12H2V10l7-3v2l5-2v3zm-4.8-1.5L18 2h3l.8 6.5zM11 18h2v-4h-2zm-4 0h2v-4H7zm10-4h-2v4h2z"},{"k":"house","id":"Rumah","en":"House","g":"Bangunan","vb":"0 0 24 24","d":"M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"},{"k":"building","id":"Gedung / kantor","en":"Building / office","g":"Bangunan","vb":"0 0 24 24","d":"M17 11V3H7v4H3v14h8v-4h2v4h8V11zM7 19H5v-2h2zm0-4H5v-2h2zm0-4H5V9h2zm4 4H9v-2h2zm0-4H9V9h2zm0-4H9V5h2zm4 8h-2v-2h2zm0-4h-2V9h2zm0-4h-2V5h2zm4 12h-2v-2h2zm0-4h-2v-2h2z"},{"k":"warehouse","id":"Gudang","en":"Warehouse","g":"Bangunan","vb":"0 0 24 24","d":"M22 21V7L12 3 2 7v14h5v-9h10v9zm-11-2H9v2h2zm2-3h-2v2h2zm2 3h-2v2h2z"},{"k":"shop","id":"Toko / pasar","en":"Shop / market","g":"Bangunan","vb":"0 0 24 24","d":"m21.9 8.89-1.05-4.37c-.22-.9-1-1.52-1.91-1.52H5.05c-.9 0-1.69.63-1.9 1.52L2.1 8.89c-.24 1.02-.02 2.06.62 2.88.08.11.19.19.28.29V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-6.94c.09-.09.2-.18.28-.28.64-.82.87-1.87.62-2.89m-2.99-3.9 1.05 4.37c.1.42.01.84-.25 1.17-.14.18-.44.47-.94.47-.61 0-1.14-.49-1.21-1.14L16.98 5zM13 5h1.96l.54 4.52c.05.39-.07.78-.33 1.07-.22.26-.54.41-.95.41-.67 0-1.22-.59-1.22-1.31zM8.49 9.52 9.04 5H11v4.69c0 .72-.55 1.31-1.29 1.31-.34 0-.65-.15-.89-.41a1.42 1.42 0 0 1-.33-1.07m-4.45-.16L5.05 5h1.97l-.58 4.86c-.08.65-.6 1.14-1.21 1.14-.49 0-.8-.29-.93-.47-.27-.32-.36-.75-.26-1.17M5 19v-6.03c.08.01.15.03.23.03.87 0 1.66-.36 2.24-.95.6.6 1.4.95 2.31.95.87 0 1.65-.36 2.23-.93.59.57 1.39.93 2.29.93.84 0 1.64-.35 2.24-.95.58.59 1.37.95 2.24.95.08 0 .15-.02.23-.03V19z"},{"k":"govt","id":"Kantor pemerintah","en":"Government office","g":"Bangunan","vb":"0 0 24 24","d":"M4 10h3v7H4zM10.5 10h3v7h-3zM2 19h20v3H2zM17 10h3v7h-3zM12 1 2 6v2h20V6z"},{"k":"school","id":"Sekolah","en":"School","g":"Fasilitas umum","vb":"0 0 24 24","d":"M5 13.18v4L12 21l7-3.82v-4L12 17zM12 3 1 9l11 6 9-4.91V17h2V9z"},{"k":"hospital","id":"Rumah sakit / klinik","en":"Hospital / clinic","g":"Fasilitas umum","vb":"0 0 24 24","d":"M19 3H5c-1.1 0-1.99.9-1.99 2L3 19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2m-1 11h-4v4h-4v-4H6v-4h4V6h4v4h4z"},{"k":"mosque","id":"Masjid","en":"Mosque","g":"Fasilitas umum","vb":"0 0 24 24","d":"M7 8h10c.29 0 .57.06.84.13.09-.33.16-.67.16-1.04 0-1.31-.65-2.53-1.74-3.25L12 1 7.74 3.84A3.89 3.89 0 0 0 6 7.09c0 .37.07.71.16 1.04.27-.07.55-.13.84-.13 M24 7c0-1.1-2-3-2-3s-2 1.9-2 3c0 .74.4 1.38 1 1.72V13h-2v-2c0-1.1-.9-2-2-2H7c-1.1 0-2 .9-2 2v2H3V8.72c.6-.34 1-.98 1-1.72 0-1.1-2-3-2-3S0 5.9 0 7c0 .74.4 1.38 1 1.72V21h9v-4c0-1.1.9-2 2-2s2 .9 2 2v4h9V8.72c.6-.34 1-.98 1-1.72"},{"k":"church","id":"Gereja","en":"Church","g":"Fasilitas umum","vb":"0 0 24 24","d":"M18 12.22V9l-5-2.5V5h2V3h-2V1h-2v2H9v2h2v1.5L6 9v3.22L2 14v8h8v-3c0-1.1.9-2 2-2s2 .9 2 2v3h8v-8zm-6 1.28c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5"},{"k":"temple","id":"Pura / vihara","en":"Temple","g":"Fasilitas umum","vb":"0 0 24 24","d":"M6.6 11h10.8l-.9-3h-9zM20 11v2H4v-2H2v11h8v-5h4v5h8V11zM15.9 6 15 3V1h-2v2h-2.03V1h-2v2.12L8.1 6z"},{"k":"police","id":"Pos keamanan","en":"Security post","g":"Fasilitas umum","vb":"0 0 24 24","d":"M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5zm2.5 11.59.9 3.88-3.4-2.05-3.4 2.05.9-3.87-3-2.59 3.96-.34L12 6.02l1.54 3.64 3.96.34z"},{"k":"fire","id":"Pemadam / titik api","en":"Fire / hotspot","g":"Fasilitas umum","vb":"0 0 24 24","d":"m12 12.9-2.13 2.09c-.56.56-.87 1.29-.87 2.07C9 18.68 10.35 20 12 20s3-1.32 3-2.94c0-.78-.31-1.52-.87-2.07z m16 6-.44.55C14.38 8.02 12 7.19 12 5.3V2S4 6 4 13c0 2.92 1.56 5.47 3.89 6.86-.56-.79-.89-1.76-.89-2.8 0-1.32.52-2.56 1.47-3.5L12 10.1l3.53 3.47c.95.93 1.47 2.17 1.47 3.5 0 1.02-.31 1.96-.85 2.75 1.89-1.15 3.29-3.06 3.71-5.3.66-3.55-1.07-6.9-3.86-8.52"},{"k":"hotel","id":"Mes / penginapan","en":"Lodging","g":"Fasilitas umum","vb":"0 0 24 24","d":"M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3m12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4"},{"k":"food","id":"Kantin / rumah makan","en":"Canteen / restaurant","g":"Fasilitas umum","vb":"0 0 24 24","d":"M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4"},{"k":"field","id":"Lapangan olahraga","en":"Sports field","g":"Fasilitas umum","vb":"0 0 24 24","d":"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m1 3.3 1.35-.95a8 8 0 0 1 4.38 3.34l-.39 1.34-1.35.46L13 6.7zm-3.35-.95L11 5.3v1.4L7.01 9.49l-1.35-.46-.39-1.34a8.1 8.1 0 0 1 4.38-3.34M7.08 17.11l-1.14.1A7.94 7.94 0 0 1 4 12c0-.12.01-.23.02-.35l1-.73 1.38.48 1.46 4.34zm7.42 2.48c-.79.26-1.63.41-2.5.41s-1.71-.15-2.5-.41l-.69-1.49.64-1.1h5.11l.64 1.11zM14.27 15H9.73l-1.35-4.02L12 8.44l3.63 2.54zm3.79 2.21-1.14-.1-.79-1.37 1.46-4.34 1.39-.47 1 .73c.01.11.02.22.02.34 0 1.99-.73 3.81-1.94 5.21"},{"k":"airport","id":"Bandara / helipad","en":"Airport / helipad","g":"Transportasi","vb":"0 0 24 24","d":"M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"},{"k":"port","id":"Dermaga / pelabuhan","en":"Jetty / port","g":"Transportasi","vb":"0 0 24 24","d":"m17 15 1.55 1.55c-.96 1.69-3.33 3.04-5.55 3.37V11h3V9h-3V7.82C14.16 7.4 15 6.3 15 5c0-1.65-1.35-3-3-3S9 3.35 9 5c0 1.3.84 2.4 2 2.82V9H8v2h3v8.92c-2.22-.33-4.59-1.68-5.55-3.37L7 15l-4-3v3c0 3.88 4.92 7 9 7s9-3.12 9-7v-3zM12 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1"},{"k":"boat","id":"Kapal / penyeberangan","en":"Boat / ferry","g":"Transportasi","vb":"0 0 24 24","d":"M20 21c-1.39 0-2.78-.47-4-1.32-2.44 1.71-5.56 1.71-8 0C6.78 20.53 5.39 21 4 21H2v2h2c1.38 0 2.74-.35 4-.99a8.75 8.75 0 0 0 8 0c1.26.65 2.62.99 4 .99h2v-2zM3.95 19H4c1.6 0 3.02-.88 4-2 .98 1.12 2.4 2 4 2s3.02-.88 4-2c.98 1.12 2.4 2 4 2h.05l1.89-6.68c.08-.26.06-.54-.06-.78s-.34-.42-.6-.5L20 10.62V6c0-1.1-.9-2-2-2h-3V1H9v3H6c-1.1 0-2 .9-2 2v4.62l-1.29.42a1.007 1.007 0 0 0-.66 1.28zM6 6h12v3.97L12 8 6 9.97z"},{"k":"truck","id":"Truk / TPH angkut","en":"Truck / loading point","g":"Transportasi","vb":"0 0 24 24","d":"M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5m13.5-9 1.96 2.5H17V9.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5"},{"k":"bus","id":"Halte / terminal","en":"Bus stop","g":"Transportasi","vb":"0 0 24 24","d":"M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17m9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5m1.5-6H6V6h12z"},{"k":"train","id":"Stasiun","en":"Railway station","g":"Transportasi","vb":"0 0 24 24","d":"M12 2c-4 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h2.23l2-2H14l2 2h2v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-3.58-4-8-4M7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17m3.5-7H6V6h5zm2 0V6h5v4zm3.5 7c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5"},{"k":"parking","id":"Parkir","en":"Parking","g":"Transportasi","vb":"0 0 24 24","d":"M13 3H6v18h4v-6h3c3.31 0 6-2.69 6-6s-2.69-6-6-6m.2 8H10V7h3.2c1.1 0 2 .9 2 2s-.9 2-2 2"},{"k":"fuel","id":"SPBU / BBM","en":"Fuel station","g":"Transportasi","vb":"0 0 24 24","d":"m19.77 7.23.01-.01-3.72-3.72L15 4.56l2.11 2.11c-.94.36-1.61 1.26-1.61 2.33a2.5 2.5 0 0 0 2.5 2.5c.36 0 .69-.08 1-.21v7.21c0 .55-.45 1-1 1s-1-.45-1-1V14c0-1.1-.9-2-2-2h-1V5c0-1.1-.9-2-2-2H6c-1.1 0-2 .9-2 2v16h10v-7.5h1.5v5a2.5 2.5 0 0 0 5 0V9c0-.69-.28-1.32-.73-1.77M12 10H6V5h6zm6 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1"},{"k":"tree","id":"Pohon","en":"Tree","g":"Alam & kebun","vb":"0 0 24 24","d":"M17 12h2L12 2 5.05 12H7l-3.9 6h6.92v4h3.96v-4H21z"},{"k":"forest","id":"Hutan","en":"Forest","g":"Alam & kebun","vb":"0 0 24 24","d":"M16 12 9 2 2 12h1.86L0 18h7v4h4v-4h7l-3.86-6z M20.14 12H22L15 2l-2.39 3.41L17.92 13h-1.95l3.22 5H24zM13 19h4v3h-4z"},{"k":"leaf","id":"Tanaman / bibit","en":"Plant / seedling","g":"Alam & kebun","vb":"0 0 24 24","d":"M6.05 8.05a7 7 0 0 0-.02 9.88c1.47-3.4 4.09-6.24 7.36-7.93A15.95 15.95 0 0 0 8 19.32c2.6 1.23 5.8.78 7.95-1.37C19.43 14.47 20 4 20 4S9.53 4.57 6.05 8.05"},{"k":"grass","id":"Rumput / gulma","en":"Grass / weed","g":"Alam & kebun","vb":"0 0 24 24","d":"M12 20H2v-2h5.75A8.03 8.03 0 0 0 2 12.26c.64-.16 1.31-.26 2-.26 4.42 0 8 3.58 8 8m10-7.74c-.64-.16-1.31-.26-2-.26-2.93 0-5.48 1.58-6.88 3.93a9.8 9.8 0 0 1 .87 4.07h8v-2h-5.75A8.06 8.06 0 0 1 22 12.26m-6.36-1.24a10.03 10.03 0 0 1 4.09-5C15.44 6.16 12 9.67 12 14v.02c.95-1.27 2.2-2.3 3.64-3m-4.22-2.17A8.53 8.53 0 0 0 6.7 4C8.14 5.86 9 8.18 9 10.71c0 .21-.03.41-.04.61.43.24.83.52 1.22.82a9.9 9.9 0 0 1 1.24-3.29"},{"k":"grain","id":"Panen / hasil","en":"Harvest","g":"Alam & kebun","vb":"0 0 24 24","d":"M10 12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2M6 8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m0 8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m12-8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2m-4 8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m4-4c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m-4-4c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2m-4-4c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2"},{"k":"farm","id":"Pertanian / alsintan","en":"Farm / machinery","g":"Alam & kebun","vb":"0 0 24 24","d":"M19.5 12c.93 0 1.78.28 2.5.76V8c0-1.1-.9-2-2-2h-6.29l-1.06-1.06 1.41-1.41-.71-.71-3.53 3.53.71.71 1.41-1.41L13 6.71V9c0 1.1-.9 2-2 2h-.54A5.98 5.98 0 0 1 12 15c0 .34-.04.67-.09 1h3.14c.25-2.25 2.14-4 4.45-4 M19.5 13c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-3.5m0 5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5M4 9h5c0-1.1-.9-2-2-2H4c-.55 0-1 .45-1 1s.45 1 1 1M9.83 13.82l-.18-.47.93-.35a4.92 4.92 0 0 0-2.31-2.43l-.4.89-.46-.21.4-.9C7.26 10.13 6.64 10 6 10c-.53 0-1.04.11-1.52.26l.34.91-.47.18-.35-.93a4.92 4.92 0 0 0-2.43 2.31l.89.4-.21.46-.9-.4C1.13 13.74 1 14.36 1 15c0 .53.11 1.04.26 1.52l.91-.34.18.47-.93.35a4.92 4.92 0 0 0 2.31 2.43l.4-.89.46.21-.4.9c.55.22 1.17.35 1.81.35.53 0 1.04-.11 1.52-.26l-.34-.91.47-.18.35.93a4.92 4.92 0 0 0 2.43-2.31l-.89-.4.21-.46.9.4c.22-.55.35-1.17.35-1.81 0-.53-.11-1.04-.26-1.52zm-2.68 3.95c-1.53.63-3.29-.09-3.92-1.62s.09-3.29 1.62-3.92 3.29.09 3.92 1.62c.64 1.53-.09 3.29-1.62 3.92"},{"k":"mountain","id":"Bukit / gunung","en":"Hill / mountain","g":"Alam & kebun","vb":"0 0 24 24","d":"m14 6-3.75 5 2.85 3.8-1.6 1.2C9.81 13.75 7 10 7 10l-6 8h22z"},{"k":"pest","id":"Hama / penyakit","en":"Pest / disease","g":"Alam & kebun","vb":"0 0 24 24","d":"M21 15v-2h-3.07c-.05-.39-.12-.77-.22-1.14l2.58-1.49-1-1.73L16.92 10c-.28-.48-.62-.91-.99-1.29.04-.23.07-.46.07-.71 0-.8-.24-1.55-.65-2.18L17 4.17l-1.41-1.41-1.72 1.72c-1.68-.89-3.1-.33-3.73 0L8.41 2.76 7 4.17l1.65 1.65A4 4 0 0 0 8 8c0 .25.03.48.07.72-.37.38-.71.81-.99 1.28L4.71 8.63l-1 1.73 2.58 1.49c-.1.37-.17.75-.22 1.14H3v2h3.07c.05.39.12.77.22 1.14l-2.58 1.49 1 1.73L7.08 18c1.08 1.81 2.88 3 4.92 3s3.84-1.19 4.92-3l2.37 1.37 1-1.73-2.58-1.49c.1-.37.17-.75.22-1.14H21zm-8 2h-2v-6h2z"},{"k":"animal","id":"Satwa","en":"Wildlife","g":"Alam & kebun","vb":"0 0 24 24","d":"M17.34 14.86c-.87-1.02-1.6-1.89-2.48-2.91-.46-.54-1.05-1.08-1.75-1.32q-.165-.06-.33-.09c-.25-.04-.52-.04-.78-.04s-.53 0-.79.05q-.165.03-.33.09c-.7.24-1.28.78-1.75 1.32-.87 1.02-1.6 1.89-2.48 2.91-1.31 1.31-2.92 2.76-2.62 4.79.29 1.02 1.02 2.03 2.33 2.32.73.15 3.06-.44 5.54-.44h.18c2.48 0 4.81.58 5.54.44 1.31-.29 2.04-1.31 2.33-2.32.31-2.04-1.3-3.49-2.61-4.8 M2 9.5a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0z M6.5 5.5a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0z M12.5 5.5a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0z M17 9.5a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0 -5 0z"},{"k":"water","id":"Sumur / mata air","en":"Well / spring","g":"Air & utilitas","vb":"0 0 24 24","d":"M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8M7.83 14c.37 0 .67.26.74.62.41 2.22 2.28 2.98 3.64 2.87.43-.02.79.32.79.75 0 .4-.32.73-.72.75-2.13.13-4.62-1.09-5.19-4.12a.75.75 0 0 1 .74-.87"},{"k":"river","id":"Sungai / kanal","en":"River / canal","g":"Air & utilitas","vb":"0 0 24 24","d":"M17 16.99c-1.35 0-2.2.42-2.95.8-.65.33-1.18.6-2.05.6-.9 0-1.4-.25-2.05-.6-.75-.38-1.57-.8-2.95-.8s-2.2.42-2.95.8c-.65.33-1.17.6-2.05.6v1.95c1.35 0 2.2-.42 2.95-.8.65-.33 1.17-.6 2.05-.6s1.4.25 2.05.6c.75.38 1.57.8 2.95.8s2.2-.42 2.95-.8c.65-.33 1.18-.6 2.05-.6.9 0 1.4.25 2.05.6.75.38 1.58.8 2.95.8v-1.95c-.9 0-1.4-.25-2.05-.6-.75-.38-1.6-.8-2.95-.8m0-4.45c-1.35 0-2.2.43-2.95.8-.65.32-1.18.6-2.05.6-.9 0-1.4-.25-2.05-.6-.75-.38-1.57-.8-2.95-.8s-2.2.43-2.95.8c-.65.32-1.17.6-2.05.6v1.95c1.35 0 2.2-.43 2.95-.8.65-.35 1.15-.6 2.05-.6s1.4.25 2.05.6c.75.38 1.57.8 2.95.8s2.2-.43 2.95-.8c.65-.35 1.15-.6 2.05-.6s1.4.25 2.05.6c.75.38 1.58.8 2.95.8v-1.95c-.9 0-1.4-.25-2.05-.6-.75-.38-1.6-.8-2.95-.8m2.95-8.08c-.75-.38-1.58-.8-2.95-.8s-2.2.42-2.95.8c-.65.32-1.18.6-2.05.6-.9 0-1.4-.25-2.05-.6-.75-.37-1.57-.8-2.95-.8s-2.2.42-2.95.8c-.65.33-1.17.6-2.05.6v1.93c1.35 0 2.2-.43 2.95-.8.65-.33 1.17-.6 2.05-.6s1.4.25 2.05.6c.75.38 1.57.8 2.95.8s2.2-.43 2.95-.8c.65-.32 1.18-.6 2.05-.6.9 0 1.4.25 2.05.6.75.38 1.58.8 2.95.8V5.04c-.9 0-1.4-.25-2.05-.58M17 8.09c-1.35 0-2.2.43-2.95.8-.65.35-1.15.6-2.05.6s-1.4-.25-2.05-.6c-.75-.38-1.57-.8-2.95-.8s-2.2.43-2.95.8c-.65.35-1.15.6-2.05.6v1.95c1.35 0 2.2-.43 2.95-.8.65-.32 1.18-.6 2.05-.6s1.4.25 2.05.6c.75.38 1.57.8 2.95.8s2.2-.43 2.95-.8c.65-.32 1.18-.6 2.05-.6.9 0 1.4.25 2.05.6.75.38 1.58.8 2.95.8V9.49c-.9 0-1.4-.25-2.05-.6-.75-.38-1.6-.8-2.95-.8"},{"k":"waterplant","id":"Pintu air / tata air","en":"Water gate","g":"Air & utilitas","vb":"0 0 24 24","d":"M21.98 14H22zM5.35 13c1.19 0 1.42 1 3.33 1 1.95 0 2.09-1 3.33-1 1.19 0 1.42 1 3.33 1 1.95 0 2.09-1 3.33-1 1.19 0 1.4.98 3.31 1v-2c-1.19 0-1.42-1-3.33-1-1.95 0-2.09 1-3.33 1-1.19 0-1.42-1-3.33-1-1.95 0-2.09 1-3.33 1-1.19 0-1.42-1-3.33-1-1.95 0-2.09 1-3.33 1v2c1.9 0 2.17-1 3.35-1m13.32 2c-1.95 0-2.09 1-3.33 1-1.19 0-1.42-1-3.33-1-1.95 0-2.1 1-3.34 1s-1.38-1-3.33-1-2.1 1-3.34 1v2c1.95 0 2.11-1 3.34-1 1.24 0 1.38 1 3.33 1s2.1-1 3.34-1c1.19 0 1.42 1 3.33 1 1.94 0 2.09-1 3.33-1 1.19 0 1.42 1 3.33 1v-2c-1.24 0-1.38-1-3.33-1M5.35 9c1.19 0 1.42 1 3.33 1 1.95 0 2.09-1 3.33-1 1.19 0 1.42 1 3.33 1 1.95 0 2.09-1 3.33-1 1.19 0 1.4.98 3.31 1V8c-1.19 0-1.42-1-3.33-1-1.95 0-2.09 1-3.33 1-1.19 0-1.42-1-3.33-1-1.95 0-2.09 1-3.33 1-1.19 0-1.42-1-3.33-1C3.38 7 3.24 8 2 8v2c1.9 0 2.17-1 3.35-1"},{"k":"tower","id":"Menara / BTS","en":"Tower / antenna","g":"Air & utilitas","vb":"0 0 24 24","d":"m7.3 14.7 1.2-1.2c-1-1-1.5-2.3-1.5-3.5 0-1.3.5-2.6 1.5-3.5L7.3 5.3c-1.3 1.3-2 3-2 4.7s.7 3.4 2 4.7M19.1 2.9l-1.2 1.2c1.6 1.6 2.4 3.8 2.4 5.9s-.8 4.3-2.4 5.9l1.2 1.2c2-2 2.9-4.5 2.9-7.1s-1-5.1-2.9-7.1 M6.1 4.1 4.9 2.9C3 4.9 2 7.4 2 10s1 5.1 2.9 7.1l1.2-1.2c-1.6-1.6-2.4-3.8-2.4-5.9s.8-4.3 2.4-5.9M16.7 14.7c1.3-1.3 2-3 2-4.7-.1-1.7-.7-3.4-2-4.7l-1.2 1.2c1 1 1.5 2.3 1.5 3.5 0 1.3-.5 2.6-1.5 3.5zM14.5 10a2.5 2.5 0 0 0-5 0c0 .76.34 1.42.87 1.88L7 22h2l.67-2h4.67l.66 2h2l-3.37-10.12c.53-.46.87-1.12.87-1.88m-4.17 8L12 13l1.67 5z"},{"k":"power","id":"Listrik / gardu","en":"Power / substation","g":"Air & utilitas","vb":"0 0 24 24","d":"M14.69 2.21 4.33 11.49c-.64.58-.28 1.65.58 1.73L13 14l-4.85 6.76c-.22.31-.19.74.08 1.01.3.3.77.31 1.08.02l10.36-9.28c.64-.58.28-1.65-.58-1.73L11 10l4.85-6.76c.22-.31.19-.74-.08-1.01a.77.77 0 0 0-1.08-.02"},{"k":"solar","id":"PLTS","en":"Solar power","g":"Air & utilitas","vb":"0 0 24 24","d":"M3.33 16H11v-3H4zM13 16h7.67L20 13h-7zM21.11 18H13v4h9zM2 22h9v-4H2.89zM11 8h2v3h-2zM15.764 7.205l1.415-1.414L19.3 7.912l-1.414 1.414zM4.705 7.913 6.826 5.79 8.24 7.206 6.12 9.327zM3 2h3v2H3zM18 2h3v2h-3zM12 7c2.76 0 5-2.24 5-5H7c0 2.76 2.24 5 5 5"},{"k":"oil","id":"Tangki / migas","en":"Tank / oil & gas","g":"Air & utilitas","vb":"0 0 24 24","d":"M20 13c.55 0 1-.45 1-1s-.45-1-1-1h-1V5h1c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1s.45 1 1 1h1v6H4c-.55 0-1 .45-1 1s.45 1 1 1h1v6H4c-.55 0-1 .45-1 1s.45 1 1 1h16c.55 0 1-.45 1-1s-.45-1-1-1h-1v-6zm-8 3c-1.66 0-3-1.32-3-2.95 0-1.3.52-1.67 3-4.55 2.47 2.86 3 3.24 3 4.55 0 1.63-1.34 2.95-3 2.95"},{"k":"waste","id":"TPS / limbah","en":"Waste / recycling","g":"Air & utilitas","vb":"0 0 24 24","d":"M5.77 7.15 7.2 4.78l1.03-1.71c.39-.65 1.33-.65 1.72 0l1.48 2.46-1.23 2.06-1 1.62zm15.95 5.82-1.6-2.66-3.46 2L18.87 16H20a2 2 0 0 0 2-2c0-.36-.1-.71-.28-1.03M16 21h1.5a2 2 0 0 0 1.79-1.11L20.74 17H16v-2l-4 4 4 4zm-6-4H5.7l-.84 1.41c-.3.5-.32 1.12-.06 1.65.28.57.87.94 1.52.94H10zm-3.88-2.65 1.73 1.04L6.48 9.9 1 11.27l1.7 1.02-.41.69c-.35.59-.38 1.31-.07 1.92l1.63 3.26zm10.9-9.21-1.3-2.17C15.35 2.37 14.7 2 14 2h-3.53l3.12 5.2-1.72 1.03 5.49 1.37 1.37-5.49z"},{"k":"construction","id":"Konstruksi / tambang","en":"Construction / mining","g":"Air & utilitas","vb":"0 0 24 24","d":"m13.783 15.172 2.121-2.121 5.996 5.996-2.121 2.121zM17.5 10c1.93 0 3.5-1.57 3.5-3.5 0-.58-.16-1.12-.41-1.6l-2.7 2.7-1.49-1.49 2.7-2.7c-.48-.25-1.02-.41-1.6-.41C15.57 3 14 4.57 14 6.5c0 .41.08.8.21 1.16l-1.85 1.85-1.78-1.78.71-.71-1.41-1.41L12 3.49a3 3 0 0 0-4.24 0L4.22 7.03l1.41 1.41H2.81l-.71.71 3.54 3.54.71-.71V9.15l1.41 1.41.71-.71 1.78 1.78-7.41 7.41 2.12 2.12L16.34 9.79c.36.13.75.21 1.16.21"},{"k":"lab","id":"Sampel / laboratorium","en":"Sample / laboratory","g":"Survei","vb":"0 0 24 24","d":"M19.8 18.4 14 10.67V6.5l1.35-1.69c.26-.33.03-.81-.39-.81H9.04c-.42 0-.65.48-.39.81L10 6.5v4.17L4.2 18.4c-.49.66-.02 1.6.8 1.6h14c.82 0 1.29-.94.8-1.6"},{"k":"camera","id":"Titik foto","en":"Photo point","g":"Survei","vb":"0 0 24 24","d":"M9 2 7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5 M8.8 12a3.2 3.2 0 1 0 6.4 0a3.2 3.2 0 1 0 -6.4 0z"},{"k":"flag","id":"Bendera / patok","en":"Flag / marker","g":"Survei","vb":"0 0 24 24","d":"M14.4 6 14 4H5v17h2v-7h5.6l.4 2h7V6z"},{"k":"pin","id":"Pin lokasi","en":"Location pin","g":"Survei","vb":"0 0 24 24","d":"M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7m0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5"},{"k":"info","id":"Informasi","en":"Information","g":"Survei","vb":"0 0 24 24","d":"M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m1 15h-2v-6h2zm0-8h-2V7h2z"},{"k":"warning","id":"Bahaya / peringatan","en":"Hazard / warning","g":"Survei","vb":"0 0 24 24","d":"M1 21h22L12 2zm12-3h-2v-2h2zm0-4h-2v-4h2z"},{"k":"star","id":"Bintang / penting","en":"Star / important","g":"Survei","vb":"0 0 24 24","d":"M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"}]};
