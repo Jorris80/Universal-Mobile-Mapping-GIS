@@ -182,7 +182,7 @@ table.t td.num,table.t th.num{width:1%;text-align:right;color:var(--muted)}
 /* v1.7 — editor, query, label */
 .tab.map.editing [data-tool]:not([data-tool=measure]){display:none}
 .tab.map.editing #btn-edit{background:var(--accent);color:#fff;border-color:var(--accent)}
-.edit-panel{max-height:58vh;overflow:auto;gap:4px}
+.edit-panel{max-height:58vh;overflow:auto;gap:4px}.edit-panel>*{flex-shrink:0}
 @media (min-width:861px){.edit-panel{left:12px;transform:none;top:62px;bottom:auto;width:340px;max-height:calc(100% - 80px)}.edit-panel .btn.sm{padding:4px 8px;min-height:30px;font-size:12.5px}.edit-panel .ed-tools{gap:4px}}
 .ed-tools{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.ed-tools .btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .ed-hint{margin-top:6px}.ed-act{margin-top:8px;gap:6px}
@@ -193,6 +193,8 @@ table.t td.num,table.t th.num{width:1%;text-align:right;color:var(--muted)}
 @media(max-width:600px){.qy-row{flex-wrap:wrap}.qy-row input{flex-basis:100%}}
 .lyr-lb,.lyr-f{padding:2px 6px;min-height:24px;font-weight:700}.lyr-lb.on{color:var(--accent);border-color:var(--accent)}.lyr-f{color:var(--warn)}
 .lbl-ed .f{min-width:120px}
+
+.cons-bar{margin-top:8px;padding-top:6px;border-top:1px dashed var(--line)}.cons-m{gap:4px;align-items:center}.cons-m .btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}.cons-a{gap:8px;margin-top:6px;align-items:center}.cons-h{margin-top:4px}.ed-es{display:flex}
 
 </style>
 </head>
@@ -884,11 +886,37 @@ var I18N_EN = {
   'Hitung otomatis': 'Auto-calculate', 'isi manual': 'manual entry', 'Layer yang dihitung': 'Layer to count', 'pilih layer': 'choose layer', 'Nilai diperbarui otomatis setiap geometri berubah (rekam, edit, editor).': 'The value updates automatically whenever the geometry changes (record, edit, editor).',
   'otomatis': 'automatic', 'Luas (ha)': 'Area (ha)', 'Luas (m²)': 'Area (m²)', 'Keliling (m)': 'Perimeter (m)', 'Panjang (m)': 'Length (m)', 'Bujur / X (WGS84)': 'Longitude / X (WGS84)', 'Lintang / Y (WGS84)': 'Latitude / Y (WGS84)',
   'UTM X / Easting (m)': 'UTM X / Easting (m)', 'UTM Y / Northing (m)': 'UTM Y / Northing (m)', 'Zona UTM': 'UTM zone', 'Jumlah vertex': 'Vertex count', 'Jumlah data layer lain di dalam poligon': 'Count of another layer’s records inside the polygon',
+  'Pilih fitur yang mau dipotong (titik, garis, poligon), lalu ketuk poligon penghapus di peta — atau gambar poligon. Bagian DI DALAM penghapus dihapus.': 'Select the features to cut (points, lines, polygons), then tap the erasing polygon on the map — or draw one. Parts INSIDE the eraser are removed.',
+  'Pilih fitur yang mau dipotong (titik, garis, poligon), lalu ketuk poligon penghapus di peta — atau gambar poligon. Bagian DI LUAR penghapus dihapus.': 'Select the features to cut (points, lines, polygons), then tap the erasing polygon on the map — or draw one. Parts OUTSIDE the eraser are removed.',
+  'Periksa & rapikan vertex yang tidak menempel, celah kecil, dan overlap kecil antar fitur dalam toleransi.': 'Check & clean vertices that do not meet, small gaps and small overlaps between features within a tolerance.',
+  'Topologi': 'Topology', 'Klik poligon di peta': 'Click a polygon on the map', 'Gambar poligon': 'Draw a polygon',
+  'Ketuk poligon penghapus di peta (data lain atau layer referensi), atau pilih "Gambar poligon".': 'Tap the erasing polygon on the map (other data or a reference layer), or choose "Draw a polygon".',
+  'Ketuk peta untuk menambah vertex (snapping bila aktif).': 'Tap the map to add vertices (with snapping when enabled).',
+  'Ketuk tepi garis/poligon lain sebagai awal, lalu ketuk titik akhir pada tepi yang sama: vertex mengikuti tepi tersebut (jalur terpendek).': 'Tap the edge of another line/polygon as the start, then tap the end point on the same edge: vertices follow that edge (shortest path).',
+  'Segmen berikutnya dikunci sejajar atau tegak lurus segmen sebelumnya (segmen pertama: arah utara–selatan / barat–timur).': 'The next segment is locked parallel or perpendicular to the previous one (first segment: north–south / west–east).',
+  'Busur 3 titik: ketuk titik yang dilalui busur, lalu ketuk titik akhir busur.': '3-point arc: tap a point the arc passes through, then tap the arc end point.',
+  'Segmen berikutnya mengikuti sudut tertentu (azimut dari utara searah jarum jam, atau relatif terhadap segmen sebelumnya). Isi jarak untuk panjang tepat.': 'The next segment follows a given angle (azimuth clockwise from north, or relative to the previous segment). Enter a distance for an exact length.',
+  'Konstruksi': 'Construction', 'Bebas': 'Free', 'Trace': 'Trace', 'Jarak': 'Distance', 'Ortogonal': 'Orthogonal', 'Lengkung': 'Curve', 'Sudut°': 'Angle°', 'opsional': 'optional', 'Sudut': 'Angle', 'relatif ke segmen sebelumnya': 'relative to the previous segment',
+  '+ Titik': '+ Point', 'Luas maks. celah/overlap (m²)': 'Max. gap/overlap area (m²)', 'Toleransi (m)': 'Tolerance (m)',
+  'Rapatkan vertex berdekatan antar fitur (vertex tidak menempel / celah titik sudut)': 'Merge nearby vertices between features (vertices that do not meet / corner gaps)',
+  'Tempel vertex ke tepi fitur tetangga (celah, overshoot & ujung garis menggantung)': 'Snap vertices to neighbouring edges (gaps, overshoots & dangling line ends)',
+  'Hapus overlap kecil antar poligon (dipotong dari poligon yang lebih besar)': 'Remove small overlaps between polygons (cut from the larger polygon)',
+  'Isi celah kecil di antara poligon (digabung ke tetangga dengan sisi bersama terpanjang)': 'Fill small gaps between polygons (merged into the neighbour with the longest shared edge)',
+  'Periksa': 'Check', 'Rapikan': 'Clean', 'Masalah': 'Issue',
+  'Topologi: perlu minimal 2 garis/poligon yang dapat diedit di layer ini (atau di pilihan).': 'Topology: at least 2 editable lines/polygons are needed in this layer (or selection).',
+  'rata-rata 5 dtk': '5-sec average', 'Titik busur dipilih — ketuk titik akhir.': 'Arc point chosen — tap the end point.', 'Awal trace dipilih — ketuk titik akhir pada tepi yang sama.': 'Trace start chosen — tap the end point on the same edge.',
+  'Trace: ketuk tepi garis atau poligon.': 'Trace: tap the edge of a line or polygon.', 'Ketuk titik awal di peta terlebih dahulu.': 'Tap the start point on the map first.', 'Isi jarak (meter) untuk menambah titik tepat.': 'Enter a distance (metres) to add an exact point.',
+  'Vertex tidak menempel': 'Vertices do not meet', 'Vertex dekat tepi tetangga (celah/overshoot)': 'Vertex near a neighbouring edge (gap/overshoot)', 'Ujung/vertex garis tidak tersambung': 'Line end/vertex not connected',
+  'Overlap kecil': 'Small overlap', 'Overlap besar (tidak dirapikan otomatis)': 'Large overlap (not cleaned automatically)', 'Celah kecil antar poligon': 'Small gap between polygons', '✓ Tidak ada masalah topologi dalam toleransi.': '✓ No topology issues within the tolerance.',
+  'Layer dihapus.': 'Layer deleted.',
   'EPSG': 'EPSG', 'GeoPDF: impor halaman utuh (bingkai peta + legenda, judul & tepi)': 'GeoPDF: import the whole page (map frame + legend, title & margins)', 'halaman utuh': 'whole page', 'bingkai peta': 'map frame'
 };
 
 /** Pola untuk teks dinamis (angka, nama). Urutan penting: yang lebih spesifik di atas. */
 var I18N_EN_PATTERNS = [
+  [/^Hanya fitur terpilih \((\d+)\)$/, 'Selected features only ($1)'], [/^Hasil pemeriksaan (\d+) fitur:$/, 'Check result for $1 features:'],
+  [/^Dirapikan: (\d+) fitur diubah(?:, (\d+) dilewati \(hasil tidak valid\))? — periksa lalu Simpan perubahan \(Undo tersedia\)\.$/, function (_, a, b) { return 'Cleaned: ' + a + ' features changed' + (b ? ', ' + b + ' skipped (invalid result)' : '') + ' — review, then Save edits (Undo available).'; }],
+  [/^\((\d+) vertex\)$/, '($1 vertices)'],
   [/^Digeser (-?[\d.,]+) m, (-?[\d.,]+) m\.$/, 'Shifted $1 m, $2 m.'], [/^Erase (inside|outside): (\d+) diubah, (\d+) terhapus(?:, (\d+) multipart)?\.$/, function (_, a, b, c, d) { return 'Erase ' + a + ': ' + b + ' changed, ' + c + ' deleted' + (d ? ', ' + d + ' multipart' : '') + '.'; }],
   [/^Merge: (\d+) fitur digabung\. Hasilnya multipart \(bagian tidak bersinggungan\) — gunakan Explode bila perlu dipisah\.$/, 'Merge: $1 features merged. The result is multipart (parts do not touch) — use Explode to separate them.'],
   [/^Cut polygons: (\d+) → (\d+) poligon\.$/, 'Cut polygons: $1 → $2 polygons.'], [/^Union (\d+) poligon$/, 'Union of $1 polygons'], [/^Union: 1 fitur baru( \(multipart\))?\.$/, 'Union: 1 new feature$1.'],
@@ -988,7 +1016,7 @@ var LEGAL_EN = {
  * Mode: 'gas' (HtmlService/google.script.run), 'remote' (PWA GitHub Pages -> fetch Web App), 'demo' (backend emulasi di browser).
  */
 'use strict';
-var APP_VERSION = '1.8.0', APP_BUILD = '2026-11-06';
+var APP_VERSION = '1.9.0', APP_BUILD = '2026-11-07';
 var S = { token: '', user: null, org: null, perms: [], settings: {}, license: {}, projects: [], layers: [], users: [],
   features: new Map(), serverVer: {}, projectId: '', layerId: '', hiddenLayers: new Set(), online: navigator.onLine, tab: 'map', rendered: {} };
 
@@ -1361,6 +1389,17 @@ var App = {
     try { var b = await Api.call('boot'); App.applyBoot(b); IDB.kvSet('boot', Object.assign({}, b, { features: undefined })); await Sync.loadLocal(b.features, false); App.renderNav(); MapView.refreshData(); App.rerender(); Brand.refresh(b.settings.logo_ver); if (b.features_next) App.loadMoreFeatures(b.features_next); }
     catch (e) { if (!e.network) console.warn(e); }
   },
+  /** Terapkan layer hasil simpan langsung ke state lokal (tanpa memuat ulang seluruh data boot) → simpan/edit layer terasa instan. */
+  applyLayer: function (l, del) {
+    if (!l) return;
+    var i = S.layers.findIndex(function (x) { return x.id === l.id; }), feats = l._features || [];
+    delete l._features;
+    if (del) { if (i >= 0) S.layers.splice(i, 1); } else if (i >= 0) S.layers[i] = l; else S.layers.push(l);
+    feats.forEach(function (f) { Sync.acceptServer(f); });
+    IDB.kvGet('boot').then(function (b) { if (b) { b.layers = S.layers.slice(); IDB.kvSet('boot', b); } });
+    if (feats.length) Sync.persistFeatures();
+    S.rendered = {}; MapView.refreshData(); App.rerender();
+  },
   leave: function () {
     S.token = ''; LS.set('umg_token', null); IDB.kvSet('boot', null); IDB.kvSet('features', null);
     S.user = null; S.features = new Map(); S.serverVer = {};
@@ -1590,7 +1629,7 @@ var MapView = {
     sl.innerHTML = lyrs.length ? lyrs.map(function (l) { return '<option value="' + esc(l.id) + '"' + (l.id === S.layerId ? ' selected' : '') + '>' + esc(l.name) + ' (' + ({ Point: 'titik', LineString: 'garis', Polygon: 'poligon' }[l.geom_type]) + ')</option>'; }).join('') : '<option value="">Belum ada layer</option>';
   },
   onClick: function (e) {
-    if (Draw.mode) { Draw.add(Snap.at(e)); return; }
+    if (Draw.mode) { if (Draw.mode === 'Point') Draw.add(Snap.at(e)); else Draw.addMany(Cons.feed(Draw.coords, e)); return; }
     if (Editor.click(e)) return;
     var hits = MapView.map.queryRenderedFeatures([[e.point.x - 6, e.point.y - 6], [e.point.x + 6, e.point.y + 6]], { layers: ['f-sym', 'f-pt', 'f-line', 'f-line-p', 'f-fill'] });
     if (hits.length) { Detail.open(hits[0].properties.id); return; }
@@ -1888,7 +1927,7 @@ var Draw = {
       Draw.layer = l;
     }
     Draw.cancel(true, false, true);
-    Draw.mode = mode; Draw.target = opt.featureId || null; Draw.coords = (opt.coords || []).slice(); Draw.sidePoints = opt.sidePoints || 0;
+    Draw.mode = mode; Draw.target = opt.featureId || null; Draw.coords = (opt.coords || []).slice(); Draw.sidePoints = opt.sidePoints || 0; Draw._grp = Draw.coords.map(function () { return 1; }); Cons.reset();
     Draw._hist = Hist.push(Draw.onBack, 'draw');
     $$('[data-tool]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-tool') === mode); });
     if (MapView.map) MapView.map.getCanvas().style.cursor = 'crosshair';
@@ -1910,9 +1949,14 @@ var Draw = {
   add: function (p, fromGps) {
     if (!Draw.mode) return;
     if (Draw.mode === 'Point') { Draw.coords = [p]; Draw.render(); Draw.finish(fromGps ? { accuracy: GPS.pos && GPS.pos.acc, altitude: GPS.pos && GPS.pos.alt, timestamp: new Date().toISOString(), source: 'device', samples: 1 } : null); return; }
-    Draw.coords.push(p); Draw.render(); Draw.panel(); Draw.save();
+    Draw.coords.push(p); (Draw._grp = Draw._grp || []).push(1); Draw.render(); Draw.panel(); Draw.save();
   },
-  undo: function () { Draw.coords.pop(); Draw.render(); Draw.panel(); Draw.save(); },
+  /** Tambah beberapa vertex sekaligus (trace / busur) — Undo membatalkan satu kelompok. */
+  addMany: function (pts) {
+    if (!Draw.mode || !pts || !pts.length) { if (Draw.mode) Draw.panel(); return; }
+    pts.forEach(function (p) { Draw.coords.push(p); }); (Draw._grp = Draw._grp || []).push(pts.length); Draw.render(); Draw.panel(); Draw.save();
+  },
+  undo: function () { var n = (Draw._grp && Draw._grp.length) ? Draw._grp.pop() : 1; n = Math.min(n, Draw.coords.length); Draw.coords.splice(Math.max(0, Draw.coords.length - n), n); Cons.reset(); Draw.render(); Draw.panel(); Draw.save(); },
   // ---- status rekam jejak: off | on | paused ----
   trackState: function () { return !GPS.track ? 'off' : (GPS.trackPaused ? 'paused' : 'on'); },
   setTrack: function (st) {
@@ -1995,11 +2039,13 @@ var Draw = {
       (m === 'measure' ? '<div class="seg"><button data-mt="line" class="' + (Draw.measureType !== 'area' ? 'on' : '') + '">Jarak</button><button data-mt="area" class="' + (Draw.measureType === 'area' ? 'on' : '') + '">Luas</button></div>' : '') +
       '<div class="row wrap">' + (m === 'Point' ? '<button class="btn sm primary" data-d="gpsavg">Ambil GPS (rata-rata 5 dtk)</button><button class="btn sm" data-d="gps1">GPS sekarang</button>' : '<button class="btn sm dp-x" data-d="undo"' + (Draw.coords.length ? '' : ' disabled') + '>Undo</button><button class="btn sm dp-x" data-d="gpsv">+ Vertex GPS</button>' + trackBtns + (m !== 'measure' ? '<button class="btn sm primary" data-d="done">Selesai</button>' : '')) +
       '<button class="btn sm danger' + (m === 'measure' ? '' : ' dp-x') + '" data-d="cancel">' + (m === 'measure' ? 'Tutup' : 'Batal') + '</button></div>' +
+      (rec || m === 'measure' ? '<div class="dp-x dp-cons">' + Cons.barHtml() + '</div>' : '') +
       (rec ? '<div class="row wrap" style="border-top:1px solid var(--line);padding-top:8px">' + (pls.length ?
         '<button class="btn sm primary" data-d="side">📍 Ambil titik GPS</button><select class="input dp-x" id="dp-side" style="width:auto;min-height:32px;padding:4px 8px" aria-label="Layer titik">' + pls.map(function (x) { return '<option value="' + esc(x.id) + '"' + (x.id === side ? ' selected' : '') + '>' + esc(x.name) + '</option>'; }).join('') + '</select>' +
         '<label class="row small dp-x"><input type="checkbox" id="dp-avg"' + (LS.get('umg_side_avg') !== '0' ? ' checked' : '') + '> rata-rata 5 dtk</label><label class="row small dp-x"><input type="checkbox" id="dp-pause"' + (LS.get('umg_side_pause') !== '0' ? ' checked' : '') + '> jeda otomatis</label>'
         : '<span class="small muted dp-x">Tambahkan layer titik di proyek ini untuk mengambil titik GPS di tengah rekaman.</span>') + '</div>' : '');
     p.classList.remove('hidden');
+    var cb = $('.dp-cons', p); if (cb) Cons.wire(cb, function () { return Draw.coords; }, function (pt) { Draw.addMany([pt]); }, Draw.panel);
     $$('[data-mt]', p).forEach(function (b) { b.onclick = function () { Draw.measureType = b.getAttribute('data-mt'); Draw.render(); Draw.panel(); }; });
     var sel = $('#dp-side', p); if (sel) { if (!side) LS.set('umg_side_layer', sel.value); sel.onchange = function () { LS.set('umg_side_layer', sel.value); }; }
     var ca = $('#dp-avg', p); if (ca) ca.onchange = function () { LS.set('umg_side_avg', ca.checked ? '1' : '0'); };
@@ -2037,6 +2083,7 @@ var Draw = {
     else FeatureForm.open({ id: uuid(), layer_id: layer.id, project_id: layer.project_id, geometry: g, attrs: {}, photos: [], gps: gpsMeta || null, status: 'draft', version: 0, _new: true }, { onDone: back });
   },
   cancel: function (silent, fromBack, keepDraft) {
+    if (typeof Cons !== 'undefined') Cons.reset();
     if (!fromBack && Draw._hist) { var h = Draw._hist; Draw._hist = null; Hist.release(h); }
     Draw.mode = null; Draw.coords = []; Draw.target = null; GPS.track = false; GPS.trackPaused = false;
     if (!keepDraft && S.user) LS.set(Draw.key(), null);
@@ -2534,11 +2581,10 @@ var Tabs = {
         var l = layerById($('#im-ly', mb).value), strip = function (f) { var o = Object.assign({}, f); delete o._src; return o; };
         if (!l) {   // layer baru dari file
           var nl = await Api.call('layers.save', { project_id: S.projectId, name: $('#im-nn', mb).value || src.name || 'Impor', geom_type: src.geomType, style: { color: '#0ea5e9' }, schema: src.schema.map(strip) });
-          await App.refreshBoot(); l = layerById(nl.id);
+          App.applyLayer(nl); l = layerById(nl.id);
           if (!good.length) { toast('Layer "' + l.name + '" dibuat dengan ' + src.schema.length + ' atribut' + (structOnly || !src.items.length ? ' (struktur saja, tanpa data).' : '; tidak ada data valid untuk diimpor.'), 'ok', 6000); return; }
         } else if (src.missing && src.missing.length && $('#im-add', mb).checked) {   // tambah kolom baru ke skema layer lalu petakan ulang
-          await Api.call('layers.save', { id: l.id, project_id: l.project_id, name: l.name, geom_type: l.geom_type, style: l.style, schema: l.schema.concat(src.missing.map(strip)) });
-          await App.refreshBoot(); l = layerById(l.id);
+          App.applyLayer(await Api.call('layers.save', { id: l.id, project_id: l.project_id, name: l.name, geom_type: l.geom_type, style: l.style, schema: l.schema.concat(src.missing.map(strip)) })); l = layerById(l.id);
           var again = await IO.parseFiles(lastFiles, l); good = again.items.filter(function (i) { return !i.errors.length; });
           if (!good.length) { toast(src.missing.length + ' atribut ditambahkan ke layer "' + l.name + '". Tidak ada data valid untuk diimpor.', 'ok', 6000); return; }
         }
@@ -2720,10 +2766,10 @@ var Tabs = {
     $('#lf-fields', body).addEventListener('change', function () { setTimeout(function () { drawSym(); var cur = Labels.collect($('#lf-lbl', body)); $('#lf-lbl', body).innerHTML = Labels.formHtml(cur, fields); }, 0); });
     $('#lf-lbl', body).innerHTML = Labels.formHtml(l.style && l.style.label, fields);
     drawSym();
-    modal({ title: l.id ? 'Edit layer' : 'Layer baru', body: body, wide: true, buttons: [{ label: 'Batal' }].concat(l.id ? [{ label: 'Hapus', cls: 'danger', onClick: async function () { if (!(await confirmBox('Hapus layer', 'Layer hanya dapat dihapus jika kosong.', 'Hapus', true))) return false; await Api.call('layers.delete', { id: l.id }); await App.refreshBoot(); } }] : []).concat([{ label: 'Simpan', cls: 'primary', onClick: async function () {
+    modal({ title: l.id ? 'Edit layer' : 'Layer baru', body: body, wide: true, buttons: [{ label: 'Batal' }].concat(l.id ? [{ label: 'Hapus', cls: 'danger', onClick: async function () { if (!(await confirmBox('Hapus layer', 'Layer hanya dapat dihapus jika kosong.', 'Hapus', true))) return false; await Api.call('layers.delete', { id: l.id }); App.applyLayer(l, true); toast('Layer dihapus.', 'ok'); } }] : []).concat([{ label: 'Simpan', cls: 'primary', onClick: async function () {
       fields.forEach(function (f) { if (!f.key && f.label) f.key = f.label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').replace(/^(\d)/, 'f_$1'); });
-      await Api.call('layers.save', { id: l.id, project_id: l.project_id, name: $('#lf-name', body).value, geom_type: $('#lf-geom', body).value, style: { color: $('#lf-color', body).value, symbol: st.symbol, mode: st.mode, size: st.size, by: st.by || '', classes: st.by ? st.classes.filter(function (c) { return String(c.v).trim() !== ''; }) : [], label: Labels.collect($('#lf-lbl', body)) }, schema: fields });
-      await App.refreshBoot(); toast('Layer tersimpan.', 'ok');
+      var saved = await Api.call('layers.save', { id: l.id, project_id: l.project_id, name: $('#lf-name', body).value, geom_type: $('#lf-geom', body).value, style: { color: $('#lf-color', body).value, symbol: st.symbol, mode: st.mode, size: st.size, by: st.by || '', classes: st.by ? st.classes.filter(function (c) { return String(c.v).trim() !== ''; }) : [], label: Labels.collect($('#lf-lbl', body)) }, schema: fields });
+      App.applyLayer(saved); toast('Layer tersimpan.', 'ok');
     } }]) });
   },
   admin: function () {
@@ -4582,6 +4628,348 @@ var Snap = {
   }
 };
 
+// ------------------------------------------------------- Konstruksi sketsa: trace, ortogonal, lengkung (busur 3 titik), sudut/azimut & jarak
+// Dipakai bersama oleh Rekam garis/poligon (Draw) dan sketsa Editor (reshape, cut, split, erase).
+var Cons = {
+  mode: 'free', pend: null,
+  ang: (function () { try { return Object.assign({ az: 90, rel: false, dist: '' }, JSON.parse(localStorage.getItem('umg_cons_ang') || '{}')); } catch (e) { return { az: 90, rel: false, dist: '' }; } })(),
+  MODES: [['free', 'Bebas', 'Ketuk peta untuk menambah vertex (snapping bila aktif).'],
+    ['trace', 'Trace', 'Ketuk tepi garis/poligon lain sebagai awal, lalu ketuk titik akhir pada tepi yang sama: vertex mengikuti tepi tersebut (jalur terpendek).'],
+    ['ortho', 'Ortogonal', 'Segmen berikutnya dikunci sejajar atau tegak lurus segmen sebelumnya (segmen pertama: arah utara–selatan / barat–timur).'],
+    ['arc', 'Lengkung', 'Busur 3 titik: ketuk titik yang dilalui busur, lalu ketuk titik akhir busur.'],
+    ['angle', 'Sudut°', 'Segmen berikutnya mengikuti sudut tertentu (azimut dari utara searah jarum jam, atau relatif terhadap segmen sebelumnya). Isi jarak untuk panjang tepat.']],
+  set: function (m) { Cons.mode = m; Cons.pend = null; Cons.show(); },
+  reset: function () { Cons.pend = null; Cons.show(); },
+  saveAng: function () { try { localStorage.setItem('umg_cons_ang', JSON.stringify(Cons.ang)); } catch (e) { /* abaikan */ } },
+  // proyeksi lokal (meter) di sekitar titik acuan o
+  k: function (o) { return [111320 * Math.cos(o[1] * Math.PI / 180), 110574]; },
+  toM: function (p, o) { var k = Cons.k(o); return [(p[0] - o[0]) * k[0], (p[1] - o[1]) * k[1]]; },
+  toLL: function (q, o) { var k = Cons.k(o); return [o[0] + q[0] / k[0], o[1] + q[1] / k[1]]; },
+  r7: function (p) { return [Math.round(p[0] * 1e8) / 1e8, Math.round(p[1] * 1e8) / 1e8]; },
+  /** Arah (radian, dari sumbu timur berlawanan jarum jam) segmen terakhir pts, atau null. */
+  lastDir: function (pts) { var n = pts.length; if (n < 2) return null; var d = Cons.toM(pts[n - 1], pts[n - 2]); return Math.hypot(d[0], d[1]) > 1e-9 ? Math.atan2(d[1], d[0]) : null; },
+  /** Arah untuk mode Sudut: azimut (dari utara, searah jarum jam) absolut atau relatif terhadap segmen sebelumnya. */
+  angDir: function (pts) {
+    var az = Number(Cons.ang.az) || 0, base = Cons.ang.rel ? Cons.lastDir(pts) : null;
+    if (Cons.ang.rel && base !== null) return base - az * Math.PI / 180;   // belok kanan positif
+    return (90 - az) * Math.PI / 180;
+  },
+  /** Titik pada ray dari pts[n-1] dengan arah dir: jarak tetap (m) atau proyeksi klik. */
+  onRay: function (pts, dir, ll, dist) {
+    var o = pts[pts.length - 1], u = [Math.cos(dir), Math.sin(dir)], t;
+    if (dist > 0) t = dist; else { var q = Cons.toM(ll, o); t = q[0] * u[0] + q[1] * u[1]; }
+    return Cons.r7(Cons.toLL([u[0] * t, u[1] * t], o));
+  },
+  /** Titik ketiga busur melalui a, b, c (lon/lat) → titik-titik busur dari a (tidak termasuk) ke c (termasuk). */
+  arc3: function (a, b, c) {
+    var B = Cons.toM(b, a), C = Cons.toM(c, a), d = 2 * (B[0] * C[1] - B[1] * C[0]);
+    if (Math.abs(d) < 1e-9) return [c];   // kolinear → garis lurus
+    var b2 = B[0] * B[0] + B[1] * B[1], c2 = C[0] * C[0] + C[1] * C[1];
+    var ux = (C[1] * b2 - B[1] * c2) / d, uy = (B[0] * c2 - C[0] * b2) / d, R = Math.hypot(ux, uy);
+    var ang = function (P) { return Math.atan2(P[1] - uy, P[0] - ux); };
+    var a0 = ang([0, 0]), a2 = ang(C), ccw = d > 0;
+    var norm = function (x) { while (x < 0) x += 2 * Math.PI; while (x >= 2 * Math.PI) x -= 2 * Math.PI; return x; };
+    var sweep = ccw ? norm(a2 - a0) : -norm(a0 - a2);
+    var n = Math.max(6, Math.min(72, Math.ceil(Math.abs(sweep) / (Math.PI / 36)))), out = [];
+    for (var i = 1; i <= n; i++) { var t = a0 + sweep * i / n; out.push(i === n ? c : Cons.r7(Cons.toLL([ux + R * Math.cos(t), uy + R * Math.sin(t)], a))); }
+    return out;
+  },
+  /** Tepi (cincin poligon / garis) terdekat dari titik layar pt. Return { key, ring:[...], closed, s (posisi segmen + t), ll }. */
+  edgeAt: function (pt) {
+    var m = MapView.map, t = Math.max(8, Snap.cfg.tol || 12), box = [[pt.x - t, pt.y - t], [pt.x + t, pt.y + t]], best = null;
+    var test = function (ring, closed, key) {
+      var n = ring.length, segs = closed ? n : n - 1;
+      for (var i = 0; i < segs; i++) {
+        var A = m.project(ring[i]), B = m.project(ring[(i + 1) % n]), vx = B.x - A.x, vy = B.y - A.y, L2 = vx * vx + vy * vy;
+        var u = L2 ? Math.max(0, Math.min(1, ((pt.x - A.x) * vx + (pt.y - A.y) * vy) / L2)) : 0;
+        var d = Math.hypot(A.x + u * vx - pt.x, A.y + u * vy - pt.y);
+        if (d <= t && (!best || d < best.d)) {
+          var p0 = ring[i], p1 = ring[(i + 1) % n];
+          best = { d: d, key: key, ring: ring, closed: closed, s: i + u, ll: Cons.r7([p0[0] + u * (p1[0] - p0[0]), p0[1] + u * (p1[1] - p0[1])]) };
+        }
+      }
+    };
+    var scan = function (g, key) {
+      Geo.parts(g).forEach(function (p, pi) {
+        if (p.type === 'LineString') test(p.coordinates, false, key + '|' + pi);
+        else if (p.type === 'Polygon') p.coordinates.forEach(function (r, ri) { test(Geom.ringOpen(r), true, key + '|' + pi + '|' + ri); });
+      });
+    };
+    var seen = {};
+    m.queryRenderedFeatures(box, { layers: Snap.LAYERS.filter(function (id) { return m.getLayer(id); }) }).forEach(function (h) {
+      var id = h.properties.id; if (!id || seen[id]) return; seen[id] = 1;
+      var f = Editor.on ? Editor.feat(id) : S.features.get(id); if (f) scan(Editor.geomOf(f), id);
+    });
+    var ov = Overlays.vectorLayerIds().filter(function (id) { return m.getLayer(id); });
+    if (ov.length) m.queryRenderedFeatures(box, { layers: ov }).forEach(function (h, i) { var g = Editor.overlayGeom(h, m.unproject([pt.x, pt.y])); if (g) scan(g, 'ov' + h.layer.id + i); });
+    return best;
+  },
+  /** Jalur sepanjang tepi dari posisi s1 ke s2 (cincin tertutup: arah terpendek). Tidak termasuk titik awal, termasuk titik akhir. */
+  tracePath: function (e1, e2) {
+    var r = e1.ring, n = r.length, seg = function (i) { return r[((i % n) + n) % n]; };
+    var walk = function (dir) {
+      var out = [], s1 = e1.s, s2 = e2.s, i;
+      if (dir > 0) { if (e1.closed && s2 < s1) s2 += n; for (i = Math.floor(s1) + 1; i < s2; i++) if (i > s1) out.push(seg(i)); }
+      else { if (e1.closed && s2 > s1) s2 -= n; for (i = Math.ceil(s1) - 1; i > s2; i--) if (i < s1) out.push(seg(i)); }
+      out.push(e2.ll); return out;
+    };
+    var len = function (pts) { var L = 0, a = e1.ll; pts.forEach(function (b) { L += Math.hypot.apply(null, Cons.toM(b, a)); a = b; }); return L; };
+    if (!e1.closed) return walk(e2.s >= e1.s ? 1 : -1);
+    var f = walk(1), b = walk(-1); return len(f) <= len(b) ? f : b;
+  },
+  /** Titik-titik yang ditambahkan untuk ketukan e pada sketsa pts (bisa kosong: menunggu ketukan kedua). */
+  feed: function (pts, e) {
+    var n = pts.length, md = Cons.mode, out;
+    if (md === 'trace') {
+      var ed = Cons.edgeAt(e.point);
+      if (!ed) { toast('Trace: ketuk tepi garis atau poligon.', 'err'); return []; }
+      if (Cons.pend && Cons.pend.key === ed.key) { out = Cons.tracePath(Cons.pend, ed); Cons.pend = null; Cons.show(); return out; }
+      Cons.pend = ed; Cons.show(); return [ed.ll];
+    }
+    if (!n || md === 'free') { Cons.pend = null; Cons.show(); return [Snap.at(e)]; }
+    var last = pts[n - 1];
+    if (md === 'ortho') {
+      var base = Cons.lastDir(pts); if (base === null) base = 0;
+      var q = Cons.toM(Snap.at(e), last), u = [Math.cos(base), Math.sin(base)], v = [-u[1], u[0]];
+      var a = q[0] * u[0] + q[1] * u[1], b = q[0] * v[0] + q[1] * v[1];
+      return [Cons.r7(Cons.toLL(Math.abs(a) >= Math.abs(b) ? [u[0] * a, u[1] * a] : [v[0] * b, v[1] * b], last))];
+    }
+    if (md === 'angle') return [Cons.onRay(pts, Cons.angDir(pts), Snap.at(e), Number(Cons.ang.dist) || 0)];
+    if (md === 'arc') {
+      var p = Snap.at(e);
+      if (!Cons.pend) { Cons.pend = { mid: p }; Cons.show(); return []; }
+      out = Cons.arc3(last, Cons.pend.mid, p); Cons.pend = null; Cons.show(); return out;
+    }
+    return [Snap.at(e)];
+  },
+  /** Tambah titik tepat (mode Sudut + jarak) tanpa ketukan. */
+  addExact: function (pts) {
+    var d = Number(Cons.ang.dist) || 0;
+    if (!pts.length) return toast('Ketuk titik awal di peta terlebih dahulu.', 'err'), null;
+    if (!(d > 0)) return toast('Isi jarak (meter) untuk menambah titik tepat.', 'err'), null;
+    return Cons.onRay(pts, Cons.angDir(pts), pts[pts.length - 1], d);
+  },
+  show: function () {
+    var m = MapView.map; if (!m || !m.getSource('cons')) return;
+    var f = [];
+    if (Cons.pend && Cons.pend.mid) f.push({ type: 'Feature', geometry: { type: 'Point', coordinates: Cons.pend.mid }, properties: {} });
+    if (Cons.pend && Cons.pend.ll) f.push({ type: 'Feature', geometry: { type: 'Point', coordinates: Cons.pend.ll }, properties: {} });
+    m.getSource('cons').setData({ type: 'FeatureCollection', features: f });
+  },
+  bind: function (m) {
+    if (!m.getSource('cons')) m.addSource('cons', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    if (!m.getLayer('e-cons')) m.addLayer({ id: 'e-cons', type: 'circle', source: 'cons', paint: { 'circle-radius': 7, 'circle-color': '#f59e0b', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2 } });
+  },
+  /** Baris tombol mode konstruksi (HTML) untuk panel Rekam & Editor. */
+  barHtml: function () {
+    var a = Cons.ang, d = Cons.MODES.find(function (x) { return x[0] === Cons.mode; }) || Cons.MODES[0];
+    return '<div class="cons-bar"><div class="row wrap cons-m"><span class="small muted">Konstruksi</span>' + Cons.MODES.map(function (x) { return '<button type="button" class="btn sm' + (x[0] === Cons.mode ? ' on' : '') + '" data-cm="' + x[0] + '" title="' + esc(x[2]) + '">' + esc(x[1]) + '</button>'; }).join('') + '</div>' +
+      (Cons.mode === 'angle' ? '<div class="row wrap small cons-a"><label class="row">Sudut <input class="input" id="cn-az" type="number" step="any" value="' + esc(a.az) + '" style="width:80px;min-height:30px">°</label>' +
+        '<label class="row"><input type="checkbox" id="cn-rel"' + (a.rel ? ' checked' : '') + '> relatif ke segmen sebelumnya</label><label class="row">Jarak <input class="input" id="cn-d" type="number" step="any" min="0" value="' + esc(a.dist) + '" placeholder="opsional" style="width:90px;min-height:30px"> m</label>' +
+        '<button type="button" class="btn sm" id="cn-add">+ Titik</button></div>' : '') +
+      '<div class="small muted cons-h">' + esc(d[2]) + (Cons.pend ? ' <b>' + (Cons.pend.mid ? 'Titik busur dipilih — ketuk titik akhir.' : 'Awal trace dipilih — ketuk titik akhir pada tepi yang sama.') + '</b>' : '') + '</div></div>';
+  },
+  /** Pasang handler pada kontainer bar; onAdd(pt) dipanggil untuk tombol "+ Titik"; redraw() menggambar ulang panel. */
+  wire: function (box, pts, onAdd, redraw) {
+    $$('[data-cm]', box).forEach(function (b) { b.onclick = function (ev) { ev.stopPropagation(); Cons.set(b.getAttribute('data-cm')); redraw(); }; });
+    var az = $('#cn-az', box), rel = $('#cn-rel', box), dd = $('#cn-d', box), add = $('#cn-add', box);
+    if (az) az.onchange = function () { Cons.ang.az = Number(az.value) || 0; Cons.saveAng(); };
+    if (rel) rel.onchange = function () { Cons.ang.rel = rel.checked; Cons.saveAng(); };
+    if (dd) dd.onchange = function () { Cons.ang.dist = dd.value; Cons.saveAng(); };
+    if (add) add.onclick = function (ev) { ev.stopPropagation(); if (az) Cons.ang.az = Number(az.value) || 0; if (dd) Cons.ang.dist = dd.value; Cons.saveAng(); var p = Cons.addExact(pts()); if (p) onAdd(p); };
+  }
+};
+
+// ------------------------------------------------------- Topologi: periksa & rapikan (integrate) vertex tidak menempel, celah & overlap kecil
+var Topo = {
+  cfg: (function () { var d = { tol: 0.5, area: 10, vv: true, ve: true, ov: true, gap: true, sel: false }; try { return Object.assign(d, JSON.parse(localStorage.getItem('umg_topo') || '{}')); } catch (e) { return d; } })(),
+  issues: [],
+  EPS: 1e-3,   // < 1 mm dianggap sudah menempel
+  /** Fitur sasaran: terpilih (opsi) atau semua fitur layer yang dipilih; hanya garis & poligon bagian tunggal yang dapat diedit. */
+  targets: function (lid) {
+    var sel = Topo.cfg.sel && Select.ids.size ? Select.ids : null;
+    return Calc.live().filter(function (f) {
+      var g = Editor.geomOf(f);
+      return g && (g.type === 'Polygon' || g.type === 'LineString') && (sel ? sel.has(f.id) : f.layer_id === lid) && (Editor.canEdit(f) || f._added);
+    });
+  },
+  /** Daftar vertex (meter lokal) semua sasaran. rings[fi][ri] = array posisi lon/lat terbuka. */
+  build: function (fs) {
+    var o = null, recs = [];
+    fs.forEach(function (f, fi) {
+      var g = Editor.geomOf(f), rings = g.type === 'Polygon' ? g.coordinates.map(function (r) { return Geom.ringOpen(r).map(function (p) { return p.slice(0, 2); }); }) : [g.coordinates.map(function (p) { return p.slice(0, 2); })];
+      if (!o) o = rings[0][0];
+      recs.push({ f: f, poly: g.type === 'Polygon', rings: rings });
+    });
+    return { o: o, recs: recs };
+  },
+  grid: function (cell) {
+    var m = new Map();
+    return {
+      add: function (x, y, v) { var k = Math.floor(x / cell) + ',' + Math.floor(y / cell); var a = m.get(k); if (!a) m.set(k, a = []); a.push(v); },
+      near: function (x, y, cb) { var cx = Math.floor(x / cell), cy = Math.floor(y / cell); for (var i = -1; i <= 1; i++) for (var j = -1; j <= 1; j++) { var a = m.get((cx + i) + ',' + (cy + j)); if (a) a.forEach(cb); } }
+    };
+  },
+  /** Langkah 1 & 2 pada salinan cincin: rapatkan vertex berdekatan (cluster) & tempel vertex ke tepi tetangga (dengan vertex sisipan). */
+  integrate: function (B, tol, apply, out) {
+    var o = B.o, recs = B.recs, V = [];
+    recs.forEach(function (r, fi) { r.rings.forEach(function (ring, ri) { ring.forEach(function (p, k) { var q = Cons.toM(p, o); V.push({ fi: fi, ri: ri, k: k, x: q[0], y: q[1] }); }); }); });
+    if (Topo.cfg.vv) {
+      var G = Topo.grid(tol), par = V.map(function (_, i) { return i; });
+      var find = function (i) { while (par[i] !== i) { par[i] = par[par[i]]; i = par[i]; } return i; };
+      V.forEach(function (v, i) { v.i = i; G.add(v.x, v.y, v); });
+      V.forEach(function (v) { G.near(v.x, v.y, function (w) { if (w.i <= v.i || w.fi === v.fi) return; var d = Math.hypot(w.x - v.x, w.y - v.y); if (d <= tol) { var a = find(v.i), b = find(w.i); if (a !== b) par[a] = b; } }); });
+      var cl = new Map(); V.forEach(function (v) { var r0 = find(v.i); var a = cl.get(r0); if (!a) cl.set(r0, a = []); a.push(v); });
+      cl.forEach(function (mem) {
+        if (mem.length < 2) return;
+        var mx = 0, my = 0; mem.forEach(function (v) { mx += v.x; my += v.y; }); mx /= mem.length; my /= mem.length;
+        var spread = Math.max.apply(null, mem.map(function (v) { return Math.hypot(v.x - mx, v.y - my); }));
+        if (spread < Topo.EPS) return;
+        out.push({ t: 'vv', lbl: 'Vertex tidak menempel', d: spread * 2, ll: Cons.toLL([mx, my], o), n: mem.length });
+        if (apply) { var ll = Cons.r7(Cons.toLL([mx, my], o)); mem.forEach(function (v) { recs[v.fi].rings[v.ri][v.k] = ll; v.x = mx; v.y = my; }); }
+      });
+    }
+    if (Topo.cfg.ve) {
+      var segs = [], SG = Topo.grid(Math.max(tol * 4, 1));
+      recs.forEach(function (r, fi) {
+        r.rings.forEach(function (ring, ri) {
+          var n = ring.length, m = r.poly ? n : n - 1;
+          for (var i = 0; i < m; i++) {
+            var a = Cons.toM(ring[i], o), b = Cons.toM(ring[(i + 1) % n], o), sg = { fi: fi, ri: ri, i: i, a: a, b: b };
+            var L = Math.hypot(b[0] - a[0], b[1] - a[1]), st = Math.max(1, Math.ceil(L / Math.max(tol * 4, 1)));
+            for (var k = 0; k <= st; k++) SG.add(a[0] + (b[0] - a[0]) * k / st, a[1] + (b[1] - a[1]) * k / st, sg);
+            segs.push(sg);
+          }
+        });
+      });
+      var ins = [];
+      recs.forEach(function (r, fi) {
+        r.rings.forEach(function (ring, ri) {
+          ring.forEach(function (p, k) {
+            var v = Cons.toM(p, o), best = null, seen = new Set();
+            SG.near(v[0], v[1], function (sg) {
+              if (sg.fi === fi || seen.has(sg)) return; seen.add(sg);
+              var dx = sg.b[0] - sg.a[0], dy = sg.b[1] - sg.a[1], L2 = dx * dx + dy * dy; if (!L2) return;
+              var t = ((v[0] - sg.a[0]) * dx + (v[1] - sg.a[1]) * dy) / L2; if (t <= 0 || t >= 1) return;
+              var q = [sg.a[0] + t * dx, sg.a[1] + t * dy], d = Math.hypot(q[0] - v[0], q[1] - v[1]);
+              if (Math.hypot(q[0] - sg.a[0], q[1] - sg.a[1]) < Topo.EPS || Math.hypot(q[0] - sg.b[0], q[1] - sg.b[1]) < Topo.EPS) return;
+              if (d <= tol && (!best || d < best.d)) best = { d: d, q: q, sg: sg, t: t };
+            });
+            if (!best) return;
+            if (best.d >= Topo.EPS) out.push({ t: 've', lbl: r.poly ? 'Vertex dekat tepi tetangga (celah/overshoot)' : 'Ujung/vertex garis tidak tersambung', d: best.d, ll: Cons.toLL(best.q, o) });
+            if (apply) { var ll = Cons.r7(Cons.toLL(best.q, o)); ring[k] = ll; ins.push({ fi: best.sg.fi, ri: best.sg.ri, i: best.sg.i, t: best.t, ll: ll }); }
+          });
+        });
+      });
+      if (apply) {
+        ins.sort(function (a, b) { return a.fi - b.fi || a.ri - b.ri || b.i - a.i || b.t - a.t; });
+        ins.forEach(function (x) { recs[x.fi].rings[x.ri].splice(x.i + 1, 0, x.ll); });
+      }
+    }
+  },
+  geomOfRec: function (r) {
+    var dd = function (ring) { return Geom.dedupe(ring); };
+    if (!r.poly) return { type: 'LineString', coordinates: dd(r.rings[0]) };
+    return { type: 'Polygon', coordinates: r.rings.map(function (ring) { return Geom.close(dd(ring)); }) };
+  },
+  /** Overlap & celah kecil antar poligon (luas ≤ cfg.area m²). */
+  areas: async function (fs, getG, apply, out) {
+    var T = await Lib.load('turf'), polys = fs.filter(function (f) { return getG(f).type === 'Polygon'; }), max = Topo.cfg.area;
+    var bb = function (g) { var b = [Infinity, Infinity, -Infinity, -Infinity]; Geom.mapCoords(g, function (p) { if (p[0] < b[0]) b[0] = p[0]; if (p[1] < b[1]) b[1] = p[1]; if (p[0] > b[2]) b[2] = p[0]; if (p[1] > b[3]) b[3] = p[1]; return p; }); return b; }, hit = function (a, b) { return !(a[2] < b[0] || b[2] < a[0] || a[3] < b[1] || b[3] < a[1]); };
+    var gm = new Map(); polys.forEach(function (f) { gm.set(f.id, getG(f)); });
+    if (Topo.cfg.ov) {
+      for (var i = 0; i < polys.length; i++) for (var j = i + 1; j < polys.length; j++) {
+        var A = gm.get(polys[i].id), Bg = gm.get(polys[j].id); if (!hit(bb(A), bb(Bg))) continue;
+        var x; try { x = T.intersect(T.featureCollection([T.feature(A), T.feature(Bg)])); } catch (e) { x = null; }
+        if (!x) continue;
+        var ar = Geo.metricsAll(x.geometry).area_m2 || 0; if (ar < 0.01) continue;
+        var big = Editor.size(A) >= Editor.size(Bg) ? polys[i] : polys[j];
+        out.push({ t: 'ov', lbl: ar <= max ? 'Overlap kecil' : 'Overlap besar (tidak dirapikan otomatis)', d: ar, ll: Geo.center(x.geometry), fix: ar <= max });
+        if (apply && ar <= max) { var dfr = T.difference(T.featureCollection([T.feature(gm.get(big.id)), x])); if (dfr) gm.set(big.id, Geom.parts(dfr.geometry).sort(function (a, b) { return Editor.size(b) - Editor.size(a); })[0]); }
+      }
+    }
+    if (Topo.cfg.gap && polys.length > 1) {
+      var u; try { u = T.union(T.featureCollection(polys.map(function (f) { return T.feature(gm.get(f.id)); }))); } catch (e) { u = null; }
+      (u ? Geom.parts(u.geometry) : []).forEach(function (pg) {
+        pg.coordinates.slice(1).forEach(function (hole) {
+          var hg = { type: 'Polygon', coordinates: [hole] }, ar = Geo.metricsAll(hg).area_m2 || 0;
+          if (ar > max || ar < 0.01) return;
+          var hc = Geo.center(hg);   // lubang milik satu poligon (enklave disengaja) bukan celah topologi
+          if (polys.some(function (f) { var g0 = gm.get(f.id); return g0.coordinates.slice(1).some(function (r) { return Geom.inRing(hc, r); }); })) return;
+          out.push({ t: 'gap', lbl: 'Celah kecil antar poligon', d: ar, ll: Geo.center(hg), fix: true });
+          if (!apply) return;
+          var hb = bb(hg), cand = polys.filter(function (f) { return hit(bb(gm.get(f.id)), hb); }).map(function (f) {
+            var sh = 0; try { var ix = T.intersect(T.featureCollection([T.buffer(T.feature(hg), Math.max(Topo.cfg.tol, 0.05), { units: 'meters' }), T.feature(gm.get(f.id))])); sh = ix ? Geo.metricsAll(ix.geometry).area_m2 : 0; } catch (e) { sh = 0; }
+            return { f: f, sh: sh };
+          }).filter(function (c) { return c.sh > 0; }).sort(function (a, b) { return b.sh - a.sh; });
+          if (!cand.length) return;
+          var w = cand[0].f, un = T.union(T.featureCollection([T.feature(gm.get(w.id)), T.feature(hg)]));
+          if (un) gm.set(w.id, Geom.parts(un.geometry).sort(function (a, b) { return Editor.size(b) - Editor.size(a); })[0]);
+        });
+      });
+    }
+    return gm;
+  },
+  /** Periksa (apply=false) atau rapikan (apply=true) layer lid. */
+  run: async function (lid, apply) {
+    var fs = Topo.targets(lid), out = [];
+    if (fs.length < 2) throw new Error('Topologi: perlu minimal 2 garis/poligon yang dapat diedit di layer ini (atau di pilihan).');
+    var B = Topo.build(fs);
+    Topo.integrate(B, Math.max(0.001, Number(Topo.cfg.tol) || 0.5), apply, out);
+    var after = new Map(); B.recs.forEach(function (r) { after.set(r.f.id, apply ? Topo.geomOfRec(r) : Editor.geomOf(r.f)); });
+    var gm = await Topo.areas(fs, function (f) { return after.get(f.id); }, apply, out);
+    gm.forEach(function (g, id) { after.set(id, g); });
+    var changed = 0, bad = 0;
+    if (apply) {
+      Editor.snapshot();
+      fs.forEach(function (f) {
+        var g = Geo.round(after.get(f.id)), gt = layerById(f.layer_id).geom_type;
+        if (JSON.stringify(g) === JSON.stringify(Geo.round(Editor.geomOf(f)))) return;
+        if (!Geo.validate(g, gt).ok) { bad++; return; }
+        Editor.setGeom(f, g); changed++;
+      });
+      MapView.refreshData(); Editor.updatePanel();
+    }
+    Topo.issues = out;
+    return { issues: out, changed: changed, bad: bad, n: fs.length };
+  },
+  open: function () {
+    var c = Topo.cfg, ls = S.layers.filter(function (l) { return l.project_id === S.projectId && (l.geom_type === 'Polygon' || l.geom_type === 'LineString'); });
+    if (!ls.length) return toast('Belum ada layer garis/poligon di proyek ini.', 'err');
+    var cur = (layerById(S.layerId) && ls.find(function (l) { return l.id === S.layerId; })) ? S.layerId : ls[0].id;
+    modal({ title: 'Topologi', wide: true, body:
+      '<div class="row wrap" style="gap:8px"><label class="f">Layer<select class="input" id="tp-l">' + ls.map(function (l) { return '<option value="' + esc(l.id) + '"' + (l.id === cur ? ' selected' : '') + '>' + esc(l.name) + '</option>'; }).join('') + '</select></label>' +
+      '<label class="f">Toleransi (m)<input class="input" id="tp-tol" type="number" step="any" min="0.001" value="' + esc(c.tol) + '" style="width:110px"></label>' +
+      '<label class="f">Luas maks. celah/overlap (m²)<input class="input" id="tp-a" type="number" step="any" min="0" value="' + esc(c.area) + '" style="width:130px"></label></div>' +
+      '<div class="col small" style="gap:4px;margin-top:8px">' +
+      '<label class="row"><input type="checkbox" id="tp-vv"' + (c.vv ? ' checked' : '') + '> Rapatkan vertex berdekatan antar fitur (vertex tidak menempel / celah titik sudut)</label>' +
+      '<label class="row"><input type="checkbox" id="tp-ve"' + (c.ve ? ' checked' : '') + '> Tempel vertex ke tepi fitur tetangga (celah, overshoot & ujung garis menggantung)</label>' +
+      '<label class="row"><input type="checkbox" id="tp-ov"' + (c.ov ? ' checked' : '') + '> Hapus overlap kecil antar poligon (dipotong dari poligon yang lebih besar)</label>' +
+      '<label class="row"><input type="checkbox" id="tp-gap"' + (c.gap ? ' checked' : '') + '> Isi celah kecil di antara poligon (digabung ke tetangga dengan sisi bersama terpanjang)</label>' +
+      '<label class="row"><input type="checkbox" id="tp-sel"' + (c.sel ? ' checked' : '') + '> Hanya fitur terpilih (' + Select.ids.size + ')</label></div>' +
+      '<div id="tp-res" class="small" style="margin-top:10px"></div>',
+      buttons: [{ label: 'Tutup' }, { label: 'Periksa', onClick: function (mb) { Topo.go(mb, false); return false; } }, { label: 'Rapikan', cls: 'primary', onClick: function (mb) { Topo.go(mb, true); return false; } }] });
+  },
+  read: function (mb) {
+    var c = Topo.cfg; c.tol = Math.max(0.001, Number($('#tp-tol', mb).value) || 0.5); c.area = Math.max(0, Number($('#tp-a', mb).value) || 0);
+    ['vv', 've', 'ov', 'gap', 'sel'].forEach(function (k) { c[k] = $('#tp-' + k, mb).checked; });
+    try { localStorage.setItem('umg_topo', JSON.stringify(c)); } catch (e) { /* abaikan */ }
+    return $('#tp-l', mb).value;
+  },
+  go: async function (mb, apply) {
+    var lid = Topo.read(mb), box = $('#tp-res', mb); box.innerHTML = '<span class="muted">Memproses…</span>';
+    try {
+      var r = await Topo.run(lid, apply), cnt = {};
+      r.issues.forEach(function (x) { cnt[x.lbl] = (cnt[x.lbl] || 0) + 1; });
+      var rows = r.issues.slice(0, 200).map(function (x, i) { return '<tr><td>' + esc(x.lbl) + (x.n ? ' <span class="muted">(' + x.n + ' vertex)</span>' : '') + '</td><td class="mono">' + (x.t === 'ov' || x.t === 'gap' ? fmtNum(x.d, 2) + ' m²' : fmtNum(x.d, 3) + ' m') + '</td><td><button type="button" class="btn sm ghost" data-tz="' + i + '">Zoom</button></td></tr>'; }).join('');
+      box.innerHTML = '<div><b>' + (apply ? 'Dirapikan: ' + r.changed + ' fitur diubah' + (r.bad ? ', ' + r.bad + ' dilewati (hasil tidak valid)' : '') + ' — periksa lalu Simpan perubahan (Undo tersedia).' : 'Hasil pemeriksaan ' + r.n + ' fitur:') + '</b></div>' +
+        (r.issues.length ? '<div class="row wrap" style="gap:6px;margin:6px 0">' + Object.keys(cnt).map(function (k) { return '<span class="badge">' + esc(k) + '<b translate="no"> · ' + cnt[k] + '</b></span>'; }).join('') + '</div><div style="max-height:220px;overflow:auto"><table class="tbl"><thead><tr><th>Masalah</th><th>Ukuran</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+          : '<div style="margin-top:6px;color:var(--ok);font-weight:600">✓ Tidak ada masalah topologi dalam toleransi.</div>');
+      $$('[data-tz]', box).forEach(function (b) { b.onclick = function () { var x = r.issues[+b.getAttribute('data-tz')]; MapView.map.flyTo({ center: x.ll, zoom: Math.max(MapView.map.getZoom(), 19) }); }; });
+    } catch (e) { box.innerHTML = '<span style="color:var(--danger)">' + esc(e.message) + '</span>'; }
+  }
+};
+
 // ------------------------------------------------------- Editor (sesi edit gaya ArcGIS)
 /**
  * Alur: Mulai edit → pilih fitur (ketuk / Query) → pilih alat → Simpan perubahan (atau Batal). Semua alat bekerja pada salinan kerja,
@@ -4596,13 +4984,14 @@ var Editor = {
     ['cut', 'Cut polygons', 'Gambar garis yang membelah poligon terpilih (masuk & keluar batas), lalu "Selesai sketsa". Setiap bagian menjadi fitur sendiri.', 2],
     ['split', 'Trim / Split', 'Gambar garis pemotong melintasi garis terpilih; lalu ketuk potongan yang akan dibuang (trim) atau biarkan semua (split).', 2],
     ['clip', 'Clip', 'Ketuk poligon pemotong (data atau layer referensi); fitur terpilih lain dipotong olehnya.', 2],
-    ['erase_in', 'Erase inside', 'Gambar poligon; bagian fitur terpilih DI DALAM poligon dihapus.', 2], ['erase_out', 'Erase outside', 'Gambar poligon; bagian fitur terpilih DI LUAR poligon dihapus.', 2],
+    ['erase_in', 'Erase inside', 'Pilih fitur yang mau dipotong (titik, garis, poligon), lalu ketuk poligon penghapus di peta — atau gambar poligon. Bagian DI DALAM penghapus dihapus.', 2], ['erase_out', 'Erase outside', 'Pilih fitur yang mau dipotong (titik, garis, poligon), lalu ketuk poligon penghapus di peta — atau gambar poligon. Bagian DI LUAR penghapus dihapus.', 2],
     ['merge', 'Merge', 'Gabungkan fitur terpilih (satu layer) menjadi satu fitur.', 3, 1], ['union', 'Union', 'Buat fitur BARU dari gabungan poligon terpilih (fitur asal tetap ada).', 3, 1],
     ['buffer', 'Buffer', 'Buat poligon penyangga (jarak meter) di sekeliling fitur terpilih.', 3, 1], ['explode', 'Explode', 'Pecah fitur multipart terpilih menjadi fitur-fitur terpisah.', 3, 1],
     ['cpoints', 'Construct points', 'Buat titik di sepanjang garis/batas poligon terpilih (jumlah titik atau interval jarak).', 3, 1],
     ['xy', 'Titik X,Y', 'Masukkan koordinat absolut (WGS84, UTM, atau EPSG): buat titik, tambah vertex sketsa, atau pindahkan vertex terpilih.', 3, 1],
-    ['copy', 'Copy', 'Salin fitur terpilih ke papan klip editor.', 3, 1], ['paste', 'Paste', 'Tempel fitur dari papan klip ke layer tujuan (lokasi sama atau tengah peta).', 3, 1]],
-  GROUPS: { 1: 'Pilih & ubah', 2: 'Potong & hapus bagian', 3: 'Gabung, buat & salin' },
+    ['copy', 'Copy', 'Salin fitur terpilih ke papan klip editor.', 3, 1], ['paste', 'Paste', 'Tempel fitur dari papan klip ke layer tujuan (lokasi sama atau tengah peta).', 3, 1],
+    ['topo', 'Topologi', 'Periksa & rapikan vertex yang tidak menempel, celah kecil, dan overlap kecil antar fitur dalam toleransi.', 4, 1]],
+  GROUPS: { 1: 'Pilih & ubah', 2: 'Potong & hapus bagian', 3: 'Gabung, buat & salin', 4: 'Topologi' },
   clip: null,
   geomOf: function (f) { return (Editor.on && Editor.work[f.id]) || f.geometry; },
   canEdit: function (f) { return !S.license.read_only && (can('feature.write.any') || (can('feature.write.own') && f.created_by === S.user.id && ['draft', 'revision', 'submitted'].indexOf(f.status) >= 0)); },
@@ -4663,9 +5052,9 @@ var Editor = {
     return list.filter(function (f) { return !Editor.removed.has(f.id); }).concat(Editor.added.filter(function (f) { return !S.hiddenLayers.has(f.layer_id); }));
   },
   setTool: function (t) {
-    var act = { merge: Editor.merge, union: Editor.union, buffer: Editor.buffer, explode: Editor.explode, cpoints: Editor.constructPoints, xy: Editor.xyDialog, copy: Editor.copy, paste: Editor.paste }[t];
+    var act = { merge: Editor.merge, union: Editor.union, buffer: Editor.buffer, explode: Editor.explode, cpoints: Editor.constructPoints, xy: Editor.xyDialog, copy: Editor.copy, paste: Editor.paste, topo: function () { Topo.open(); } }[t];
     var sel = Editor.selected();
-    if (['select', 'clip', 'xy', 'paste', 'cut'].indexOf(t) < 0 && !sel.length) return toast('Pilih fitur terlebih dahulu (alat Pilih atau Query).', 'err');
+    if (['select', 'clip', 'xy', 'paste', 'cut', 'erase_in', 'erase_out', 'topo'].indexOf(t) < 0 && !sel.length) return toast('Pilih fitur terlebih dahulu (alat Pilih atau Query).', 'err');
     if (['copy', 'buffer', 'union', 'cpoints', 'xy', 'paste', 'select'].indexOf(t) < 0 && sel.some(function (f) { return !Editor.canEdit(f) && !f._added; })) return toast('Sebagian fitur terpilih tidak dapat Anda edit (status/kepemilikan). Batalkan pilihannya dulu.', 'err', 5000);
     if (['vertex', 'reshape', 'split', 'cut'].indexOf(t) >= 0 && sel.some(Editor.isMulti)) return toast('Fitur multipart: jalankan Explode dulu.', 'err', 5000);
     if (act) return act();
@@ -4674,9 +5063,31 @@ var Editor = {
     if (t === 'split' && sel.some(function (f) { return Editor.geomOf(f).type !== 'LineString'; })) return toast('Trim / Split berlaku untuk garis. Pilih fitur garis saja.', 'err');
     if (t === 'cut' && sel.some(function (f) { return Editor.geomOf(f).type !== 'Polygon'; })) return toast('Cut polygons berlaku untuk poligon. Pilih fitur poligon saja.', 'err');
     if (t === 'clip' && !sel.length) return toast('Pilih dulu fitur yang akan dipotong, lalu alat Clip.', 'err');
-    Editor.tool = t; Editor.sketch = ['reshape', 'split', 'erase_in', 'erase_out', 'cut'].indexOf(t) >= 0 ? [] : null; Editor.vtx = null; Editor.pieces = null; Editor.clipper = null;
+    Cons.reset(); Editor.tool = t; Editor.sketch = ['reshape', 'split', 'cut'].indexOf(t) >= 0 || (/^erase_/.test(t) && Editor.eraseSrc === 'draw') ? [] : null; Editor.vtx = null; Editor.pieces = null; Editor.clipper = null;
     Editor.renderSketch(); Editor.updatePanel();
   },
+  /** Geometri asli (tidak terpotong ubin) fitur layer referensi yang terkena klik h di titik ll. */
+  overlayGeom: function (h, ll) {
+    var o = Overlays.list.find(function (x) { return h.layer && h.layer.id.indexOf('ov-' + x.id) === 0; });
+    var t = h.geometry.type.replace('Multi', ''), pt = [ll.lng, ll.lat], best = null, bd = Infinity;
+    ((o && o.geojson && o.geojson.features) || []).forEach(function (f) {
+      var g = f.geometry; if (!g || g.type.replace('Multi', '') !== t) return;
+      if (t === 'Polygon') { if (!best && Geo.pointIn(pt, g)) best = g; return; }
+      Geom.mapCoords(g, function (p) { var d = Math.hypot(p[0] - pt[0], p[1] - pt[1]); if (d < bd) { bd = d; best = g; } return p; });
+    });
+    return best || h.geometry;
+  },
+  /** Poligon di bawah klik (data proyek yang tidak terpilih, atau layer referensi) → { g, id } atau null. */
+  pickPolygon: function (e) {
+    var m = MapView.map, box = [[e.point.x - 3, e.point.y - 3], [e.point.x + 3, e.point.y + 3]], pt = [e.lngLat.lng, e.lngLat.lat];
+    var cl = m.queryRenderedFeatures(box, { layers: ['f-fill'] }).filter(function (h) { return !Select.ids.has(h.properties.id); });
+    for (var i = 0; i < cl.length; i++) { var f = Editor.feat(cl[i].properties.id), g = f && Editor.geomOf(f); if (g && /Polygon/.test(g.type) && Geo.pointIn(pt, g)) return { g: g, id: f.id }; }
+    if (cl.length) { var f0 = Editor.feat(cl[0].properties.id); if (f0) return { g: Editor.geomOf(f0), id: f0.id }; }
+    var ov = Overlays.vectorLayerIds().filter(function (id) { return m.getLayer(id); });
+    var oh = ov.length ? m.queryRenderedFeatures(box, { layers: ov }).filter(function (h) { return /Polygon/.test(h.geometry.type); })[0] : null;
+    return oh ? { g: Editor.overlayGeom(oh, e.lngLat), id: null } : null;
+  },
+  eraseSrc: (function () { try { return localStorage.getItem('umg_erase_src') || 'pick'; } catch (e) { return 'pick'; } })(),
   /** Klik peta selama sesi edit. Return true bila ditangani. */
   click: function (e) {
     if (!Editor.on) return false;
@@ -4686,7 +5097,13 @@ var Editor = {
       if (ph.length) { var k = ph[0].properties.n; Editor.pieces[k].drop = !Editor.pieces[k].drop; Editor.renderSketch(); }
       return true;
     }
-    if (Editor.sketch) { Editor.sketch.push(Snap.at(e)); Editor.renderSketch(); Editor.updatePanel(); return true; }
+    if (Editor.sketch) { Cons.feed(Editor.sketch, e).forEach(function (p) { Editor.sketch.push(p); }); Editor.renderSketch(); Editor.updatePanel(); return true; }
+    if (Editor.tool === 'erase_in' || Editor.tool === 'erase_out') {
+      var pk = Editor.pickPolygon(e);
+      if (!pk) { toast('Ketuk poligon penghapus di peta (data lain atau layer referensi), atau pilih "Gambar poligon".', 'err', 5000); return true; }
+      Editor.eraseWith(pk.g, Editor.tool === 'erase_in', pk.id).then(function () { MapView.refreshData(); Editor.updatePanel(); }).catch(function (er) { toast(er.message, 'err', 5000); });
+      return true;
+    }
     if (Editor.tool === 'vertex') {
       var mh = m.queryRenderedFeatures(box, { layers: ['e-mid'] });
       if (mh.length) { Editor.snapshot(); Editor.insertVertex(JSON.parse(mh[0].properties.i), Snap.at(e)); return true; }
@@ -4694,9 +5111,7 @@ var Editor = {
       Editor.vtx = vh.length ? JSON.parse(vh[0].properties.i) : null; Editor.renderSketch(); Editor.updatePanel(); return true;
     }
     if (Editor.tool === 'clip') {
-      var cl = m.queryRenderedFeatures(box, { layers: ['f-fill'] }).filter(function (h) { return !Select.ids.has(h.properties.id); })[0];
-      var g = cl ? (Editor.feat(cl.properties.id) && Editor.geomOf(Editor.feat(cl.properties.id))) : null;
-      if (!g) { var ov = Overlays.vectorLayerIds().filter(function (id) { return m.getLayer(id); }); var oh = ov.length ? m.queryRenderedFeatures(box, { layers: ov }).filter(function (h) { return /Polygon/.test(h.geometry.type); })[0] : null; if (oh) g = oh.geometry; }
+      var cp = Editor.pickPolygon(e), g = cp && cp.g;
       if (!g || !/Polygon/.test(g.type)) { toast('Ketuk poligon pemotong (bukan fitur yang sedang dipilih).', 'err'); return true; }
       Editor.clipDialog(g); return true;
     }
@@ -4818,7 +5233,7 @@ var Editor = {
     add({ id: 'e-skv', type: 'circle', source: 'edit', filter: ['==', ['get', 'k'], 'skv'], paint: { 'circle-radius': 4.5, 'circle-color': '#fff', 'circle-stroke-color': '#7c3aed', 'circle-stroke-width': 2 } });
     add({ id: 'e-mid', type: 'circle', source: 'edit', filter: ['==', ['get', 'k'], 'mid'], paint: { 'circle-radius': 5, 'circle-color': '#ffffff', 'circle-opacity': 0.85, 'circle-stroke-color': '#0891b2', 'circle-stroke-width': 1.5 } });
     add({ id: 'e-vtx', type: 'circle', source: 'edit', filter: ['==', ['get', 'k'], 'vtx'], paint: { 'circle-radius': ['case', ['get', 'on'], 9, 7], 'circle-color': ['case', ['get', 'on'], '#e11d48', '#0891b2'], 'circle-stroke-color': '#fff', 'circle-stroke-width': 2.5 } });
-    Editor.bindDrag(); Snap.bind(m);
+    Editor.bindDrag(); Snap.bind(m); Cons.bind(m);
   },
   // ----- alat sketsa
   finishSketch: async function () {
@@ -4857,10 +5272,12 @@ var Editor = {
     Editor.renderSketch(); MapView.refreshData(); Editor.updatePanel();
   },
   /** Hapus bagian fitur terpilih di dalam (inside=true) atau di luar poligon. Tanpa pilihan → semua fitur layer aktif yang bersinggungan. */
-  erase: async function (sk, inside) {
-    var T = await Lib.load('turf'), er = T.polygon([sk.concat([sk[0]])]);
-    var targets = Editor.selected();
-    if (!targets.length) { MapView.visibleFeatures().forEach(function (f) { if (f.layer_id === S.layerId && Editor.canEdit(f) && T.booleanIntersects(T.feature(Editor.geomOf(f)), er)) targets.push(f); }); }
+  erase: async function (sk, inside) { return Editor.eraseWith({ type: 'Polygon', coordinates: [sk.concat([sk[0]])] }, inside, null); },
+  /** Erase inside/outside dengan poligon penghapus g (sketsa atau poligon yang diklik di peta). Target: fitur terpilih (titik, garis, poligon); tanpa pilihan: fitur layer aktif yang terkena. */
+  eraseWith: async function (g, inside, eraserId) {
+    var T = await Lib.load('turf'), er = T.feature(g);
+    var targets = Editor.selected().filter(function (f) { return f.id !== eraserId; });
+    if (!targets.length) { Calc.live().forEach(function (f) { var fg = Editor.geomOf(f); if (fg && f.id !== eraserId && f.layer_id === S.layerId && !S.hiddenLayers.has(f.layer_id) && Editor.canEdit(f) && T.booleanIntersects(T.feature(fg), er)) targets.push(f); }); }
     if (!targets.length) throw new Error('Tidak ada fitur yang terkena poligon penghapus.');
     Editor.snapshot();
     var changed = 0, removed = 0, multi = 0;
@@ -5125,7 +5542,7 @@ var Editor = {
     var sel = Editor.selected(), t = Editor.TOOLS.find(function (x) { return x[0] === Editor.tool; }) || Editor.TOOLS[0], nChg = Object.keys(Editor.work).length + Editor.added.length + Editor.removed.size;
     var st = { a: 0, l: 0, mp: 0 }; sel.forEach(function (f) { var m = Geo.metricsAll(Editor.geomOf(f)); st.a += m.area_m2 || 0; st.l += m.length_m || 0; if (Editor.isMulti(f)) st.mp++; });
     var stat = (st.a ? fmtNum(st.a / 10000, 4) + ' ha' : '') + (st.a && st.l ? ' · ' : '') + (st.l ? fmtNum(st.l, 1) + ' m' : '') + (st.mp ? ' · ' + st.mp + ' multipart' : '');
-    var groups = [1, 2, 3].map(function (g) {
+    var groups = [1, 2, 3, 4].map(function (g) {
       return '<div class="ed-grp"><span class="ed-gl">' + esc(Editor.GROUPS[g]) + '</span><div class="ed-tools">' + Editor.TOOLS.filter(function (x) { return x[3] === g; }).map(function (x) {
         var dis = (x[0] === 'paste' && !(Editor.clip && Editor.clip.length));
         return '<button type="button" class="btn sm' + (Editor.tool === x[0] && !x[4] ? ' on' : '') + '" data-et="' + x[0] + '" title="' + esc(x[2]) + '"' + (dis ? ' disabled' : '') + '>' + esc(x[1]) + (x[0] === 'paste' && Editor.clip ? ' (' + Editor.clip.length + ')' : '') + '</button>';
@@ -5139,6 +5556,8 @@ var Editor = {
       [['point', 'Titik'], ['end', 'Ujung'], ['vertex', 'Vertex']].map(function (k) { return '<label class="row"><input type="checkbox" data-sn="' + k[0] + '"' + (sc[k[0]] ? ' checked' : '') + (sc.on ? '' : ' disabled') + '> ' + esc(k[1]) + '</label>'; }).join('') +
       '<label class="row">' + esc('Toleransi') + ' <select class="input" id="sn-tol" style="width:auto;min-height:28px;padding:2px 6px">' + [8, 12, 16, 24].map(function (n) { return '<option' + (sc.tol === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select> px</label></div>' +
       '<div class="small muted ed-hint">' + esc(t[2]) + '</div>' +
+      (/^erase_/.test(Editor.tool) ? '<div class="seg ed-es" style="margin-top:6px"><button type="button" data-es="pick" class="' + (Editor.eraseSrc !== 'draw' ? 'on' : '') + '">Klik poligon di peta</button><button type="button" data-es="draw" class="' + (Editor.eraseSrc === 'draw' ? 'on' : '') + '">Gambar poligon</button></div>' : '') +
+      (Editor.sketch ? Cons.barHtml() : '') +
       (Editor.tool === 'move' ? '<div class="row wrap small ed-mv"><span>' + esc('Geser presisi') + '</span> X <input class="input" id="mv-dx" type="number" step="any" value="0" style="width:84px;min-height:30px"> Y <input class="input" id="mv-dy" type="number" step="any" value="0" style="width:84px;min-height:30px"> m <button type="button" class="btn sm" id="ed-mvxy">' + esc('Geser') + '</button></div>' : '') +
       '<div class="row wrap ed-act">' +
       (Editor.sketch ? '<button type="button" class="btn sm primary" id="ed-sk-done">Selesai sketsa</button><button type="button" class="btn sm" id="ed-sk-xy">X,Y…</button>' : '') +
@@ -5149,10 +5568,13 @@ var Editor = {
     p.onclick = function (e) {
       var b = e.target.closest('button'); if (!b || b.disabled) return;
       var et = b.getAttribute('data-et'); if (et) return Editor.setTool(et);
+      var es = b.getAttribute('data-es'); if (es) { Editor.eraseSrc = es; try { localStorage.setItem('umg_erase_src', es); } catch (er) { /* abaikan */ } return Editor.setTool(Editor.tool); }
       ({ 'ed-sk-done': Editor.finishSketch, 'ed-sk-xy': Editor.xyDialog, 'ed-vxy': Editor.xyDialog, 'ed-mvxy': function () { Editor.moveBy(Number($('#mv-dx').value), Number($('#mv-dy').value)); }, 'ed-pc-ok': Editor.applyPieces, 'ed-pc-x': function () { Editor.pieces = null; Editor.tool = 'select'; Editor.renderSketch(); Editor.updatePanel(); }, 'ed-vdel': Editor.deleteVertex, 'ed-undo': Editor.undo, 'ed-del': Editor.deleteSelected, 'ed-unsel': function () { Select.set([]); }, 'ed-stop': function () { Editor.stop(); }, 'ed-save': Editor.save }[b.id] || function () { })();
     };
+    if (Editor.sketch) Cons.wire(p, function () { return Editor.sketch || []; }, function (pt) { Editor.sketch.push(pt); Editor.renderSketch(); Editor.updatePanel(); }, Editor.updatePanel);
     p.onchange = function (e) {
       var x = e.target;
+      if (/^cn-/.test(x.id)) return;
       if (x.id === 'sn-on') { Snap.cfg.on = x.checked; Snap.save(); Editor.updatePanel(); }
       else if (x.getAttribute('data-sn')) { Snap.cfg[x.getAttribute('data-sn')] = x.checked; Snap.save(); }
       else if (x.id === 'sn-tol') { Snap.cfg.tol = Number(x.value) || 12; Snap.save(); }
@@ -5169,7 +5591,7 @@ document.addEventListener('keydown', function (e) {
   else if (e.key === 'F6' && (Editor.sketch || Editor.vtx || Editor.tool === 'select')) { Editor.xyDialog(); e.preventDefault(); }
   else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c' && Select.ids.size && !String(window.getSelection())) { Editor.copy(); e.preventDefault(); }
   else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v' && Editor.clip) { Editor.paste(); e.preventDefault(); }
-  else if (e.key === 'Escape' && Editor.sketch && Editor.sketch.length) { Editor.sketch = []; Editor.renderSketch(); e.preventDefault(); }
+  else if (e.key === 'Escape' && Editor.sketch && Editor.sketch.length) { Editor.sketch = []; Cons.reset(); Editor.renderSketch(); Editor.updatePanel(); e.preventDefault(); }
 });
 
 /* Pustaka simbol titik — dibuat oleh scripts/gen_symbols.js dari Material Design Icons (Apache License 2.0, Google). Jangan edit manual. */
