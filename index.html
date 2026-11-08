@@ -71,7 +71,7 @@ main{grid-area:main;position:relative;overflow:hidden}
 .map-top{position:absolute;top:10px;left:10px;right:10px;display:flex;gap:8px;z-index:5;pointer-events:none;flex-wrap:wrap}
 .map-top>*{pointer-events:auto}
 .map-top select{max-width:220px;box-shadow:var(--shadow)}
-.tools{position:absolute;right:10px;top:64px;display:flex;flex-direction:column;gap:6px;z-index:5}
+.tools{position:absolute;right:10px;top:64px;display:grid;grid-auto-flow:column;grid-template-rows:repeat(30,auto);gap:6px;z-index:5;direction:rtl;align-content:start}.tools>*{direction:ltr}
 .tools .btn{width:44px;height:44px;padding:0;box-shadow:var(--shadow);border-radius:11px}
 .tools .btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .gps-chip{position:absolute;left:10px;bottom:30px;z-index:5;box-shadow:var(--shadow);max-width:calc(100% - 70px)}.gps-chip .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -195,6 +195,7 @@ table.t td.num,table.t th.num{width:1%;text-align:right;color:var(--muted)}
 .lbl-ed .f{min-width:120px}
 
 .cons-bar{margin-top:8px;padding-top:6px;border-top:1px dashed var(--line)}.cons-m{gap:4px;align-items:center}.cons-m .btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}.cons-a{gap:8px;margin-top:6px;align-items:center}.cons-h{margin-top:4px}.ed-es{display:flex}
+.ctl-tight .maplibregl-ctrl-scale{display:none}
 
 </style>
 </head>
@@ -1016,7 +1017,7 @@ var LEGAL_EN = {
  * Mode: 'gas' (HtmlService/google.script.run), 'remote' (PWA GitHub Pages -> fetch Web App), 'demo' (backend emulasi di browser).
  */
 'use strict';
-var APP_VERSION = '1.9.0', APP_BUILD = '2026-11-07';
+var APP_VERSION = '1.9.1', APP_BUILD = '2026-11-08';
 var S = { token: '', user: null, org: null, perms: [], settings: {}, license: {}, projects: [], layers: [], users: [],
   features: new Map(), serverVer: {}, projectId: '', layerId: '', hiddenLayers: new Set(), online: navigator.onLine, tab: 'map', rendered: {} };
 
@@ -1481,6 +1482,8 @@ var GPS = {
     GPS.err = '';
     GPS.watch = navigator.geolocation.watchPosition(function (p) {
       GPS.pos = { lon: p.coords.longitude, lat: p.coords.latitude, acc: p.coords.accuracy, alt: p.coords.altitude, ts: p.timestamp };
+      // arah gerak dari GPS (course) dipakai bila kompas tidak tersedia & perangkat bergerak
+      if (p.coords.heading !== null && isFinite(p.coords.heading) && (p.coords.speed || 0) > 0.7) { GPS.course = p.coords.heading; GPS.courseTs = Date.now(); }
       GPS.err = ''; GPS.chip(); MapView.drawGps();
       if (GPS.follow && MapView.map) MapView.map.easeTo({ center: [GPS.pos.lon, GPS.pos.lat], duration: 400 });
       if (GPS.track && !GPS.trackPaused && Draw.mode && Draw.mode !== 'Point' && Draw.mode !== 'measure') GPS.trackPoint();
@@ -1488,9 +1491,52 @@ var GPS = {
       GPS.err = e.code === 1 ? 'Izin lokasi ditolak. Aktifkan izin lokasi di pengaturan browser.' : (e.code === 2 ? 'Posisi tidak tersedia (sinyal GPS lemah / di dalam ruangan).' : 'Waktu tunggu GPS habis.');
       GPS.chip(); if (e.code === 1) { GPS.stop(); toast(GPS.err, 'err', 6000); }
     }, { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 });
-    GPS.chip();
+    GPS.chip(); GPS.compassStart();
     clearInterval(GPS._t); GPS._t = setInterval(GPS.chip, 2000);
   },
+  // ---- Kompas perangkat: panah arah hadap di penanda lokasi (seperti Google Maps)
+  heading: null, course: null, courseTs: 0,
+  compassStart: function () {
+    if (GPS._cmp) return;
+    var onAbs = function (e) {
+      var h = null;
+      if (typeof e.webkitCompassHeading === 'number' && isFinite(e.webkitCompassHeading)) h = e.webkitCompassHeading;   // iOS (searah jarum jam dari utara)
+      else if ((e.absolute || e.type === 'deviceorientationabsolute') && typeof e.alpha === 'number') h = 360 - e.alpha;   // Android
+      if (h === null) return;
+      var so = (screen.orientation && typeof screen.orientation.angle === 'number') ? screen.orientation.angle : (window.orientation || 0);
+      GPS.setHeading((h + so + 360) % 360);
+    };
+    GPS._cmp = onAbs;
+    var start = function () {
+      if ('ondeviceorientationabsolute' in window) window.addEventListener('deviceorientationabsolute', onAbs, true);
+      else window.addEventListener('deviceorientation', onAbs, true);
+    };
+    // iOS 13+: izin sensor wajib diminta dari ketukan pengguna (tombol GPS)
+    start();
+    if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission().catch(function () { /* tidak diizinkan / bukan dari ketukan: pakai arah gerak GPS */ });
+    }
+  },
+  compassStop: function () {
+    if (!GPS._cmp) return;
+    window.removeEventListener('deviceorientationabsolute', GPS._cmp, true); window.removeEventListener('deviceorientation', GPS._cmp, true);
+    GPS._cmp = null; GPS.heading = null;
+  },
+  /** Haluan terhalus (low-pass melingkar) → gambar ulang maksimal ~10×/detik bila berubah ≥ 2°. */
+  setHeading: function (h) {
+    if (GPS.heading === null) GPS.heading = h;
+    else { var d = ((h - GPS.heading + 540) % 360) - 180; GPS.heading = (GPS.heading + d * 0.35 + 360) % 360; }
+    GPS.headingTs = Date.now();
+    var now = Date.now();
+    if ((GPS._hd === undefined || Math.abs(((GPS.heading - GPS._hd + 540) % 360) - 180) >= 2) && (!GPS._hdT || now - GPS._hdT > 100)) { GPS._hd = GPS.heading; GPS._hdT = now; MapView.drawGps(); }
+  },
+  /** Arah yang ditampilkan: kompas (bila aktif < 3 dtk) atau arah gerak GPS (< 10 dtk). */
+  dir: function () {
+    if (GPS.heading !== null && Date.now() - (GPS.headingTs || 0) < 3000) return GPS.heading;
+    if (GPS.course !== null && Date.now() - GPS.courseTs < 10000) return GPS.course;
+    return null;
+  },
+  compassName: function (h) { return ['U', 'TL', 'T', 'TG', 'S', 'BD', 'B', 'BL'][Math.round(h / 45) % 8]; },
   /** Ikuti posisi (auto-center) — on/off terpisah dari GPS. */
   setFollow: function (v, byUser) {
     GPS.follow = !!v;
@@ -1499,7 +1545,7 @@ var GPS = {
     if (v && GPS.pos && MapView.map) MapView.map.easeTo({ center: [GPS.pos.lon, GPS.pos.lat], duration: 400 });
     var b = $('#btn-follow'); if (b) { b.classList.toggle('on', GPS.follow); b.setAttribute('aria-pressed', GPS.follow ? 'true' : 'false'); b.title = 'Ikuti posisi GPS: ' + (GPS.follow ? 'AKTIF' : 'MATI'); }
   },
-  stop: function () { if (GPS.watch !== null) navigator.geolocation.clearWatch(GPS.watch); GPS.watch = null; GPS.track = false; GPS.trackPaused = false; clearInterval(GPS._t); GPS.setFollow(false, false); GPS.chip(); },
+  stop: function () { if (GPS.watch !== null) navigator.geolocation.clearWatch(GPS.watch); GPS.watch = null; GPS.compassStop(); GPS.track = false; GPS.trackPaused = false; clearInterval(GPS._t); GPS.setFollow(false, false); GPS.chip(); },
   age: function () { return GPS.pos ? Math.round((Date.now() - GPS.pos.ts) / 1000) : Infinity; },
   chip: function () {
     var c = $('#gps-chip'); if (!c) return;
@@ -1511,7 +1557,8 @@ var GPS = {
       var a = GPS.age(), acc = GPS.pos.acc, stale = a > 10;
       dot.className = 'dot ' + (stale || acc > 15 ? (acc > 30 || stale ? 'off' : 'warn') : '');
       var u = Geo.toUTM(GPS.pos.lon, GPS.pos.lat);
-      lbl.textContent = '±' + fmtNum(acc, 1) + ' m · ' + (stale ? 'posisi lama ' + a + ' dtk' : a + ' dtk') + ' · ' + GPS.pos.lat.toFixed(6) + ', ' + GPS.pos.lon.toFixed(6) + ' · UTM ' + u.zone + u.hemi + ' X ' + Math.round(u.easting) + ' Y ' + Math.round(u.northing);
+      var hd = GPS.dir();
+      lbl.textContent = '±' + fmtNum(acc, 1) + ' m · ' + (stale ? 'posisi lama ' + a + ' dtk' : a + ' dtk') + (hd !== null ? ' · ' + Math.round(hd) + '° ' + GPS.compassName(hd) : '') + ' · ' + GPS.pos.lat.toFixed(6) + ', ' + GPS.pos.lon.toFixed(6) + ' · UTM ' + u.zone + u.hemi + ' X ' + Math.round(u.easting) + ' Y ' + Math.round(u.northing);
     }
     var b = $('#btn-gps'); if (b) b.classList.toggle('on', GPS.watch !== null);
   },
@@ -1572,6 +1619,7 @@ var MapView = {
     m.on('load', function () { MapView.ready = true; MapView.addLayers(); Overlays.restoreAll(); MapView.refreshData(); PMT.restore(); setTimeout(Draw.restore, 300); });
     m.on('moveend', debounce(function () { LS.set('umg_view', JSON.stringify({ center: m.getCenter().toArray(), zoom: m.getZoom() })); }, 500));
     m.on('click', MapView.onClick);
+    m.on('resize', MapView.layoutTools); setTimeout(MapView.layoutTools, 50); m.once('load', MapView.layoutTools);
     m.on('dragstart', function (e) { if (e.originalEvent && GPS.follow) { GPS.setFollow(false, false); toast('Ikuti posisi dimatikan karena peta digeser. Ketuk tombol panah untuk mengaktifkan lagi.', '', 4000); } });
     m.on('error', function (e) { console.warn('MapLibre:', e && e.error ? e.error.message : e); });
     MapView.fillSelectors();
@@ -1591,6 +1639,8 @@ var MapView = {
     add({ id: 'lbl', type: 'symbol', source: 'lbl', layout: { 'icon-image': ['get', 'img'], 'icon-anchor': ['case', ['==', ['get', 'pt'], 1], 'left', 'center'], 'icon-offset': ['case', ['==', ['get', 'pt'], 1], ['literal', [13, 0]], ['literal', [0, 0]]], 'icon-allow-overlap': false, 'icon-padding': 1 } });
     Editor.addLayers(add, m);
     add({ id: 'gps-acc', type: 'fill', source: 'gps', filter: ['==', ['geometry-type'], 'Polygon'], paint: { 'fill-color': '#2563eb', 'fill-opacity': 0.12 } });
+    if (!m.hasImage('umg-gps-dir')) m.addImage('umg-gps-dir', MapView.gpsArrow(), { pixelRatio: 2 });
+    add({ id: 'gps-dir', type: 'symbol', source: 'gps', filter: ['all', ['==', ['geometry-type'], 'Point'], ['has', 'h']], layout: { 'icon-image': 'umg-gps-dir', 'icon-rotate': ['get', 'h'], 'icon-rotation-alignment': 'map', 'icon-pitch-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true } });
     add({ id: 'gps-pt', type: 'circle', source: 'gps', filter: ['==', ['geometry-type'], 'Point'], paint: { 'circle-radius': 7, 'circle-color': '#2563eb', 'circle-stroke-width': 3, 'circle-stroke-color': '#fff' } });
     add({ id: 'd-fill', type: 'fill', source: 'draft', filter: ['==', ['geometry-type'], 'Polygon'], paint: { 'fill-color': '#f59e0b', 'fill-opacity': 0.2 } });
     add({ id: 'd-line', type: 'line', source: 'draft', filter: ['in', ['geometry-type'], ['literal', ['LineString', 'Polygon']]], paint: { 'line-color': '#f59e0b', 'line-width': 3 } });
@@ -1636,12 +1686,34 @@ var MapView = {
     var ovl = Overlays.vectorLayerIds().filter(function (id) { return MapView.map.getLayer(id); });
     if (ovl.length) { var oh = MapView.map.queryRenderedFeatures([[e.point.x - 6, e.point.y - 6], [e.point.x + 6, e.point.y + 6]], { layers: ovl }); if (oh.length) Overlays.showAttributes(oh[0], oh[0].layer.id); }
   },
+  /** Gambar penanda arah: kerucut sorotan + panah di tepi titik biru (menghadap utara; diputar sesuai haluan). */
+  gpsArrow: function () {
+    var S2 = 176, c = document.createElement('canvas'); c.width = c.height = S2; var x = c.getContext('2d'), o = S2 / 2;
+    var g = x.createRadialGradient(o, o, 8, o, o, 84); g.addColorStop(0, 'rgba(37,99,235,0.6)'); g.addColorStop(1, 'rgba(37,99,235,0)');
+    x.fillStyle = g; x.beginPath(); x.moveTo(o, o); x.arc(o, o, 84, -Math.PI / 2 - 0.6, -Math.PI / 2 + 0.6); x.closePath(); x.fill();
+    x.beginPath(); x.moveTo(o, o - 50); x.lineTo(o - 15, o - 22); x.lineTo(o + 15, o - 22); x.closePath();
+    x.fillStyle = '#1d4ed8'; x.fill(); x.lineWidth = 4; x.strokeStyle = '#ffffff'; x.lineJoin = 'round'; x.stroke();
+    var d = x.getImageData(0, 0, S2, S2); return { width: S2, height: S2, data: new Uint8Array(d.data.buffer) };
+  },
+  /** Tombol alat kanan disusun per kolom setinggi ruang yang tersedia → zoom (+/−), skala & info atribusi (i) di kanan bawah tidak tertutup. */
+  layoutTools: function () {
+    var t = $('#tools'), mp = $('#map'); if (!t || !mp || !mp.clientHeight) return;
+    var b = t.querySelector('.btn:not(.hidden)'), bh = b ? b.offsetHeight || 42 : 42, gap = parseFloat(getComputedStyle(t).rowGap) || 6;
+    var top = t.getBoundingClientRect().top - mp.getBoundingClientRect().top;
+    var ctl = mp.querySelector('.maplibregl-ctrl-bottom-right');
+    mp.classList.remove('ctl-tight');
+    var reserve = (ctl ? ctl.offsetHeight : 120) + 16;
+    if (mp.clientHeight - top - reserve < bh) { mp.classList.add('ctl-tight'); reserve = (ctl ? ctl.offsetHeight : 90) + 12; }   // layar pendek (HP lanskap): sembunyikan skala
+    var rows = Math.max(1, Math.floor((mp.clientHeight - top - reserve + gap) / (bh + gap)));
+    t.style.gridTemplateRows = 'repeat(' + rows + ', auto)';
+  },
   drawGps: function () {
     if (!MapView.ready) return; var s = MapView.map.getSource('gps'); if (!s) return;
     if (!GPS.pos || GPS.watch === null) { s.setData({ type: 'FeatureCollection', features: [] }); return; }
     var c = [GPS.pos.lon, GPS.pos.lat], r = Math.min(GPS.pos.acc, 500), ring = [];
     for (var i = 0; i <= 48; i++) { var t = i / 48 * 2 * Math.PI; ring.push([c[0] + r * Math.cos(t) / (111320 * Math.cos(c[1] * Math.PI / 180)), c[1] + r * Math.sin(t) / 110540]); }
-    s.setData({ type: 'FeatureCollection', features: [{ type: 'Feature', geometry: { type: 'Polygon', coordinates: [ring] }, properties: {} }, { type: 'Feature', geometry: { type: 'Point', coordinates: c }, properties: {} }] });
+    var hd = GPS.dir(), pt = { type: 'Feature', geometry: { type: 'Point', coordinates: c }, properties: hd === null ? {} : { h: Math.round(hd * 10) / 10 } };
+    s.setData({ type: 'FeatureCollection', features: [{ type: 'Feature', geometry: { type: 'Polygon', coordinates: [ring] }, properties: {} }, pt] });
   },
   closePanel: function (fromBack) { $('#layer-panel').classList.add('hidden'); if (!fromBack && MapView._panelHist) { var h = MapView._panelHist; MapView._panelHist = null; Hist.release(h); } },
   fit: function (list) {
