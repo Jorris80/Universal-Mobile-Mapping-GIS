@@ -1017,7 +1017,7 @@ var LEGAL_EN = {
  * Mode: 'gas' (HtmlService/google.script.run), 'remote' (PWA GitHub Pages -> fetch Web App), 'demo' (backend emulasi di browser).
  */
 'use strict';
-var APP_VERSION = '1.9.1', APP_BUILD = '2026-11-08';
+var APP_VERSION = '1.9.2', APP_BUILD = '2026-11-08';
 var S = { token: '', user: null, org: null, perms: [], settings: {}, license: {}, projects: [], layers: [], users: [],
   features: new Map(), serverVer: {}, projectId: '', layerId: '', hiddenLayers: new Set(), online: navigator.onLine, tab: 'map', rendered: {} };
 
@@ -1586,6 +1586,32 @@ var GPS = {
   }
 };
 
+// Pintasan keyboard di PC saat rekam/ukur: Delete/Backspace = hapus vertex terakhir, Ctrl+Z = undo, Enter = selesai, Esc = batal.
+// Di luar rekam/editor: Esc menutup panel layer/menu samping dan mengosongkan seleksi.
+document.addEventListener('keydown', function (e) {
+  if (/INPUT|TEXTAREA|SELECT/.test((e.target || {}).tagName || '') || (e.target && e.target.isContentEditable)) return;
+  if (document.querySelector('.overlay, .zoomer')) return;   // dialog terbuka: Esc ditangani dialog
+  if (typeof Editor !== 'undefined' && Editor.on) return;    // ditangani editor
+  var k = e.key, stop = function () { e.preventDefault(); e.stopPropagation(); };
+  if (Draw.mode) {
+    if ((k === 'Delete' || k === 'Backspace' || ((e.ctrlKey || e.metaKey) && k.toLowerCase() === 'z')) && Draw.coords.length) { Draw.undo(); return stop(); }
+    if (k === 'Enter' && Draw.mode !== 'Point' && Draw.mode !== 'measure' && Draw.coords.length) { Draw.finish(); return stop(); }
+    if (k === 'Escape') {
+      if (typeof Cons !== 'undefined' && Cons.pend) { Cons.reset(); Draw.panel(); }
+      else if (Draw.mode === 'measure' || !Draw.coords.length) Draw.cancel();
+      else Draw.confirmCancel();
+      return stop();
+    }
+    return;
+  }
+  if (k === 'Escape') {
+    var lp = $('#layer-panel'), sn = $('#sidenav');
+    if (lp && !lp.classList.contains('hidden')) { MapView.closePanel(); return stop(); }
+    if (sn && sn.classList.contains('open')) { Side.close(); return stop(); }
+    if (typeof Select !== 'undefined' && Select.ids.size) { Select.set([]); return stop(); }
+  }
+});
+
 // ======================================================= Peta (MapLibre)
 var MapView = {
   map: null, ready: false, popupFeature: null,
@@ -1619,6 +1645,7 @@ var MapView = {
     m.on('load', function () { MapView.ready = true; MapView.addLayers(); Overlays.restoreAll(); MapView.refreshData(); PMT.restore(); setTimeout(Draw.restore, 300); });
     m.on('moveend', debounce(function () { LS.set('umg_view', JSON.stringify({ center: m.getCenter().toArray(), zoom: m.getZoom() })); }, 500));
     m.on('click', MapView.onClick);
+    MapView.bindMiddlePan(m);
     m.on('resize', MapView.layoutTools); setTimeout(MapView.layoutTools, 50); m.once('load', MapView.layoutTools);
     m.on('dragstart', function (e) { if (e.originalEvent && GPS.follow) { GPS.setFollow(false, false); toast('Ikuti posisi dimatikan karena peta digeser. Ketuk tombol panah untuk mengaktifkan lagi.', '', 4000); } });
     m.on('error', function (e) { console.warn('MapLibre:', e && e.error ? e.error.message : e); });
@@ -1694,6 +1721,25 @@ var MapView = {
     x.beginPath(); x.moveTo(o, o - 50); x.lineTo(o - 15, o - 22); x.lineTo(o + 15, o - 22); x.closePath();
     x.fillStyle = '#1d4ed8'; x.fill(); x.lineWidth = 4; x.strokeStyle = '#ffffff'; x.lineJoin = 'round'; x.stroke();
     var d = x.getImageData(0, 0, S2, S2); return { width: S2, height: S2, data: new Uint8Array(d.data.buffer) };
+  },
+  /** Tombol tengah mouse (roda ditekan) + seret = geser peta seperti tangan, di semua mode (rekam, ukur, editor). */
+  bindMiddlePan: function (m) {
+    var box = m.getCanvasContainer(), cv = m.getCanvas(), st = null;
+    box.addEventListener('mousedown', function (e) {
+      if (e.button !== 1) return;
+      e.preventDefault(); e.stopPropagation();   // cegah autoscroll browser & handler lain
+      st = { x: e.clientX, y: e.clientY, cur: cv.style.cursor }; cv.style.cursor = 'grabbing';
+    }, true);
+    document.addEventListener('mousemove', function (e) {
+      if (!st) return;
+      var dx = e.clientX - st.x, dy = e.clientY - st.y; if (!dx && !dy) return;
+      st.x = e.clientX; st.y = e.clientY; m.panBy([-dx, -dy], { duration: 0 });
+      if (GPS.follow && Math.abs(dx) + Math.abs(dy) > 2) GPS.setFollow(false, false);
+    });
+    var end = function () { if (!st) return; cv.style.cursor = st.cur; st = null; };
+    document.addEventListener('mouseup', function (e) { if (e.button === 1) end(); });
+    window.addEventListener('blur', end);
+    box.addEventListener('auxclick', function (e) { if (e.button === 1) e.preventDefault(); });
   },
   /** Tombol alat kanan disusun per kolom setinggi ruang yang tersedia → zoom (+/−), skala & info atribusi (i) di kanan bawah tidak tertutup. */
   layoutTools: function () {
@@ -5228,12 +5274,12 @@ var Editor = {
   bindDrag: function () {
     var m = MapView.map; if (Editor._dragBound) return; Editor._dragBound = true;
     var down = function (e) {
-      if (!Editor.on || Editor.tool !== 'vertex' || !e.features || !e.features.length) return;
+      if (!Editor.on || Editor.tool !== 'vertex' || !e.features || !e.features.length || (e.originalEvent && e.originalEvent.button > 0)) return;
       e.preventDefault(); Editor.snapshot(); Editor.drag = JSON.parse(e.features[0].properties.i); Editor.vtx = Editor.drag; m.dragPan.disable();
     };
     // Move: tekan pada fitur terpilih lalu seret. Titik jangkar = vertex terdekat (bila snapping aktif) agar bisa ditempelkan tepat ke vertex lain.
     var mdown = function (e) {
-      if (!Editor.on || Editor.tool !== 'move' || !Select.ids.size || !e.point) return;
+      if (!Editor.on || Editor.tool !== 'move' || !Select.ids.size || !e.point || (e.originalEvent && e.originalEvent.button > 0)) return;
       var t = 8, hits = m.queryRenderedFeatures([[e.point.x - t, e.point.y - t], [e.point.x + t, e.point.y + t]], { layers: Snap.LAYERS.filter(function (id) { return m.getLayer(id); }) }).filter(function (h) { return Select.ids.has(h.properties.id); });
       if (!hits.length) return;
       e.preventDefault(); Editor.snapshot();
@@ -5654,16 +5700,33 @@ var Editor = {
   }
 };
 
-// Pintasan keyboard di PC: Delete = hapus vertex terpilih, Ctrl+Z = undo, Enter = selesai sketsa, Esc = batal sketsa.
+// Pintasan keyboard di PC (Editor): Delete = hapus vertex terpilih / fitur terpilih, Backspace = hapus vertex sketsa terakhir,
+// Ctrl+Z = undo, Enter = selesai sketsa, Esc = batal bertahap (titik konstruksi → sketsa → potongan → alat → pilihan), F6 = X,Y.
+function umgTyping(e) { return /INPUT|TEXTAREA|SELECT/.test((e.target || {}).tagName || '') || (e.target && e.target.isContentEditable); }
+function umgModalOpen() { return !!document.querySelector('.overlay, .zoomer'); }
 document.addEventListener('keydown', function (e) {
-  if (!Editor.on || /INPUT|TEXTAREA|SELECT/.test((e.target || {}).tagName || '')) return;
-  if (e.key === 'Delete' && Editor.vtx) { Editor.deleteVertex(); e.preventDefault(); }
-  else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { Editor.undo(); e.preventDefault(); }
-  else if (e.key === 'Enter' && Editor.sketch) { Editor.finishSketch(); e.preventDefault(); }
-  else if (e.key === 'F6' && (Editor.sketch || Editor.vtx || Editor.tool === 'select')) { Editor.xyDialog(); e.preventDefault(); }
-  else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c' && Select.ids.size && !String(window.getSelection())) { Editor.copy(); e.preventDefault(); }
-  else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v' && Editor.clip) { Editor.paste(); e.preventDefault(); }
-  else if (e.key === 'Escape' && Editor.sketch && Editor.sketch.length) { Editor.sketch = []; Cons.reset(); Editor.renderSketch(); Editor.updatePanel(); e.preventDefault(); }
+  if (!Editor.on || umgTyping(e) || umgModalOpen()) return;
+  var k = e.key, stop = function () { e.preventDefault(); e.stopPropagation(); };
+  if (k === 'Delete') {
+    if (Editor.vtx) { Editor.deleteVertex(); return stop(); }
+    if (Editor.sketch && Editor.sketch.length) { Editor.sketch.pop(); Cons.reset(); Editor.renderSketch(); Editor.updatePanel(); return stop(); }
+    if (Select.ids.size) { Editor.deleteSelected(); return stop(); }
+  } else if (k === 'Backspace' && Editor.sketch && Editor.sketch.length) { Editor.sketch.pop(); Cons.reset(); Editor.renderSketch(); Editor.updatePanel(); stop(); }
+  else if ((e.ctrlKey || e.metaKey) && k.toLowerCase() === 'z') { Editor.undo(); stop(); }
+  else if (k === 'Enter' && Editor.sketch) { Editor.finishSketch(); stop(); }
+  else if (k === 'F6' && (Editor.sketch || Editor.vtx || Editor.tool === 'select')) { Editor.xyDialog(); stop(); }
+  else if ((e.ctrlKey || e.metaKey) && k.toLowerCase() === 'c' && Select.ids.size && !String(window.getSelection())) { Editor.copy(); stop(); }
+  else if ((e.ctrlKey || e.metaKey) && k.toLowerCase() === 'v' && Editor.clip) { Editor.paste(); stop(); }
+  else if (k === 'Escape') {
+    if (Cons.pend) { Cons.reset(); Editor.updatePanel(); }
+    else if (Editor.sketch && Editor.sketch.length) { Editor.sketch = []; Editor.renderSketch(); Editor.updatePanel(); }
+    else if (Editor.pieces) { Editor.pieces = null; Editor.tool = 'select'; Editor.renderSketch(); Editor.updatePanel(); }
+    else if (Editor.vtx) { Editor.vtx = null; Editor.renderSketch(); Editor.updatePanel(); }
+    else if (Editor.tool !== 'select') Editor.setTool('select');
+    else if (Select.ids.size) Select.set([]);
+    else return;
+    stop();
+  }
 });
 
 /* Pustaka simbol titik — dibuat oleh scripts/gen_symbols.js dari Material Design Icons (Apache License 2.0, Google). Jangan edit manual. */
